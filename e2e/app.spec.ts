@@ -1,0 +1,194 @@
+import { expect, test, type Page } from "@playwright/test";
+
+/**
+ * End-to-end flow against a fresh in-memory database with the mock AI provider.
+ * Tests run serially and build on each other (add → edit → duplicate → delete).
+ */
+test.describe.configure({ mode: "serial" });
+
+function todayInKolkata(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
+function monthLabel(offset = 0): string {
+  const [y, m] = todayInKolkata().split("-").map(Number);
+  const date = new Date(Date.UTC(y!, m! - 1 + offset, 1));
+  return new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(date);
+}
+
+async function openAddDialog(page: Page) {
+  await page.getByTestId("add-transaction").click();
+  await expect(page.getByTestId("transaction-form")).toBeVisible();
+}
+
+async function pickCategory(page: Page, name: string) {
+  await page.locator("#tx-category").click();
+  await page.getByRole("option", { name }).click();
+}
+
+test("dashboard loads with empty state", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 2 })).toContainText(/Good (morning|afternoon|evening|night)/);
+  await expect(page.getByText("Total balance")).toBeVisible();
+  await expect(page.getByText("No transactions yet")).toBeVisible();
+  await expect(page.getByText(monthLabel(), { exact: true })).toBeVisible();
+});
+
+test("add income", async ({ page }) => {
+  await page.goto("/");
+  await openAddDialog(page);
+  await page.getByRole("radio", { name: "Income" }).click();
+  await expect(page.locator("#tx-amount")).toBeFocused();
+  await page.locator("#tx-amount").fill("55000");
+  await page.locator("#tx-description").fill("Salary");
+  await pickCategory(page, "Salary");
+  await page.getByRole("button", { name: "Add income" }).click();
+  await expect(page.getByText("Income added")).toBeVisible();
+  await expect(page.getByTestId("transaction-form")).toBeHidden();
+  await expect(page.getByLabel("Financial summary")).toContainText("₹55,000");
+});
+
+test("add expense and see savings", async ({ page }) => {
+  await page.goto("/");
+  await openAddDialog(page);
+  await page.getByRole("radio", { name: "Expense" }).click();
+  await page.locator("#tx-amount").fill("850");
+  await page.locator("#tx-description").fill("Dinner");
+  await pickCategory(page, "Food");
+  await page.locator("#tx-tags").fill("personal");
+  await page.locator("#tx-tags").press("Enter");
+  await page.getByRole("button", { name: "Add expense" }).click();
+  await expect(page.getByText("Expense added")).toBeVisible();
+  const summary = page.getByLabel("Financial summary");
+  await expect(summary).toContainText("₹850");
+  await expect(summary).toContainText("₹54,150");
+  await expect(summary).toContainText("98.5%");
+});
+
+test("validation blocks an empty form", async ({ page }) => {
+  await page.goto("/");
+  await openAddDialog(page);
+  await page.getByRole("button", { name: /Add (expense|income)/ }).click();
+  await expect(page.getByText("Amount is required")).toBeVisible();
+  await expect(page.getByText("Description is required")).toBeVisible();
+  await expect(page.getByText("Choose a category")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+});
+
+test("transactions page: search and filter", async ({ page }) => {
+  await page.goto("/transactions");
+  await expect(page.getByTestId("transaction-row")).toHaveCount(2);
+  await page.getByLabel("Search transactions").fill("dinner");
+  await expect(page.getByTestId("transaction-row")).toHaveCount(1);
+  await expect(page.getByTestId("transaction-row").first()).toContainText("Dinner");
+  await page.getByLabel("Search transactions").fill("");
+  await expect(page).not.toHaveURL(/q=/);
+  await expect(page.getByTestId("transaction-row")).toHaveCount(2);
+  await page.getByRole("radio", { name: "Income" }).click();
+  await expect(page).toHaveURL(/type=INCOME/);
+  await expect(page.getByTestId("transaction-row")).toHaveCount(1);
+  await expect(page.getByTestId("transaction-row").first()).toContainText("Salary");
+  await page.goto("/transactions?tags=personal");
+  await expect(page.getByTestId("transaction-row")).toHaveCount(1);
+  await expect(page.getByTestId("transaction-row").first()).toContainText("Dinner");
+});
+
+test("edit expense", async ({ page }) => {
+  await page.goto("/transactions?q=dinner");
+  await page.getByTestId("transaction-row").first().click();
+  await expect(page.getByTestId("transaction-form")).toBeVisible();
+  await expect(page.locator("#tx-amount")).toHaveValue("850");
+  await page.locator("#tx-amount").fill("900");
+  await page.locator("#tx-description").fill("Dinner at Swiggy");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByText("Expense updated")).toBeVisible();
+  await expect(page.getByTestId("transaction-row").first()).toContainText("Dinner at Swiggy");
+  await expect(page.getByTestId("transaction-row").first()).toContainText("₹900");
+});
+
+test("duplicate and delete with confirmation", async ({ page }) => {
+  await page.goto("/transactions?q=swiggy");
+  await page.getByRole("button", { name: "Actions for Dinner at Swiggy" }).first().click();
+  await page.getByRole("menuitem", { name: "Duplicate" }).click();
+  await expect(page.getByText("Transaction duplicated")).toBeVisible();
+  await expect(page.getByTestId("transaction-row")).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Actions for Dinner at Swiggy" }).first().click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText("Delete this transaction?");
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("transaction-row")).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Actions for Dinner at Swiggy" }).first().click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+  await expect(page.getByText("Transaction deleted")).toBeVisible();
+  await expect(page.getByTestId("transaction-row")).toHaveCount(1);
+});
+
+test("change month on the dashboard", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Previous month/ }).click();
+  await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
+  await expect(page.getByText(monthLabel(-1)).first()).toBeVisible();
+  await expect(page.getByText("No transactions yet")).toBeVisible();
+  await page.getByRole("button", { name: /Next month/ }).click();
+  await expect(page).not.toHaveURL(/month=/);
+  await expect(page.getByLabel("Financial summary")).toContainText("₹55,000");
+});
+
+test("calendar shows the day's transactions", async ({ page }) => {
+  await page.goto(`/calendar?day=${todayInKolkata()}`);
+  await expect(page.getByRole("heading", { level: 2 })).toContainText(monthLabel());
+  await expect(page.getByRole("button", { name: /Edit Dinner at Swiggy/ })).toBeVisible();
+  await page.getByRole("radio", { name: "week" }).click();
+  await expect(page.getByRole("grid", { name: "Week" })).toBeVisible();
+});
+
+test("analytics renders totals and breakdowns", async ({ page }) => {
+  await page.goto("/analytics");
+  await expect(page.getByText("Total income")).toBeVisible();
+  await expect(page.getByLabel("Range totals")).toContainText("₹55,000");
+  await expect(page.getByText("Income sources")).toBeVisible();
+  await expect(page.getByText("Largest expenses")).toBeVisible();
+  await page.goto("/analytics?range=12m");
+  await expect(page.getByText(/last 12 months/).first()).toBeVisible();
+});
+
+test("AI summary uses the mock provider", async ({ page }) => {
+  await page.goto("/");
+  const card = page.getByTestId("ai-summary-card");
+  await expect(card).toContainText("Mock AI");
+  await page.getByTestId("analyze-button").click();
+  await expect(page.getByTestId("ai-insight")).toContainText("Based on your tracked data");
+  await expect(page.getByTestId("ai-insight")).toContainText("₹55,000");
+});
+
+test("AI assistant answers with app-computed figures", async ({ page }) => {
+  await page.goto("/assistant");
+  await page.getByRole("button", { name: "How much did I spend this month?" }).click();
+  await expect(page.getByRole("log")).toContainText("Based on your tracked data");
+  await expect(page.getByRole("log")).toContainText("₹900");
+  await expect(page.getByRole("log")).toContainText("Figures computed by the app");
+});
+
+test("export JSON backup", async ({ request }) => {
+  const response = await request.get("/api/export?format=json");
+  expect(response.ok()).toBeTruthy();
+  const body = (await response.json()) as { format: string; transactions: unknown[] };
+  expect(body.format).toBe("expenses-tracker-backup");
+  expect(body.transactions.length).toBe(2);
+  const csv = await request.get("/api/export?format=csv");
+  expect(csv.headers()["content-type"]).toContain("text/csv");
+  expect(await csv.text()).toContain("Dinner at Swiggy");
+});
+
+test("settings: categories and AI status", async ({ page }) => {
+  await page.goto("/settings?tab=categories");
+  await expect(page.getByText("Expense categories")).toBeVisible();
+  await expect(page.getByText("Food", { exact: true })).toBeVisible();
+  await page.goto("/settings?tab=ai");
+  await expect(page.getByText("Mock AI (testing)").first()).toBeVisible();
+  await page.goto("/settings?tab=data");
+  await expect(page.getByText("Export JSON backup")).toBeVisible();
+});
