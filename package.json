@@ -59,5 +59,10 @@
   "description": "Personal AI-powered expense tracker (INR) built with Next.js, MongoDB and Ollama",
   "engines": {
     "node": ">=20.9.0"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": "1"
+    }
   }
 }

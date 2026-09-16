@@ -7,7 +7,8 @@ import { getCurrentUserId } from "@/lib/services/user";
 import { chatRequestSchema } from "@/lib/validation/ai";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+// Keep within the Vercel Hobby plan's function limit.
+export const maxDuration = 60;
 
 /**
  * POST /api/ai/chat { messages, month } → streamed plain-text answer.

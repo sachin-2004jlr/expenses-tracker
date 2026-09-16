@@ -6,7 +6,8 @@ import { getCurrentUserId } from "@/lib/services/user";
 import { insightRequestSchema } from "@/lib/validation/ai";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+// Keep within the Vercel Hobby plan's function limit.
+export const maxDuration = 60;
 
 const getQuerySchema = z.object({
   kind: z.enum(["MONTHLY", "SPENDING", "COMPARISON"]).default("MONTHLY"),
