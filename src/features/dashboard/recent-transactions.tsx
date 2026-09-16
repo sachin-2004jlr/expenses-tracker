@@ -27,7 +27,7 @@ export function RecentTransactions({
         <CardTitle>Recent transactions</CardTitle>
         <CardDescription>Latest activity in {formatMonthLabel(month)}</CardDescription>
         <CardAction>
-          <Button variant="ghost" size="sm" render={<Link href={`/transactions?month=${month}`} />}>
+          <Button variant="ghost" size="sm" nativeButton={false} render={<Link href={`/transactions?month=${month}`} />}>
             View all
             <ArrowRight data-icon="inline-end" aria-hidden />
           </Button>

@@ -104,11 +104,11 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
           <CardDescription>Download everything you have tracked. JSON backups can be imported again; CSV opens in any spreadsheet.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline" render={<a href="/api/export?format=json" download />}>
+          <Button variant="outline" nativeButton={false} render={<a href="/api/export?format=json" download />}>
             <Download data-icon="inline-start" aria-hidden />
             Export JSON backup
           </Button>
-          <Button variant="outline" render={<a href="/api/export?format=csv" download />}>
+          <Button variant="outline" nativeButton={false} render={<a href="/api/export?format=csv" download />}>
             <FileSpreadsheet data-icon="inline-start" aria-hidden />
             Export CSV
           </Button>

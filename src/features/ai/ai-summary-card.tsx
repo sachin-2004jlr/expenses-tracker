@@ -175,7 +175,7 @@ export function AiSummaryCard({ month, initial, hasData, aiEnabled, autoAnalyze,
                 <RefreshCw data-icon="inline-start" className={cn(statusLoading && "animate-spin")} aria-hidden />
                 Check again
               </Button>
-              <Button size="xs" variant="ghost" render={<Link href="/settings?tab=ai" />}>
+              <Button size="xs" variant="ghost" nativeButton={false} render={<Link href="/settings?tab=ai" />}>
                 AI settings
                 <ArrowRight data-icon="inline-end" aria-hidden />
               </Button>
