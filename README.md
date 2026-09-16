@@ -101,7 +101,7 @@ _Placeholders: add screenshots of the dashboard, transactions, calendar, analyti
 
 ## Local setup
 
-Requirements: Node.js 24 (LTS) with npm 11. Node 20.9+ runs the app, but `package-lock.json` is maintained with npm 11 and CI uses Node 24; npm 10 (Node 22) may reject the lock file with "Missing: @emnapi/runtime from lock file" because npm 11 omits optional WebAssembly runtime packages.
+Requirements: Node.js 24 (LTS) with npm 11. Node 20.9+ runs the app, but `package-lock.json` is maintained with npm 11; npm 10 (Node 22) may reject the lock file with "Missing: @emnapi/runtime from lock file" because npm 11 omits optional WebAssembly runtime packages.
 
 ```bash
 git clone git@github-personal:sachin-2004jlr/expenses-tracker.git
