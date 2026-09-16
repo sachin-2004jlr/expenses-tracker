@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,12 +85,12 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
             <CardHeader>
               <CardTitle>{group.title}</CardTitle>
               <CardDescription>{items.length} categories</CardDescription>
-              <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+              <CardAction>
                 <Button size="sm" variant="outline" onClick={() => openCreate(group.type)}>
                   <Plus data-icon="inline-start" aria-hidden />
                   Add
                 </Button>
-              </div>
+              </CardAction>
             </CardHeader>
             <CardContent>
               <ul className="grid gap-1 sm:grid-cols-2">
@@ -166,7 +166,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
             )}
             <fieldset className="grid gap-1.5">
               <legend className="text-sm font-medium">Icon</legend>
-              <div className="grid grid-cols-8 gap-1" role="radiogroup" aria-label="Icon">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-1" role="radiogroup" aria-label="Icon">
                 {CATEGORY_ICONS.map((icon) => {
                   const Icon = getCategoryIcon(icon);
                   const active = editor.icon === icon;

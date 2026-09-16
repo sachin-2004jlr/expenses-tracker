@@ -165,7 +165,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
               <span className="ml-1 rounded-full bg-foreground px-1.5 text-[10px] font-semibold text-background">{activeCount}</span>
             )}
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 gap-4">
+          <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] gap-4">
             <fieldset className="grid gap-2">
               <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Date range</legend>
               <div className="grid grid-cols-2 gap-2">

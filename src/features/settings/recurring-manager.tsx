@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { Pencil, Play, Plus, Repeat, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
@@ -155,9 +155,9 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recurring transactions</CardTitle>
-        <CardDescription>Salary, rent, EMIs and subscriptions are created automatically on their due dates when you open the app.</CardDescription>
-        <div className="col-start-2 row-span-2 row-start-1 flex gap-2 self-start justify-self-end">
+        <CardTitle className="max-sm:col-start-1 max-sm:row-start-1">Recurring transactions</CardTitle>
+        <CardDescription className="max-sm:col-start-1 max-sm:row-start-2">Salary, rent, EMIs and subscriptions are created automatically on their due dates when you open the app.</CardDescription>
+        <CardAction className="flex flex-wrap gap-2 max-sm:col-start-1 max-sm:row-start-3 max-sm:mt-1 max-sm:justify-self-start">
           <Button size="sm" variant="outline" onClick={runNow} disabled={running || rules.length === 0}>
             <Play data-icon="inline-start" aria-hidden />
             Run due now
@@ -166,7 +166,7 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
             <Plus data-icon="inline-start" aria-hidden />
             Add rule
           </Button>
-        </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
         {rules.length === 0 ? (
@@ -185,7 +185,7 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
         ) : (
           <ul className="divide-y divide-border/70">
             {rules.map((rule) => (
-              <li key={rule.id} className={cn("flex items-center gap-3 py-2.5", !rule.isActive && "opacity-60")}>
+              <li key={rule.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5", !rule.isActive && "opacity-60")}>
                 <CategoryIcon icon={rule.category.icon} color={rule.category.color} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{rule.description}</span>
@@ -194,14 +194,16 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
                     {rule.endDate ? ` · until ${formatIsoDate(rule.endDate, dateFormat)}` : ""}
                   </span>
                 </span>
-                <Amount paise={rule.amount} type={rule.type} className="text-sm font-semibold" />
-                <Switch checked={rule.isActive} onCheckedChange={(checked) => void toggle(rule, checked)} aria-label={`${rule.isActive ? "Pause" : "Resume"} ${rule.description}`} size="sm" />
-                <Button variant="ghost" size="icon-sm" onClick={() => openEdit(rule)} aria-label={`Edit ${rule.description}`}>
-                  <Pencil aria-hidden />
-                </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => setDeleting(rule)} aria-label={`Delete ${rule.description}`}>
-                  <Trash aria-hidden />
-                </Button>
+                <Amount paise={rule.amount} type={rule.type} className="shrink-0 whitespace-nowrap text-sm font-semibold" />
+                <span className="flex basis-full items-center justify-end gap-1 sm:basis-auto">
+                  <Switch checked={rule.isActive} onCheckedChange={(checked) => void toggle(rule, checked)} aria-label={`${rule.isActive ? "Pause" : "Resume"} ${rule.description}`} size="sm" />
+                  <Button variant="ghost" size="icon-sm" onClick={() => openEdit(rule)} aria-label={`Edit ${rule.description}`}>
+                    <Pencil aria-hidden />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => setDeleting(rule)} aria-label={`Delete ${rule.description}`}>
+                    <Trash aria-hidden />
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>

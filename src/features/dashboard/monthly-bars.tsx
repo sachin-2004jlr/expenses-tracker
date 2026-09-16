@@ -22,7 +22,7 @@ export function MonthlyBars({ series, currentMonth, className }: MonthlyBarsProp
   const hasData = series.some((m) => m.expenses > 0);
 
   return (
-    <section className={cn("flex flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Monthly expenses">
+    <section className={cn("flex min-w-0 flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Monthly expenses">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">Monthly spending</span>
         <span className="text-xs text-muted-foreground">last {series.length} months</span>
@@ -55,7 +55,7 @@ export function MonthlyBars({ series, currentMonth, className }: MonthlyBarsProp
       </div>
       <ul className="mt-2 grid text-center text-[11px] tabular-nums" style={{ gridTemplateColumns: `repeat(${Math.max(1, data.length)}, minmax(0, 1fr))` }}>
         {data.map((entry) => (
-          <li key={entry.month} className={cn(entry.month === currentMonth ? "font-semibold text-brand" : "text-muted-foreground")}>
+          <li key={entry.month} className={cn("truncate px-0.5", entry.month === currentMonth ? "font-semibold text-brand" : "text-muted-foreground")}>
             {formatCompactCurrency(entry.Expenses)}
           </li>
         ))}

@@ -28,7 +28,7 @@ export function RecentOperations({ transactions, expenses, perDay, month, today,
   const parts = formatCurrencyParts(expenses);
 
   return (
-    <section className={cn("flex flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Recent transactions">
+    <section className={cn("flex min-w-0 flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Recent transactions">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold">Recent activity</h2>

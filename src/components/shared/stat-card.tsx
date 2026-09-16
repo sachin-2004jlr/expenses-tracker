@@ -44,14 +44,14 @@ export function StatCard({
   const DeltaIcon = direction === "up" ? ArrowUpRight : direction === "down" ? ArrowDownRight : Minus;
 
   return (
-    <div className={cn("flex flex-col gap-3 rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10 sm:p-5", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-3 rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10 sm:p-5", className)}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
         <span className={cn("flex size-8 items-center justify-center rounded-lg", TONE_ICON[tone])}>
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
-      <p className="text-2xl font-semibold tracking-tight tabular-nums sm:text-[1.7rem]">{value}</p>
+      <p className="min-w-0 text-2xl font-semibold tracking-tight tabular-nums [overflow-wrap:anywhere] sm:text-[1.7rem]">{value}</p>
       {(hasChange || hint) && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           {hasChange && (

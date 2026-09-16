@@ -31,7 +31,7 @@ export function ThemeToggle({ className, size = "sm" }: { className?: string; si
     <div
       role="radiogroup"
       aria-label="Colour theme"
-      className={cn("inline-flex items-center rounded-lg border border-border bg-muted/60 p-0.5", className)}
+      className={cn("inline-flex max-w-full items-center rounded-lg border border-border bg-muted/60 p-0.5", size === "md" && "flex w-full sm:inline-flex sm:w-auto", className)}
     >
       {OPTIONS.map((option) => {
         const Icon = option.icon;
@@ -47,7 +47,7 @@ export function ThemeToggle({ className, size = "sm" }: { className?: string; si
             onClick={() => setTheme(option.value)}
             className={cn(
               "flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              size === "sm" ? "size-7" : "h-8 gap-1.5 px-3 text-sm",
+              size === "sm" ? "size-7" : "h-8 flex-1 gap-1.5 px-2 text-sm sm:flex-none sm:px-3",
               active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >

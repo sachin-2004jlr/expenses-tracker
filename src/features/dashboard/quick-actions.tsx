@@ -40,7 +40,7 @@ function Tile({ icon: Icon, label, highlight, ...props }: { icon: LucideIcon; la
 export function QuickActions({ month, className }: QuickActionsProps) {
   const { openCreate } = useTransactionDialog();
   return (
-    <section className={cn("grid grid-cols-2 gap-2", className)} aria-label="Quick actions">
+    <section className={cn("grid min-w-0 grid-cols-2 gap-2", className)} aria-label="Quick actions">
       <Tile icon={ArrowDownToLine} label="Add income" onClick={() => openCreate({ type: "INCOME" })} />
       <Tile icon={ArrowUpFromLine} label="Add expense" highlight onClick={() => openCreate({ type: "EXPENSE" })} />
       <Tile icon={CalendarDays} label="Calendar" href={`/calendar?month=${month}`} />

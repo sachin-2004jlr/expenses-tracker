@@ -26,9 +26,9 @@ export interface TransactionTableProps {
 type SortField = TransactionFilters["sort"];
 
 const COLUMNS: { field: SortField; label: string; className?: string }[] = [
-  { field: "date", label: "Date", className: "w-32" },
+  { field: "date", label: "Date", className: "w-28 lg:w-32" },
   { field: "description", label: "Description" },
-  { field: "category", label: "Category", className: "w-44" },
+  { field: "category", label: "Category", className: "w-36 lg:w-44" },
   { field: "amount", label: "Amount", className: "w-36 text-right" },
 ];
 
@@ -85,7 +85,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                   </TableHead>
                 );
               })}
-              <TableHead className="w-24 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</TableHead>
+              <TableHead className="hidden w-24 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">Type</TableHead>
               <TableHead className="w-12 px-3">
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -114,7 +114,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                 <TableCell className="px-3 text-right">
                   <Amount paise={tx.amount} type={tx.type} className="font-semibold" />
                 </TableCell>
-                <TableCell className="px-3">
+                <TableCell className="hidden px-3 lg:table-cell">
                   <Badge variant="outline" className={cn(tx.type === "INCOME" ? "border-income/40 text-income-foreground" : "border-expense/40 text-expense-foreground")}>
                     {tx.type === "INCOME" ? "Income" : "Expense"}
                   </Badge>
@@ -131,17 +131,17 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
       {/* Mobile cards */}
       <ul className="space-y-2 md:hidden" aria-label="Transactions">
         {transactions.map((tx) => (
-          <li key={tx.id} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-foreground/10">
+          <li key={tx.id} className="flex items-center gap-2 rounded-xl bg-card p-3 pr-1.5 ring-1 ring-foreground/10">
             <button type="button" onClick={() => openEdit(tx)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`Edit ${tx.description}`}>
               <CategoryIcon icon={tx.category.icon} color={tx.category.color} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">{tx.description}</span>
+                <span className="line-clamp-2 hyphens-auto break-words text-sm font-medium">{tx.description}</span>
                 <span className="block truncate text-xs text-muted-foreground">
                   {tx.category.name} · {formatIsoDate(tx.date, dateFormat)}
                   {tx.tags.length > 0 && <> · {tx.tags.map((t) => `#${t.name}`).join(" ")}</>}
                 </span>
               </span>
-              <Amount paise={tx.amount} type={tx.type} className="text-sm font-semibold" />
+              <Amount paise={tx.amount} type={tx.type} className="shrink-0 whitespace-nowrap text-sm font-semibold" />
             </button>
             <TransactionRowActions transaction={tx} />
           </li>

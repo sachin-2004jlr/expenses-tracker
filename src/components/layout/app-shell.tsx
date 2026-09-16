@@ -21,7 +21,7 @@ export function AppShell({ categories, tagSuggestions, today, currentMonth, user
     <TransactionDialogProvider categories={categories} tagSuggestions={tagSuggestions} today={today}>
       <div className="flex min-h-svh w-full bg-background">
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col lg:pl-18">
+        <div className="flex min-w-0 flex-1 flex-col overflow-x-clip lg:pl-18">
           <AppHeader user={user} currentMonth={currentMonth} />
           <main className="flex-1 px-2 pb-24 pt-3 sm:px-4 lg:px-5 lg:pb-6 lg:pt-4">
             <div className="mx-auto w-full max-w-360 rounded-3xl border border-border bg-panel p-3 sm:p-5 lg:p-6">{children}</div>

@@ -85,11 +85,11 @@ export function CategoryDonut({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="@container">
         {slices.length === 0 ? (
           <EmptyState icon={ChartPie} title={type === "EXPENSE" ? "No expenses this month" : "No income this month"} compact />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-[11rem_1fr] sm:items-center">
+          <div className="grid gap-4 @md:grid-cols-[11rem_minmax(0,1fr)] @md:items-center">
             <div className="relative mx-auto h-44 w-44">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -149,16 +149,19 @@ export function CategoryDonut({
                       onFocus={() => setActive(slice.key)}
                       onBlur={() => setActive(null)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                        "grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:gap-x-3",
                         active === slice.key && "bg-muted",
                       )}
                     >
-                      <span className="size-2.5 shrink-0 rounded-sm" style={{ background: slice.color }} aria-hidden />
+                      <span className="size-2.5 rounded-sm" style={{ background: slice.color }} aria-hidden />
                       <CategoryIcon icon={slice.icon} color={items.find((i) => i.categoryId === slice.key)?.color ?? "slate"} size="sm" />
-                      <span className="min-w-0 flex-1 truncate">{slice.name}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">{slice.count}×</span>
-                      <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">{formatPercent(slice.percentage, slice.percentage >= 10 ? 0 : 1)}</span>
-                      <span className="w-20 text-right font-medium tabular-nums">{formatCurrency(slice.amount)}</span>
+                      <span className="min-w-0">
+                        <span className="block truncate">{slice.name}</span>
+                        <span className="block text-[11px] leading-tight text-muted-foreground tabular-nums">
+                          {slice.count}× · {formatPercent(slice.percentage, slice.percentage >= 10 ? 0 : 1)}
+                        </span>
+                      </span>
+                      <span className="whitespace-nowrap text-right font-medium tabular-nums">{formatCurrency(slice.amount, { compact: slice.amount >= 1_000_000_000 })}</span>
                     </Link>
                   </li>
                 );

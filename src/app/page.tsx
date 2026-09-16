@@ -58,7 +58,7 @@ export default async function LandingPage() {
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
-    <div className="min-h-svh bg-background text-foreground">
+    <div className="min-h-svh overflow-x-clip bg-background text-foreground">
       <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         <BrandLogo />
         <nav aria-label="Landing" className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
@@ -81,7 +81,7 @@ export default async function LandingPage() {
         {/* Hero */}
         <section className="mx-auto grid max-w-7xl gap-12 px-6 pb-24 pt-10 lg:grid-cols-[1.5fr_1fr] lg:pt-16">
           <div>
-            <h1 className="display-heading text-[13vw] text-foreground sm:text-6xl lg:text-[4.5rem] xl:text-[5.25rem]" data-testid="hero-title">
+            <h1 className="display-heading text-[clamp(2.25rem,11.5vw,3.5rem)] text-foreground sm:text-6xl lg:text-[4.5rem] xl:text-[5.25rem]" data-testid="hero-title">
               Know where
               <br />
               your money

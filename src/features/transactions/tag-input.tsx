@@ -89,7 +89,7 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
         placeholder={value.length === 0 ? placeholder : ""}
         aria-invalid={rest["aria-invalid"]}
         aria-describedby={undefined}
-        className="min-w-24 flex-1 bg-transparent py-0.5 text-sm outline-none placeholder:text-muted-foreground"
+        className="min-w-24 flex-1 bg-transparent py-0.5 text-base outline-none placeholder:text-muted-foreground md:text-sm"
       />
       <datalist id={listId}>
         {available.map((suggestion) => (

@@ -38,18 +38,18 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
                   className="group grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 rounded-lg px-1 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                 >
                   <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-                  <span className="flex min-w-0 items-baseline justify-between gap-2 text-sm">
-                    <span className="truncate font-medium">{item.name}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
+                  <span className="min-w-0 truncate text-sm font-medium">{item.name}</span>
+                  <span className="whitespace-nowrap text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
+                  <span className="col-start-2 col-end-4 flex items-center gap-2">
+                    <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+                      <span
+                        className="block h-full rounded-full"
+                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: categoryColorValue(item.color) }}
+                      />
+                    </span>
+                    <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground tabular-nums">
                       {item.count}× · {formatPercent(item.percentage, item.percentage >= 10 ? 0 : 1)}
                     </span>
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
-                  <span className="col-start-2 col-end-4 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <span
-                      className="block h-full rounded-full"
-                      style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: categoryColorValue(item.color) }}
-                    />
                   </span>
                 </Link>
               </li>

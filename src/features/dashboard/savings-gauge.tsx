@@ -28,7 +28,7 @@ export function SavingsGauge({ rate, savings, className }: SavingsGaugeProps) {
   const r = 78;
 
   return (
-    <section className={cn("flex flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Savings rate">
+    <section className={cn("flex min-w-0 flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Savings rate">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">Savings rate</span>
         <span className="text-xs text-muted-foreground">this month</span>
@@ -60,9 +60,9 @@ export function SavingsGauge({ rate, savings, className }: SavingsGaugeProps) {
           <span className="text-[11px] text-muted-foreground">{label}</span>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         <span>Low</span>
-        <span className={cn("normal-case tracking-normal", savings < 0 ? "text-expense-foreground" : "text-foreground")}>{formatCurrency(savings)} saved</span>
+        <span className={cn("whitespace-nowrap normal-case tracking-normal", savings < 0 ? "text-expense-foreground" : "text-foreground")}>{formatCurrency(savings)} saved</span>
         <span>High</span>
       </div>
     </section>

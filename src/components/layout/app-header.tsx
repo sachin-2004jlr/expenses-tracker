@@ -52,22 +52,22 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur supports-backdrop-filter:bg-background/70 sm:gap-3 sm:px-5 lg:px-6">
-      <div className="lg:hidden">
+      <div className="shrink-0 lg:hidden">
         <BrandLogo withText={false} size="sm" href="/dashboard" />
       </div>
 
       {monthScoped ? (
-        <MonthSelector month={month} currentMonth={currentMonth} size="sm" className="rounded-full bg-card" />
+        <MonthSelector month={month} currentMonth={currentMonth} size="sm" className="min-w-0 rounded-full bg-card" />
       ) : (
-        <h1 className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold">{current?.label ?? "Expenses"}</h1>
+        <h1 className="min-w-0 truncate rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold">{current?.label ?? "Expenses"}</h1>
       )}
 
-      <Button size="icon" onClick={() => openCreate()} aria-label="Add transaction" className="rounded-full shadow-glow-brand" data-testid="add-transaction">
+      <Button size="icon" onClick={() => openCreate()} aria-label="Add transaction" className="shrink-0 rounded-full shadow-glow-brand" data-testid="add-transaction">
         <Plus aria-hidden />
       </Button>
 
-      <form onSubmit={submitSearch} role="search" className="ml-auto hidden min-w-0 md:block">
-        <label className="flex h-9 w-56 items-center gap-2 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground transition-colors focus-within:border-ring focus-within:text-foreground lg:w-72">
+      <form onSubmit={submitSearch} role="search" className="ml-auto hidden min-w-0 flex-1 md:block md:max-w-xs lg:max-w-sm">
+        <label className="flex h-9 w-full items-center gap-2 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground transition-colors focus-within:border-ring focus-within:text-foreground">
           <Search className="size-4 shrink-0" aria-hidden />
           <input
             type="search"
@@ -80,7 +80,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
         </label>
       </form>
 
-      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transactions" />} className="hidden rounded-full md:inline-flex">
+      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transactions" />} className="hidden shrink-0 rounded-full lg:inline-flex">
         View all
       </Button>
 
@@ -91,15 +91,15 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
               type="button"
               aria-label="Account menu"
               data-testid="account-menu"
-              className="ml-auto flex h-9 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-2.5 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 md:ml-0"
+              className="ml-auto flex h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-1 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:pr-2.5 md:ml-0"
             />
           }
         >
           <UserAvatar name={user?.name} email={user?.email} image={user?.image} size="sm" />
-          <span className="hidden max-w-32 truncate font-medium sm:inline">{displayName}</span>
-          <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
+          <span className="hidden max-w-32 truncate font-medium lg:inline">{displayName}</span>
+          <ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" aria-hidden />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-1.5rem)]">
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex items-center gap-2 py-2">
               <UserAvatar name={user?.name} email={user?.email} image={user?.image} />

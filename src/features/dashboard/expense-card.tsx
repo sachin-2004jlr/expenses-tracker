@@ -24,7 +24,7 @@ export function ExpenseCard({ amount, changePercent, series, perDay, className }
   const good = changePercent === null ? null : changePercent <= 0;
 
   return (
-    <section className={cn("relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5", className)} aria-label="Expenses this month">
+    <section className={cn("relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card p-5", className)} aria-label="Expenses this month">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-full bg-expense/15 text-expense-foreground">

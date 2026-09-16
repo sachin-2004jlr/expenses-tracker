@@ -24,7 +24,7 @@ export function IncomeCard({ amount, changePercent, series, className }: IncomeC
 
   return (
     <section
-      className={cn("relative flex flex-col overflow-hidden rounded-2xl bg-income-surface p-5 text-black", className)}
+      className={cn("relative flex min-w-0 flex-col overflow-hidden rounded-2xl bg-income-surface p-5 text-black", className)}
       aria-label="Income this month"
       style={{ backgroundImage: "radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.28), transparent 60%)" }}
     >

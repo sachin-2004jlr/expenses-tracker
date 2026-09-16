@@ -15,7 +15,7 @@ export interface TopCategoryCardProps {
 export function TopCategoryCard({ item, month, className }: TopCategoryCardProps) {
   const share = item ? Math.max(0, Math.min(100, item.percentage)) : 0;
   return (
-    <section className={cn("flex flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Top spending category">
+    <section className={cn("flex min-w-0 flex-col rounded-2xl border border-border bg-card p-5", className)} aria-label="Top spending category">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">Top category</span>
         {item && (
@@ -35,7 +35,7 @@ export function TopCategoryCard({ item, month, className }: TopCategoryCardProps
               </p>
             </div>
           </div>
-          <p className="mt-4 text-2xl font-bold tabular-nums" data-testid="top-category-amount">{formatCurrency(item.amount)}</p>
+          <p className="mt-4 text-2xl font-bold tabular-nums [overflow-wrap:anywhere]" data-testid="top-category-amount">{formatCurrency(item.amount)}</p>
           <div className="mt-3">
             <div className="relative h-1.5 w-full rounded-full bg-muted">
               <div className="absolute inset-y-0 left-0 rounded-full bg-brand" style={{ width: `${share}%` }} />

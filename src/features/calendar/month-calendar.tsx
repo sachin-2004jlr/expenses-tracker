@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Amount } from "@/components/shared/money";
 import { TransactionListItem } from "@/features/transactions/transaction-list-item";
@@ -79,25 +79,31 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
         aria-label={`${formatIsoDate(day, "EEEE d MMMM yyyy")}${totals ? `, ${totals.count} transaction${totals.count === 1 ? "" : "s"}` : ""}`}
         aria-pressed={isSelected}
         className={cn(
-          "flex flex-col rounded-lg border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-          compact ? "min-h-14 sm:min-h-20" : "min-h-24",
+          "flex min-w-0 flex-col rounded-lg border p-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:p-1.5",
+          compact ? "min-h-11 sm:min-h-20" : "min-h-16 sm:min-h-24",
           inMonth ? "bg-card hover:bg-muted" : "bg-muted/30 text-muted-foreground hover:bg-muted/60",
           isSelected ? "border-foreground/40 ring-1 ring-foreground/20" : "border-border",
         )}
       >
         <span
           className={cn(
-            "inline-flex size-6 items-center justify-center rounded-full text-xs font-medium tabular-nums",
+            "inline-flex size-5 items-center justify-center rounded-full text-[11px] font-medium tabular-nums sm:size-6 sm:text-xs",
             isToday && "bg-primary text-primary-foreground",
           )}
         >
           {Number(day.slice(8, 10))}
         </span>
         {totals && (
-          <span className="mt-auto flex flex-col gap-0.5 text-[10px] leading-tight tabular-nums sm:text-[11px]">
-            {totals.income > 0 && <span className="truncate text-income-foreground">+{formatCompactCurrency(totals.income)}</span>}
-            {totals.expenses > 0 && <span className="truncate text-expense-foreground">−{formatCompactCurrency(totals.expenses)}</span>}
-          </span>
+          <>
+            <span className="mt-auto flex gap-1 pt-1 sm:hidden" aria-hidden>
+              {totals.income > 0 && <span className="size-1.5 rounded-full bg-income" />}
+              {totals.expenses > 0 && <span className="size-1.5 rounded-full bg-expense" />}
+            </span>
+            <span className="mt-auto hidden min-w-0 flex-col gap-0.5 text-[11px] leading-tight tabular-nums sm:flex">
+              {totals.income > 0 && <span className="truncate text-income-foreground">+{formatCompactCurrency(totals.income)}</span>}
+              {totals.expenses > 0 && <span className="truncate text-expense-foreground">−{formatCompactCurrency(totals.expenses)}</span>}
+            </span>
+          </>
         )}
         {totals && compact && (
           <span className="sr-only">
@@ -110,11 +116,11 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_22rem]">
-      <Card>
+      <Card className="max-sm:[--card-spacing:--spacing(3)]">
         <CardHeader>
           <CardTitle>{view === "month" ? "Month" : "Week"} view</CardTitle>
           <CardDescription>Tap a day to see its transactions.</CardDescription>
-          <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+          <CardAction>
             <div role="radiogroup" aria-label="Calendar view" className="inline-flex items-center rounded-lg bg-muted p-0.5">
               {(["month", "week"] as const).map((option) => (
                 <button
@@ -132,20 +138,20 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
                 </button>
               ))}
             </div>
-          </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
-          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:gap-1 sm:text-[11px]">
             {labels.map((label) => (
               <div key={label}>{label}</div>
             ))}
           </div>
           {view === "month" ? (
-            <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Calendar">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1" role="grid" aria-label="Calendar">
               {grid.flat().map((day) => renderCell(day, true))}
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Week">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1" role="grid" aria-label="Week">
               {week.map((day) => renderCell(day, false))}
             </div>
           )}
@@ -173,12 +179,12 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
               "No transactions on this day."
             )}
           </CardDescription>
-          <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+          <CardAction>
             <Button size="sm" variant="outline" onClick={() => openCreate({ date: selected })}>
               <Plus data-icon="inline-start" aria-hidden />
               Add
             </Button>
-          </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
           {selectedTotals ? (

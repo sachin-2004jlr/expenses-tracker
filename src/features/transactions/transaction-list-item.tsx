@@ -41,14 +41,14 @@ export function TransactionListItem({
     >
       <CategoryIcon icon={transaction.category.icon} color={transaction.category.color} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{transaction.description}</span>
+        <span className="line-clamp-2 hyphens-auto break-words text-sm font-medium">{transaction.description}</span>
         <span className="block truncate text-xs text-muted-foreground">
           {transaction.category.name}
           {showDate && <> · {dateLabel}</>}
           {transaction.tags.length > 0 && <> · {transaction.tags.map((t) => `#${t.name}`).join(" ")}</>}
         </span>
       </span>
-      <Amount paise={transaction.amount} type={transaction.type} className="shrink-0 text-sm font-semibold" />
+      <Amount paise={transaction.amount} type={transaction.type} className="shrink-0 whitespace-nowrap text-sm font-semibold" />
     </button>
   );
 }

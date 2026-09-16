@@ -26,9 +26,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <BrandLogo />
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-16">
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl shadow-black/30">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl shadow-black/30 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Welcome back</p>
-          <h1 className="display-heading mt-2 text-4xl text-foreground">
+          <h1 className="display-heading mt-2 text-[2rem] text-foreground sm:text-4xl">
             Sign in to
             <br />
             your money

@@ -51,13 +51,13 @@ export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, 
   const last = data[data.length - 1];
 
   return (
-    <section className={cn("rounded-2xl border border-border bg-card p-5 sm:p-6", className)} aria-label="Total balance">
+    <section className={cn("min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6", className)} aria-label="Total balance">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Total balance</h2>
           <p className="text-xs text-muted-foreground">All-time income minus expenses</p>
           <p className="mt-3 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="total-balance">
-            <span className={cn("text-3xl sm:text-4xl", totalBalance < 0 && "text-expense-foreground")}>
+            <span className={cn("text-3xl [overflow-wrap:anywhere] sm:text-4xl", totalBalance < 0 && "text-expense-foreground")}>
               {parts.sign}
               {parts.symbol}
               {parts.integer}
