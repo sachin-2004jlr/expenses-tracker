@@ -13,7 +13,7 @@ import { transactionInputSchema, type TransactionInput } from "@/lib/validation/
 import type { Transaction } from "@/types";
 
 function refreshAll(): void {
-  // Every page derives from transactions (dashboard, calendar, analytics, AI cache).
+  // Every page derives from transactions (dashboard, calendar, analytics).
   revalidatePath("/", "layout");
 }
 

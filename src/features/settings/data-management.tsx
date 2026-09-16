@@ -194,7 +194,7 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
       <Card className="ring-destructive/25">
         <CardHeader>
           <CardTitle className="text-destructive">Clear data</CardTitle>
-          <CardDescription>Delete all transactions, tags, recurring rules and cached AI insights. Export a backup first.</CardDescription>
+          <CardDescription>Delete all transactions, tags and recurring rules. Export a backup first.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-4">
           <label className="flex items-center gap-2 text-sm">

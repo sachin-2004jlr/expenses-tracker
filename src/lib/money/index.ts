@@ -60,7 +60,7 @@ export function rupeesToPaise(rupees: string | number): Paise {
   return result;
 }
 
-/** Convert paise to a rupee number. Only for display or for handing facts to the AI layer. */
+/** Convert paise to a rupee number. Only for display. */
 export function paiseToRupees(paise: Paise): number {
   return paise / PAISE_PER_RUPEE;
 }

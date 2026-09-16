@@ -3,61 +3,50 @@ import { DEFAULT_CATEGORIES } from "@/lib/db/defaults";
 import { newId } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { defaultSettingsDoc } from "./settings";
 
 /**
  * Account documents (e-mail + password) and their default data. Kept separate from `user.ts`
  * so the auth layer can import it without a circular dependency.
  */
 
+function isDuplicateKey(error: unknown): boolean {
+  return (error as { code?: number }).code === 11000;
+}
+
 /** Idempotently create default categories and a settings document for a user. */
 export async function ensureUserDefaults(db: Db, userId: string): Promise<void> {
   const now = new Date();
   const hasCategories = await db.categories.countDocuments({ userId }, { limit: 1 });
   if (hasCategories === 0) {
-    await db.categories.insertMany(
-      DEFAULT_CATEGORIES.map((category, index) => ({
-        _id: newId(),
-        userId,
-        name: category.name,
-        nameLower: category.name.toLowerCase(),
-        type: category.type,
-        icon: category.icon,
-        color: category.color,
-        isDefault: true,
-        sortOrder: index,
-        createdAt: now,
-        updatedAt: now,
-      })),
-      { ordered: false },
-    ).catch((error: unknown) => {
-      // Duplicate-key errors mean a parallel request seeded first; that is fine.
-      if ((error as { code?: number }).code !== 11000) throw error;
-    });
+    await db.categories
+      .insertMany(
+        DEFAULT_CATEGORIES.map((category, index) => ({
+          _id: newId(),
+          userId,
+          name: category.name,
+          nameLower: category.name.toLowerCase(),
+          type: category.type,
+          icon: category.icon,
+          color: category.color,
+          isDefault: true,
+          sortOrder: index,
+          createdAt: now,
+          updatedAt: now,
+        })),
+        { ordered: false },
+      )
+      .catch((error: unknown) => {
+        // Duplicate-key errors mean a parallel request seeded first; that is fine.
+        if (!isDuplicateKey(error)) throw error;
+      });
   }
 
   const hasSettings = await db.settings.countDocuments({ userId }, { limit: 1 });
   if (hasSettings === 0) {
-    const provider = process.env.AI_PROVIDER;
-    await db.settings
-      .insertOne({
-        _id: newId(),
-        userId,
-        currency: "INR",
-        locale: "en-IN",
-        dateFormat: "dd MMM yyyy",
-        firstDayOfWeek: 1,
-        timeZone: process.env.APP_TIMEZONE || "Asia/Kolkata",
-        aiEnabled: true,
-        aiProvider: provider === "openai-compatible" || provider === "mock" ? provider : "ollama",
-        ollamaUrl: (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, ""),
-        ollamaModel: process.env.OLLAMA_MODEL || null,
-        aiAutoAnalyze: false,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .catch((error: unknown) => {
-        if ((error as { code?: number }).code !== 11000) throw error;
-      });
+    await db.settings.insertOne(defaultSettingsDoc(userId)).catch((error: unknown) => {
+      if (!isDuplicateKey(error)) throw error;
+    });
   }
 }
 
@@ -105,7 +94,7 @@ export async function createUserWithPassword(input: { name: string; email: strin
       updatedAt: now,
     });
   } catch (error) {
-    if ((error as { code?: number }).code === 11000) throw AppError.conflict("An account with this e-mail already exists");
+    if (isDuplicateKey(error)) throw AppError.conflict("An account with this e-mail already exists");
     throw error;
   }
   await ensureUserDefaults(db, id);

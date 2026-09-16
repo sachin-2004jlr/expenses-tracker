@@ -56,7 +56,7 @@
     "typescript": "^5",
     "vitest": "^5.0.0"
   },
-  "description": "Personal AI-powered expense tracker (INR) built with Next.js, MongoDB and Ollama",
+  "description": "Personal expense tracker (INR) built with Next.js and MongoDB",
   "engines": {
     "node": ">=20.9.0"
   },

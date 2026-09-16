@@ -64,7 +64,7 @@ export function MobileNav() {
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <SheetHeader>
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Analytics, AI assistant and settings</SheetDescription>
+            <SheetDescription>Analytics and settings</SheetDescription>
           </SheetHeader>
           <ul className="grid grid-cols-3 gap-2 px-4">
             {MORE_ITEMS.map((item) => {

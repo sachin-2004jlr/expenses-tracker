@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { E2E_USER } from "./fixtures";
 
 /**
- * End-to-end flow against a production build with a fresh in-memory database and the mock AI
- * provider. The `setup` project has registered E2E_USER; these tests reuse its session and run
+ * End-to-end flow against a production build with a fresh in-memory database.
+ * The `setup` project has registered E2E_USER; these tests reuse its session and run
  * serially because they build on each other (add → edit → duplicate → delete).
  */
 test.describe.configure({ mode: "serial" });
@@ -207,23 +207,6 @@ test("analytics renders totals and breakdowns", async ({ page }) => {
   await expect(page.getByText(/last 12 months/).first()).toBeVisible();
 });
 
-test("AI summary uses the mock provider", async ({ page }) => {
-  await page.goto("/dashboard");
-  const card = page.getByTestId("ai-summary-card");
-  await expect(card).toContainText("Mock AI");
-  await page.getByTestId("analyze-button").click();
-  await expect(page.getByTestId("ai-insight")).toContainText("Based on your tracked data");
-  await expect(page.getByTestId("ai-insight")).toContainText("₹55,000");
-});
-
-test("AI assistant answers with app-computed figures", async ({ page }) => {
-  await page.goto("/assistant");
-  await page.getByRole("button", { name: "How much did I spend this month?" }).click();
-  await expect(page.getByRole("log")).toContainText("Based on your tracked data");
-  await expect(page.getByRole("log")).toContainText("₹900");
-  await expect(page.getByRole("log")).toContainText("Figures computed by the app");
-});
-
 test("export JSON backup", async ({ request }) => {
   const response = await request.get("/api/export?format=json");
   expect(response.ok()).toBeTruthy();
@@ -235,12 +218,10 @@ test("export JSON backup", async ({ request }) => {
   expect(await csv.text()).toContain("Dinner at Swiggy");
 });
 
-test("settings: categories, AI status and account", async ({ page }) => {
+test("settings: categories, data and account", async ({ page }) => {
   await page.goto("/settings?tab=categories");
   await expect(page.getByText("Expense categories")).toBeVisible();
   await expect(page.getByText("Food", { exact: true })).toBeVisible();
-  await page.goto("/settings?tab=ai");
-  await expect(page.getByText("Mock AI (testing)").first()).toBeVisible();
   await page.goto("/settings?tab=data");
   await expect(page.getByText("Export JSON backup")).toBeVisible();
 

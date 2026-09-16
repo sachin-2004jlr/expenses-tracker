@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { ChevronDown, LogOut, Plus, Search, Settings, Sparkles, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, Plus, Search, Settings, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -82,11 +82,6 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
 
       <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transactions" />} className="hidden rounded-full md:inline-flex">
         View all
-      </Button>
-
-      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/assistant" />} className="hidden rounded-full xl:inline-flex" aria-label="AI assistant">
-        <Sparkles data-icon="inline-start" className="text-brand" aria-hidden />
-        Assistant
       </Button>
 
       <DropdownMenu>

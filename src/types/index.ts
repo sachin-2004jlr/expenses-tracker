@@ -5,7 +5,6 @@
 
 export type TransactionType = "INCOME" | "EXPENSE";
 export type RecurrenceFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-export type InsightKind = "MONTHLY" | "SPENDING" | "COMPARISON";
 
 /** ISO calendar date, YYYY-MM-DD. */
 export type IsoDate = string;
@@ -81,11 +80,6 @@ export interface AppSettings {
   dateFormat: string;
   firstDayOfWeek: 0 | 1;
   timeZone: string;
-  aiEnabled: boolean;
-  aiProvider: "ollama" | "openai-compatible" | "mock";
-  ollamaUrl: string;
-  ollamaModel: string | null;
-  aiAutoAnalyze: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,56 +174,4 @@ export interface AnalyticsOverview {
   comparison: MonthlyComparison;
   bestMonth: MonthTotals | null;
   worstMonth: MonthTotals | null;
-}
-
-// ---------------------------------------------------------------------------
-// AI
-// ---------------------------------------------------------------------------
-
-export type FinancialHealth = "excellent" | "good" | "fair" | "concerning" | "unknown";
-
-export interface AiInsight {
-  summary: string;
-  highlights: string[];
-  concerns: string[];
-  recommendations: string[];
-  financialHealth: FinancialHealth;
-}
-
-export interface AiInsightResult {
-  kind: InsightKind;
-  month: MonthKey;
-  insight: AiInsight;
-  provider: string;
-  model: string;
-  generatedAt: string;
-  cached: boolean;
-  /** True when the model returned unstructured text and we fell back to plain summary. */
-  degraded: boolean;
-}
-
-export interface AiModelInfo {
-  name: string;
-  family?: string;
-  parameterSize?: string;
-  sizeBytes?: number;
-}
-
-export interface AiStatus {
-  enabled: boolean;
-  provider: string;
-  providerLabel: string;
-  available: boolean;
-  models: AiModelInfo[];
-  selectedModel: string | null;
-  endpoint: string | null;
-  /** Human readable reason when unavailable. */
-  message: string | null;
-  checkedAt: string;
-  isLocal: boolean;
-}
-
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
 }

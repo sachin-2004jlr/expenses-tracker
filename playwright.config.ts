@@ -5,8 +5,8 @@ const BASE_URL = `http://localhost:${PORT}`;
 const STORAGE_STATE = "e2e/.auth/user.json";
 
 /**
- * End-to-end tests run against a production build with a throwaway in-memory MongoDB and the
- * mock AI provider, so neither a MongoDB server nor Ollama is required (CI-safe).
+ * End-to-end tests run against a production build with a throwaway in-memory MongoDB, so no
+ * MongoDB server is required (CI-safe).
  * The `setup` project registers an account and saves its session; the main project reuses it.
  */
 export default defineConfig({
@@ -43,7 +43,6 @@ export default defineConfig({
     env: {
       AUTH_SECRET: "e2e-only-secret-not-for-production",
       AUTH_ALLOWED_EMAILS: "",
-      AI_PROVIDER: "mock",
       // Throwaway in-memory MongoDB (mongodb-memory-server) so no local server is needed.
       DATABASE_URL: "memory://",
       APP_TIMEZONE: "Asia/Kolkata",

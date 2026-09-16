@@ -1,4 +1,4 @@
-import { ArrowLeftRight, CalendarDays, ChartColumn, LayoutDashboard, Settings, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, ChartColumn, LayoutDashboard, Settings, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -15,7 +15,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight, short: "Activity" },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/analytics", label: "Analytics", icon: ChartColumn },
-  { href: "/assistant", label: "AI Assistant", icon: Sparkles, short: "Assistant" },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -24,4 +23,4 @@ export function isActivePath(pathname: string, href: string): boolean {
 }
 
 /** Pages that are scoped to a month and therefore show the month selector in the top bar. */
-export const MONTH_SCOPED_PATHS = [DASHBOARD_PATH, "/calendar", "/analytics", "/assistant"];
+export const MONTH_SCOPED_PATHS = [DASHBOARD_PATH, "/calendar", "/analytics"];

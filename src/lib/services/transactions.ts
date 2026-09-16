@@ -6,7 +6,6 @@ import { AppError } from "@/lib/errors";
 import { transactionInputSchema, type TransactionFilters, type TransactionInput } from "@/lib/validation/transaction";
 import type { IsoDate, Transaction } from "@/types";
 import { toCategory } from "./categories";
-import { invalidateInsightsForMonths } from "./insights-cache";
 import { normaliseTags } from "./tags";
 
 export interface TransactionListResult {
@@ -215,13 +214,12 @@ export async function createTransaction(userId: string, rawInput: TransactionInp
     updatedAt: now,
   };
   await db.transactions.insertOne(doc);
-  await invalidateInsightsForMonths(userId, [monthKeyOf(input.date)]);
   return getTransaction(userId, doc._id);
 }
 
 export async function updateTransaction(userId: string, id: string, rawInput: TransactionInput): Promise<Transaction> {
   const input = transactionInputSchema.parse(rawInput);
-  const existing = await getTransaction(userId, id);
+  await getTransaction(userId, id);
   await assertCategory(userId, input.categoryId, input.type);
   const db = await getDb();
   await db.transactions.updateOne(
@@ -239,7 +237,6 @@ export async function updateTransaction(userId: string, id: string, rawInput: Tr
       },
     },
   );
-  await invalidateInsightsForMonths(userId, [monthKeyOf(existing.date), monthKeyOf(input.date)]);
   return getTransaction(userId, id);
 }
 
@@ -247,7 +244,6 @@ export async function deleteTransaction(userId: string, id: string): Promise<{ i
   const existing = await getTransaction(userId, id);
   const db = await getDb();
   await db.transactions.deleteOne({ _id: id, userId });
-  await invalidateInsightsForMonths(userId, [monthKeyOf(existing.date)]);
   return { id, month: monthKeyOf(existing.date) };
 }
 
@@ -274,12 +270,11 @@ export interface ClearDataOptions {
   resetCategories?: boolean;
 }
 
-/** Delete every transaction, recurring rule and cached insight for a user. */
+/** Delete every transaction and recurring rule for a user. */
 export async function clearUserData(userId: string, options: ClearDataOptions = {}): Promise<{ transactions: number }> {
   const db = await getDb();
   const deleted = await db.transactions.deleteMany({ userId });
   await db.recurring.deleteMany({ userId });
-  await db.insights.deleteMany({ userId });
   if (options.resetCategories) await db.categories.deleteMany({ userId });
   return { transactions: deleted.deletedCount };
 }

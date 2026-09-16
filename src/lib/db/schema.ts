@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { AiInsight, InsightKind, RecurrenceFrequency, TransactionType } from "@/types";
+import type { RecurrenceFrequency, TransactionType } from "@/types";
 
 /**
  * MongoDB document shapes and collection names.
@@ -17,7 +17,6 @@ export const COLLECTIONS = {
   categories: "categories",
   transactions: "transactions",
   recurring: "recurring_transactions",
-  insights: "ai_insights",
   settings: "app_settings",
 } as const;
 
@@ -86,18 +85,6 @@ export interface RecurringDoc extends Timestamps {
   isActive: boolean;
 }
 
-export interface AiInsightDoc extends Timestamps {
-  _id: string;
-  userId: string;
-  kind: InsightKind;
-  /** YYYY-MM */
-  monthKey: string;
-  dataHash: string;
-  provider: string;
-  model: string;
-  content: AiInsight;
-}
-
 export interface AppSettingsDoc extends Timestamps {
   _id: string;
   userId: string;
@@ -106,9 +93,4 @@ export interface AppSettingsDoc extends Timestamps {
   dateFormat: string;
   firstDayOfWeek: number;
   timeZone: string;
-  aiEnabled: boolean;
-  aiProvider: string;
-  ollamaUrl: string;
-  ollamaModel: string | null;
-  aiAutoAnalyze: boolean;
 }

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AiSummaryCard } from "@/features/ai/ai-summary-card";
 import { BalanceHero } from "@/features/dashboard/balance-hero";
 import { CategoryDonut } from "@/features/dashboard/category-donut";
 import { ExpenseCard } from "@/features/dashboard/expense-card";
@@ -10,7 +9,6 @@ import { QuickActions } from "@/features/dashboard/quick-actions";
 import { RecentOperations } from "@/features/dashboard/recent-operations";
 import { SavingsGauge } from "@/features/dashboard/savings-gauge";
 import { TopCategoryCard } from "@/features/dashboard/top-category-card";
-import { getCachedInsight } from "@/lib/ai/insights";
 import { getDashboardSummary } from "@/lib/analytics/queries";
 import { currentHour, daysInMonth, formatMonthLabel, greetingForHour, parseIsoDate, parseMonthKey } from "@/lib/dates";
 import { loadAppContext, resolveMonthParam } from "@/lib/services/bootstrap";
@@ -21,10 +19,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const context = await loadAppContext();
   const month = resolveMonthParam(params.month, context.currentMonth);
-  const [summary, cachedInsight] = await Promise.all([
-    getDashboardSummary(context.userId, month, context.today),
-    getCachedInsight(context.userId, "MONTHLY", month).catch(() => null),
-  ]);
+  const summary = await getDashboardSummary(context.userId, month, context.today);
 
   const { year, month: monthNumber } = parseMonthKey(month);
   const daysElapsed = month === context.currentMonth ? parseIsoDate(context.today).day : daysInMonth(year, monthNumber);
@@ -81,15 +76,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <CategoryDonut items={summary.expenseCategories} month={month} />
         <MonthlyComparisonCard comparison={summary.comparison} />
       </div>
-
-      <AiSummaryCard
-        key={`ai-${month}`}
-        month={month}
-        initial={cachedInsight}
-        hasData={summary.current.transactionCount > 0}
-        aiEnabled={context.settings.aiEnabled}
-        autoAnalyze={context.settings.aiAutoAnalyze}
-      />
     </div>
   );
 }

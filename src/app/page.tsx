@@ -3,14 +3,14 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  BrainCircuit,
   CalendarDays,
   ChartColumn,
   Download,
   Lock,
   Repeat,
+  Search,
   ShieldCheck,
-  Sparkles,
+  Tags,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -41,7 +41,7 @@ const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: Wallet, title: "Five-second entries", text: "One button, amount auto-focused, category and tags. Income or expense, done before the chai cools." },
   { icon: ChartColumn, title: "Analytics that add up", text: "Balance, savings rate, category breakdowns and month-over-month deltas, computed in code, never guessed." },
   { icon: CalendarDays, title: "Calendar view", text: "See every rupee on the day it moved. Month and week views with per-day totals." },
-  { icon: BrainCircuit, title: "Local AI insights", text: "Ollama on your own machine explains your month, spots patterns and answers questions. Nothing leaves your laptop." },
+  { icon: Search, title: "Find anything", text: "Search descriptions, notes, categories and tags; filter by type, date range, amount and tag." },
   { icon: Repeat, title: "Recurring rules", text: "Salary, rent, EMIs and subscriptions post themselves on their due dates." },
   { icon: Download, title: "Your data, exportable", text: "JSON backups and CSV exports any time. Import them back with full validation." },
 ];
@@ -49,7 +49,7 @@ const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
 const STEPS = [
   { title: "Create your account", text: "Just an e-mail and a password. No third parties involved." },
   { title: "Add your first transaction", text: "Salary in, dinner out. Categories and tags included." },
-  { title: "Let AI explain your month", text: "Summaries and answers, computed from your real numbers." },
+  { title: "See where it all goes", text: "Dashboard, calendar and analytics, updated the moment you save." },
 ];
 
 export default async function LandingPage() {
@@ -89,7 +89,7 @@ export default async function LandingPage() {
               goes
             </h1>
             <p className="mt-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Income, expenses and savings in ₹, tracked in seconds and explained by AI that runs on your own machine.
+              Income, expenses and savings in ₹, tracked in seconds and explained by clear charts, in a database that is yours.
             </p>
             <div className="mt-10 flex items-center gap-3">
               <Link
@@ -149,14 +149,14 @@ export default async function LandingPage() {
               <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center gap-2">
                   <span className="flex size-8 items-center justify-center rounded-lg bg-brand/15 text-brand">
-                    <Sparkles className="size-4" aria-hidden />
+                    <Tags className="size-4" aria-hidden />
                   </span>
-                  <span className="text-sm font-semibold">AI financial summary</span>
+                  <span className="text-sm font-semibold">Categories and tags</span>
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  &ldquo;This month you received ₹55,000 and spent ₹16,550, saving ₹38,450. Your largest category was Food at ₹4,500. Your savings rate is 69.9%.&rdquo;
+                  Twenty-one ready-made categories with icons and colours, editable to your liking, plus free-form tags like #work, #family or #travel that you can filter by in one click.
                 </p>
-                <p className="mt-4 text-[11px] text-muted-foreground">Figures calculated by the app; the model only writes the words.</p>
+                <p className="mt-4 text-[11px] text-muted-foreground">Delete a category safely: its transactions move to the one you choose.</p>
               </div>
             </div>
           </div>
@@ -190,14 +190,14 @@ export default async function LandingPage() {
               <h2 className="display-heading mt-3 text-4xl sm:text-5xl">
                 Your data.
                 <br />
-                Your machine.
+                Your database.
               </h2>
             </div>
             <ul className="grid gap-4 sm:grid-cols-3">
               {[
                 { icon: Lock, title: "Your database", text: "Transactions live in the MongoDB you configure: the server on your own laptop, or your own Atlas cluster." },
-                { icon: ShieldCheck, title: "Local AI", text: "With Ollama, AI requests are processed on your computer. No financial data goes to a cloud model unless you choose one." },
-                { icon: BrainCircuit, title: "AI never decides", text: "Every total, percentage and comparison is computed by the app. The model only explains the result." },
+                { icon: ShieldCheck, title: "Your account", text: "E-mail and password only. Passwords are hashed, sessions are encrypted cookies, and you can restrict sign-up to your own address." },
+                { icon: Download, title: "Always exportable", text: "Full JSON backups and CSV exports in one click, importable again any time. No lock-in." },
               ].map((item) => {
                 const Icon = item.icon;
                 return (
@@ -228,7 +228,7 @@ export default async function LandingPage() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
           <BrandLogo size="sm" />
-          <p>Personal finance tracker · INR · Local AI via Ollama</p>
+          <p>Personal finance tracker · INR · Your own MongoDB</p>
         </div>
       </footer>
     </div>

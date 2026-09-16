@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, CalendarDays, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, CalendarDays, ChartColumn, type LucideIcon } from "lucide-react";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { cn } from "@/lib/utils";
 import type { MonthKey } from "@/types";
@@ -44,7 +44,7 @@ export function QuickActions({ month, className }: QuickActionsProps) {
       <Tile icon={ArrowDownToLine} label="Add income" onClick={() => openCreate({ type: "INCOME" })} />
       <Tile icon={ArrowUpFromLine} label="Add expense" highlight onClick={() => openCreate({ type: "EXPENSE" })} />
       <Tile icon={CalendarDays} label="Calendar" href={`/calendar?month=${month}`} />
-      <Tile icon={Sparkles} label="Ask AI" href={`/assistant?month=${month}`} />
+      <Tile icon={ChartColumn} label="Analytics" href={`/analytics?month=${month}`} />
     </section>
   );
 }

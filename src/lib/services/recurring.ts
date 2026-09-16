@@ -1,12 +1,11 @@
 import { getDb } from "@/lib/db";
 import { newId, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
-import { addDays, compareIsoDates, monthKeyOf, todayIso } from "@/lib/dates";
+import { addDays, compareIsoDates, todayIso } from "@/lib/dates";
 import { nextOccurrenceOnOrAfter, occurrencesBetween } from "@/lib/dates/recurrence";
 import { AppError } from "@/lib/errors";
 import { recurringInputSchema, type RecurringInput } from "@/lib/validation/recurring";
 import type { IsoDate, RecurringTransaction } from "@/types";
 import { toCategory } from "./categories";
-import { invalidateInsightsForMonths } from "./insights-cache";
 
 function toRecurring(doc: RecurringDoc, category: CategoryDoc): RecurringTransaction {
   return {
@@ -153,7 +152,6 @@ export async function materialiseDueRecurring(userId: string, today: IsoDate = t
   if (due.length === 0) return { created: 0, rulesProcessed: 0 };
 
   let created = 0;
-  const touchedMonths = new Set<string>();
   const now = new Date();
 
   for (const rule of due) {
@@ -176,7 +174,6 @@ export async function materialiseDueRecurring(userId: string, today: IsoDate = t
       }));
       await db.transactions.insertMany(docs);
       created += docs.length;
-      for (const date of dates) touchedMonths.add(monthKeyOf(date));
     }
     const lastRun = dates.length > 0 ? dates[dates.length - 1]! : rule.lastRunDate;
     const nextRunDate = nextOccurrenceOnOrAfter(rule.startDate, rule.frequency, rule.interval, addDays(lastRun ?? rule.nextRunDate, 1));
@@ -186,7 +183,6 @@ export async function materialiseDueRecurring(userId: string, today: IsoDate = t
       { $set: { nextRunDate, lastRunDate: lastRun ?? null, isActive: finished ? false : rule.isActive, updatedAt: now } },
     );
   }
-  if (touchedMonths.size > 0) await invalidateInsightsForMonths(userId, touchedMonths);
 
   return { created, rulesProcessed: due.length };
 }

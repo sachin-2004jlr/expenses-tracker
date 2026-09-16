@@ -1,21 +1,13 @@
 import { MongoClient, type Collection, type Db as MongoDatabase } from "mongodb";
 import { DatabaseUnavailableError } from "./errors";
-import {
-  COLLECTIONS,
-  type AiInsightDoc,
-  type AppSettingsDoc,
-  type CategoryDoc,
-  type RecurringDoc,
-  type TransactionDoc,
-  type UserDoc,
-} from "./schema";
+import { COLLECTIONS, type AppSettingsDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc, type UserDoc } from "./schema";
 
 /**
  * MongoDB access.
  *
  * - `DATABASE_URL` (or `MONGODB_URI`): any MongoDB connection string, e.g.
- *   `mongodb://127.0.0.1:27017/expenses_tracker` locally or an Atlas `mongodb+srv://...` URI
- *   in production. When unset, the local server on 127.0.0.1:27017 is used.
+ *   `mongodb://127.0.0.1:27017/expenses_tracker` locally or an Atlas URI in production.
+ *   When unset, the local server on 127.0.0.1:27017 is used.
  * - `memory://` starts an in-memory MongoDB (mongodb-memory-server) for tests.
  *
  * The client is memoised on `globalThis` so hot reloads do not open new connection pools, and
@@ -32,7 +24,6 @@ export interface Db {
   categories: Collection<CategoryDoc>;
   transactions: Collection<TransactionDoc>;
   recurring: Collection<RecurringDoc>;
-  insights: Collection<AiInsightDoc>;
   settings: Collection<AppSettingsDoc>;
 }
 
@@ -114,7 +105,6 @@ async function initialise(): Promise<Db> {
     categories: database.collection<CategoryDoc>(COLLECTIONS.categories),
     transactions: database.collection<TransactionDoc>(COLLECTIONS.transactions),
     recurring: database.collection<RecurringDoc>(COLLECTIONS.recurring),
-    insights: database.collection<AiInsightDoc>(COLLECTIONS.insights),
     settings: database.collection<AppSettingsDoc>(COLLECTIONS.settings),
   };
   await ensureIndexes(db);
@@ -133,7 +123,6 @@ export async function ensureIndexes(db: Db): Promise<void> {
     db.transactions.createIndex({ userId: 1, tags: 1 }, { name: "transactions_user_tags" }),
     db.transactions.createIndex({ userId: 1, recurringId: 1 }, { name: "transactions_user_recurring", sparse: true }),
     db.recurring.createIndex({ userId: 1, nextRunDate: 1 }, { name: "recurring_user_next_run" }),
-    db.insights.createIndex({ userId: 1, kind: 1, monthKey: 1 }, { unique: true, name: "insights_user_kind_month_unique" }),
     db.settings.createIndex({ userId: 1 }, { unique: true, name: "settings_user_unique" }),
   ]);
 }

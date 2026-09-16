@@ -1,9 +1,9 @@
 /**
- * Small in-memory sliding-window rate limiter for the AI endpoints.
+ * Small in-memory sliding-window rate limiter (used for sign-in and registration attempts).
  *
  * It is per-process (best effort on serverless), which is adequate for a personal app where the
- * goal is to stop a runaway client from hammering a local model, not to defend a public API.
- * Swap in Redis/Upstash for multi-instance deployments.
+ * goal is to slow down brute-force attempts, not to defend a public API. Swap in Redis/Upstash
+ * for multi-instance deployments.
  */
 
 interface Bucket {
@@ -41,8 +41,6 @@ export function checkRateLimit(key: string, options: RateLimitOptions, now = Dat
   bucket.timestamps.push(now);
   return { ok: true, remaining: limit - bucket.timestamps.length, retryAfterSeconds: 0 };
 }
-
-export const AI_RATE_LIMIT: RateLimitOptions = { limit: 30, windowMs: 60_000 };
 
 /** Test helper. */
 export function resetRateLimits(): void {

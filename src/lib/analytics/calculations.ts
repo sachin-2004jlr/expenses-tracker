@@ -17,7 +17,7 @@ import type {
  * Pure financial calculations.
  *
  * These functions are the application's **source of truth** for every number shown in the UI
- * and every fact handed to the AI layer. They operate on integer paise, never on floats, and
+ * (dashboard, calendar, analytics). They operate on integer paise, never on floats, and
  * are covered by unit tests in `calculations.test.ts`.
  */
 

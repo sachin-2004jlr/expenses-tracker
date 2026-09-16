@@ -138,7 +138,6 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
     transactionsDeleted = removed.deletedCount;
     await db.recurring.deleteMany({ userId });
   }
-  await db.insights.deleteMany({ userId });
   await ensureUserDefaults(db, userId);
 
   // Categories: existing by (type, lower(name)); create any that are missing.

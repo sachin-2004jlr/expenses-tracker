@@ -1,16 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { testOllamaConnection } from "@/lib/ai/status";
 import { runAction, type ActionResult } from "@/lib/actions";
+import { getDb } from "@/lib/db";
 import { createCategory, deleteCategory, updateCategory, type DeleteCategoryResult } from "@/lib/services/categories";
 import { getSettings, updateSettings } from "@/lib/services/settings";
 import { clearUserData } from "@/lib/services/transactions";
 import { ensureUserDefaults, getCurrentUserId } from "@/lib/services/user";
-import { getDb } from "@/lib/db";
 import { categoryInputSchema, categoryUpdateSchema, type CategoryInput, type CategoryUpdate } from "@/lib/validation/category";
-import { ollamaTestSchema, settingsUpdateSchema, type SettingsUpdate } from "@/lib/validation/settings";
-import type { AiStatus, AppSettings, Category } from "@/types";
+import { settingsUpdateSchema, type SettingsUpdate } from "@/lib/validation/settings";
+import type { AppSettings, Category } from "@/types";
 
 function refreshAll(): void {
   revalidatePath("/", "layout");
@@ -22,13 +21,6 @@ export async function updateSettingsAction(update: SettingsUpdate): Promise<Acti
     const settings = await updateSettings(userId, settingsUpdateSchema.parse(update));
     refreshAll();
     return settings;
-  });
-}
-
-export async function testOllamaAction(url: string, model: string | null): Promise<ActionResult<AiStatus>> {
-  return runAction(async () => {
-    const parsed = ollamaTestSchema.parse({ url });
-    return testOllamaConnection(parsed.url, model);
   });
 }
 

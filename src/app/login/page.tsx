@@ -37,7 +37,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <LoginForm next={next} />
           <p className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="size-4 text-income" aria-hidden />
-            Private by design: AI runs on your machine through Ollama.
+            Private by design: your data lives in your own MongoDB database.
           </p>
         </div>
       </main>

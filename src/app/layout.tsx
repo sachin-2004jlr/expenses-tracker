@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     default: "Expenses Tracker",
     template: "%s · Expenses Tracker",
   },
-  description: "Know exactly where your money goes. Income, expenses, savings and local AI insights in one private dashboard.",
+  description: "Know exactly where your money goes. Income, expenses, savings and analytics in one private dashboard.",
   applicationName: "Expenses Tracker",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
