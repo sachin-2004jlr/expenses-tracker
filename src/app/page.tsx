@@ -20,7 +20,7 @@ import { IncomeCard } from "@/features/dashboard/income-card";
 import { MonthlyBars } from "@/features/dashboard/monthly-bars";
 import { SavingsGauge } from "@/features/dashboard/savings-gauge";
 import { TopCategoryCard } from "@/features/dashboard/top-category-card";
-import { getCurrentUser, isAuthConfigured } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import type { MonthTotals } from "@/types";
 
 export const metadata: Metadata = {
@@ -47,15 +47,14 @@ const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
 ];
 
 const STEPS = [
-  { title: "Sign in with Google", text: "One click, no passwords to remember." },
+  { title: "Create your account", text: "Just an e-mail and a password. No third parties involved." },
   { title: "Add your first transaction", text: "Salary in, dinner out. Categories and tags included." },
   { title: "Let AI explain your month", text: "Summaries and answers, computed from your real numbers." },
 ];
 
 export default async function LandingPage() {
-  const authEnabled = isAuthConfigured();
-  const user = authEnabled ? await getCurrentUser() : null;
-  const ctaHref = user ? "/dashboard" : authEnabled ? "/login" : "/dashboard";
+  const user = await getCurrentUser();
+  const ctaHref = user ? "/dashboard" : "/register";
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
@@ -73,10 +72,7 @@ export default async function LandingPage() {
             Privacy
           </a>
         </nav>
-        <Link
-          href={user ? "/dashboard" : "/login"}
-          className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
-        >
+        <Link href={user ? "/dashboard" : "/login"} className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent" data-testid="nav-signin">
           {user ? "Dashboard" : "Sign in"}
         </Link>
       </header>

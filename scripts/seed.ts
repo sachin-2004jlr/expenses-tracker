@@ -4,12 +4,13 @@ import { addDays, addMonths, currentMonthKey, monthRange, todayIso } from "../sr
 import { rupeesToPaise } from "../src/lib/money";
 import { listCategories } from "../src/lib/services/categories";
 import { createTransaction, countTransactions } from "../src/lib/services/transactions";
-import { getCurrentUserId } from "../src/lib/services/user";
+import { ensureDemoAccount } from "../src/lib/services/user-identity";
 
 /**
  * Development seed.
  *
- *   npm run db:seed            -> creates the default user, categories and settings only
+ *   npm run db:seed            -> creates the demo account (demo@expenses.local / demo12345)
+ *                                 with default categories and settings
  *   npm run db:seed -- --demo  -> additionally inserts clearly-marked demo transactions
  *
  * Demo data is refused in production unless --force is passed.
@@ -49,9 +50,9 @@ const MONTHLY_TEMPLATE: DemoRow[] = [
 async function main(): Promise<void> {
   console.log(`Seeding ${getDbKind() === "postgres" ? "PostgreSQL" : "local PGlite"} database...`);
   await getDb();
-  const userId = await getCurrentUserId();
-  const categories = await listCategories(userId);
-  console.log(`Default user ready (${categories.length} categories).`);
+  const account = await ensureDemoAccount();
+  const categories = await listCategories(account.id);
+  console.log(`Demo account ready: ${account.email} / ${account.password} (${categories.length} categories).`);
 
   if (!wantDemo) {
     console.log("Done. Pass --demo to insert demo transactions.");
@@ -61,9 +62,9 @@ async function main(): Promise<void> {
     console.error("Refusing to insert demo data into a production database. Pass --force to override.");
     process.exit(1);
   }
-  const existing = await countTransactions(userId);
+  const existing = await countTransactions(account.id);
   if (existing > 0 && !force) {
-    console.error(`Database already has ${existing} transactions. Pass --force to add demo data anyway.`);
+    console.error(`Demo account already has ${existing} transactions. Pass --force to add demo data anyway.`);
     process.exit(1);
   }
 
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
       const category = byName.get(`${row.type}:${row.category.toLowerCase()}`);
       if (!category) continue;
       const rupees = row.type === "INCOME" ? row.rupees : Math.round(row.rupees * variance);
-      await createTransaction(userId, {
+      await createTransaction(account.id, {
         type: row.type,
         amount: rupeesToPaise(rupees),
         description: row.description,
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
       created += 1;
     }
   }
-  console.log(`Inserted ${created} demo transactions tagged "demo".`);
+  console.log(`Inserted ${created} demo transactions tagged "demo" into the demo account.`);
 }
 
 main()

@@ -1,21 +1,28 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
-import { ensureUserForIdentity } from "@/lib/services/user-identity";
+import Credentials from "next-auth/providers/credentials";
+import { authenticateUser } from "@/lib/services/user-identity";
+import { loginSchema } from "@/lib/validation/auth";
 
 /**
- * Authentication (Auth.js v5) with Google sign-in.
+ * Authentication (Auth.js v5) with e-mail + password accounts.
  *
- * - Sessions are JWTs in an encrypted cookie; no session tables are needed.
- * - On sign-in the Google profile is mapped to a row in our `users` table (by e-mail) and that
- *   row's id travels in the token, so every service keeps working with a plain `userId`.
- * - `AUTH_ALLOWED_EMAILS` (comma-separated) restricts who may sign in. Leave it empty to allow
- *   any Google account, each of which gets its own private data.
- * - When the Google credentials are absent the app falls back to a single local user, which
- *   keeps `npm run dev`, tests and CI working with zero configuration.
+ * - Passwords are hashed with scrypt (`lib/password.ts`); accounts live in our `users` table.
+ * - Sessions are JWTs in an encrypted, HttpOnly cookie; no session tables are needed.
+ * - `AUTH_SECRET` signs the cookie. In development a fixed fallback keeps `npm run dev` working
+ *   with zero setup; production refuses to start without a real secret.
+ * - `AUTH_ALLOWED_EMAILS` (comma-separated) optionally restricts who may register.
  */
 
-export function isAuthConfigured(): boolean {
-  return Boolean(process.env.AUTH_SECRET && process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+const DEV_FALLBACK_SECRET = "expenses-tracker-development-only-secret";
+
+export function getAuthSecret(): string | null {
+  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
+  return process.env.NODE_ENV === "production" ? null : DEV_FALLBACK_SECRET;
+}
+
+/** Human-readable configuration problem, or null when sign-in can work. */
+export function authSetupError(): string | null {
+  return getAuthSecret() ? null : "AUTH_SECRET is not set. Generate one with `npx auth secret` and add it to the environment.";
 }
 
 export function allowedEmails(): string[] {
@@ -32,28 +39,37 @@ export function isEmailAllowed(email: string | null | undefined): boolean {
 }
 
 const config: NextAuthConfig = {
-  providers: isAuthConfigured()
-    ? [
-        Google({
-          clientId: process.env.AUTH_GOOGLE_ID,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET,
-          authorization: { params: { prompt: "select_account" } },
-        }),
-      ]
-    : [],
+  secret: getAuthSecret() ?? undefined,
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: "E-mail", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+        const account = await authenticateUser(parsed.data.email, parsed.data.password);
+        if (!account) return null;
+        return { id: account.id, email: account.email, name: account.name, image: account.image };
+      },
+    }),
+  ],
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: { signIn: "/login", error: "/login" },
   trustHost: true,
   callbacks: {
-    async signIn({ user }) {
-      return isEmailAllowed(user.email);
-    },
-    async jwt({ token, user }) {
-      // `user` is only present on the sign-in request: map the identity to our users table.
-      if (user?.email) {
-        token.userId = await ensureUserForIdentity({ email: user.email, name: user.name, image: user.image });
-        token.picture = user.image ?? token.picture;
+    async jwt({ token, user, trigger, session }) {
+      // `user` is only present on the sign-in request.
+      if (user?.id) {
+        token.userId = user.id;
         token.name = user.name ?? token.name;
+        token.email = user.email ?? token.email;
+        token.picture = user.image ?? token.picture;
+      }
+      // Allow the client to refresh the name after a profile update (session.update()).
+      if (trigger === "update" && session && typeof session === "object" && "name" in session) {
+        token.name = (session as { name?: string }).name ?? token.name;
       }
       return token;
     },
@@ -73,9 +89,9 @@ export interface CurrentUser {
   image: string | null;
 }
 
-/** The signed-in user for display purposes, or the local placeholder when auth is off. */
+/** The signed-in user for display purposes, or null. */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  if (!isAuthConfigured()) return null;
+  if (!getAuthSecret()) return null;
   const session = await auth();
   if (!session?.user?.id) return null;
   return {

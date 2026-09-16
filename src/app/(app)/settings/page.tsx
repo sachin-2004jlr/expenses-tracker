@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Database, Palette, Repeat, Settings2, Sparkles, Tags } from "lucide-react";
+import { Database, Palette, Repeat, Settings2, Sparkles, Tags, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
+import { AccountSettings } from "@/features/settings/account-settings";
 import { AiSettings } from "@/features/settings/ai-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { CategoryManager } from "@/features/settings/category-manager";
@@ -9,16 +10,19 @@ import { DataManagement } from "@/features/settings/data-management";
 import { GeneralSettings } from "@/features/settings/general-settings";
 import { RecurringManager } from "@/features/settings/recurring-manager";
 import { getAiStatus } from "@/lib/ai/status";
+import { getCurrentUser } from "@/lib/auth";
 import { loadAppContext } from "@/lib/services/bootstrap";
 import { listCategoriesWithStats } from "@/lib/services/categories";
 import { listRecurring } from "@/lib/services/recurring";
 import { countTransactions } from "@/lib/services/transactions";
+import { getUserProfile } from "@/lib/services/user-identity";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Settings" };
 
 const TABS = [
   { id: "general", label: "General", icon: Settings2 },
+  { id: "account", label: "Account", icon: UserRound },
   { id: "categories", label: "Categories", icon: Tags },
   { id: "recurring", label: "Recurring", icon: Repeat },
   { id: "ai", label: "AI", icon: Sparkles },
@@ -40,6 +44,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
   let panel: React.ReactNode;
   switch (tab) {
+    case "account": {
+      const [sessionUser, profile] = await Promise.all([getCurrentUser(), getUserProfile(context.userId)]);
+      const user = {
+        id: context.userId,
+        name: profile?.name ?? sessionUser?.name ?? null,
+        email: profile?.email ?? sessionUser?.email ?? null,
+        image: profile?.image ?? sessionUser?.image ?? null,
+      };
+      panel = <AccountSettings user={user} />;
+      break;
+    }
     case "categories": {
       const categories = await listCategoriesWithStats(context.userId);
       panel = <CategoryManager categories={categories} />;
@@ -70,7 +85,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Settings" description="Preferences, categories, recurring rules, AI and your data." />
+      <PageHeader title="Settings" description="Preferences, account, categories, recurring rules, AI and your data." />
       <div className="grid gap-5 lg:grid-cols-[13rem_1fr]">
         <nav aria-label="Settings sections" className="-mx-1 overflow-x-auto lg:mx-0">
           <ul className="flex gap-1 px-1 lg:flex-col">
@@ -84,7 +99,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                      active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                      active ? "bg-brand/12 text-brand" : "text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local dev server log
 *.log
+
+# playwright auth state
+/e2e/.auth/

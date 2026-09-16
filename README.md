@@ -1,6 +1,6 @@
 # Expenses Tracker
 
-A personal finance tracker for income, expenses, savings and monthly budgets in **Indian Rupees (₹, en-IN)**, with **local AI insights powered by Ollama** and **Google sign-in**. Dark, trading-desk style interface. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, Auth.js and PostgreSQL. Deploys to Vercel.
+A personal finance tracker for income, expenses, savings and monthly budgets in **Indian Rupees (₹, en-IN)**, with **local AI insights powered by Ollama** and **e-mail + password accounts**. Dark, trading-desk style interface. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, Auth.js and PostgreSQL. Deploys to Vercel.
 
 Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
@@ -11,7 +11,7 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 ## Features
 
 - **Landing page** (`/`) with a bold uppercase hero, product preview built from the real dashboard cards, feature grid and privacy section.
-- **Google sign-in** (`/login`) through Auth.js. Optional allow-list so only your Google account can log in. Without OAuth keys the app runs in a zero-config local single-user mode.
+- **Accounts** (`/register`, `/login`) with e-mail and password: scrypt-hashed passwords, encrypted session cookies, optional allow-list of e-mail addresses, name and password changes in Settings → Account.
 - **Dashboard** (`/dashboard`): total balance hero with a day-by-day balance line, saved-this-month panel, recent activity with per-day burn rate, quick-action tiles, bright-green income card with trend, expenses card with trend and daily rate, dotted savings-rate gauge, top category with share slider, monthly spending bars (current month highlighted), category donut, month-over-month comparison and the AI financial summary.
 - **Top bar**: month selector pill (previous / next / today, future months allowed), orange add button, global search that jumps to filtered transactions, quick links, account menu with theme switch and sign-out.
 - **Add money in seconds**: income / expense toggle, amount auto-focused, category, date, tags and notes, validated on the client and again on the server. Edit, duplicate and confirmed delete on every transaction.
@@ -29,7 +29,7 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 src/
   app/
     page.tsx                Landing page
-    login/                  Google sign-in page
+    login/  register/       Sign-in and account creation pages
     (app)/                  Signed-in shell: dashboard, transactions, calendar, analytics, assistant, settings
     api/                    Route handlers: auth, transactions, categories, analytics, settings, export, import, ai/*
   components/
@@ -39,7 +39,7 @@ src/
   features/
     auth/  dashboard/  transactions/  calendar/  analytics/  ai/  settings/  recurring/
   lib/
-    auth.ts                 Auth.js configuration (Google provider, JWT sessions, allow-list)
+    auth.ts  password.ts    Auth.js configuration (credentials provider, JWT sessions, allow-list), scrypt hashing
     db/                     Drizzle schema, client (PGlite locally, Postgres in production), migrations
     money/  dates/          Integer-paise money utilities, timezone-safe date helpers, recurrence
     analytics/              Pure financial calculations (tested) + SQL-backed queries
@@ -58,25 +58,22 @@ e2e/                        Playwright tests
 
 **Dates**: transactions store a calendar date (`YYYY-MM-DD`). "Today" and "this month" are resolved in the configured time zone (`Asia/Kolkata` by default).
 
-**Users**: every table carries a `user_id` and every service takes a `userId`. `src/lib/services/user.ts` resolves it from the Auth.js session, or from a single local user when sign-in is not configured.
+**Users**: every table carries a `user_id` and every service takes a `userId`. `src/lib/services/user.ts` resolves it from the Auth.js session; unauthenticated requests get a 401 (API) or a redirect to `/login` (pages).
 
 ## Authentication
 
-Sign-in uses Auth.js v5 with the Google provider and JWT sessions (no session tables). On sign-in the Google profile is matched to a row in `users` by e-mail, so each Google account gets its own private workspace.
+Accounts are e-mail + password, handled by Auth.js v5 with a credentials provider:
 
-1. Generate a secret: `npx auth secret` (or `openssl rand -base64 32`).
-2. In Google Cloud Console create an **OAuth client ID** (Web application) and add the redirect URIs
-   `http://localhost:3000/api/auth/callback/google` and `https://<your-domain>/api/auth/callback/google`.
-3. Put the values in `.env`:
-   ```
-   AUTH_SECRET=...
-   AUTH_GOOGLE_ID=...
-   AUTH_GOOGLE_SECRET=...
-   AUTH_ALLOWED_EMAILS=you@gmail.com
-   ```
-4. Restart `npm run dev`. `/dashboard` and the API now require a session; `/login` offers "Continue with Google".
+- Passwords are hashed with Node's built-in **scrypt** (random salt, timing-safe compare) and stored in `users.password_hash`; nothing is ever stored in plain text.
+- Sessions are JWTs in an encrypted, HttpOnly cookie signed with `AUTH_SECRET` (30-day expiry). No session tables.
+- `/register` creates an account (and its default categories/settings), `/login` signs in, Settings → Account changes the name or password, the account menu signs out.
+- `/dashboard`, every app page and every `/api/*` route require a session (pages redirect to `/login`, the API returns 401).
+- Login attempts are rate-limited (10 per 15 minutes per address) and registrations too (5 per hour per network).
+- `AUTH_ALLOWED_EMAILS` (comma-separated) optionally restricts who may register, which is recommended for a personal finance app that is reachable on the internet.
 
-`AUTH_ALLOWED_EMAILS` (comma-separated) is strongly recommended for a personal finance app. Leave the three `AUTH_*` values empty and the app runs in local single-user mode (used by the tests and CI).
+Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) and put it in `.env` as `AUTH_SECRET`. In development a built-in fallback secret is used when it is missing, so `npm run dev` works immediately; production refuses to serve the app without a real secret and shows a setup screen instead.
+
+`npm run db:seed` creates a demo account (`demo@expenses.local` / `demo12345`) you can sign in with locally.
 
 ## Tech stack
 
@@ -85,7 +82,7 @@ Sign-in uses Auth.js v5 with the Google provider and JWT sessions (no session ta
 | Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript 5 |
 | Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons, Montserrat via `next/font` |
 | Charts | Recharts 3 |
-| Auth | Auth.js v5 (Google), JWT sessions |
+| Auth | Auth.js v5 credentials provider, scrypt password hashing, JWT sessions |
 | Database | PostgreSQL (production) / PGlite embedded Postgres (local dev, tests) |
 | ORM | Drizzle ORM + Drizzle Kit migrations |
 | Validation / forms | Zod 4, React Hook Form |
@@ -151,8 +148,8 @@ See `.env.example`. Never commit `.env`.
 | `DATABASE_SSL` | auto | `disable` for non-TLS hosts |
 | `DB_AUTO_MIGRATE` | `true` | Run migrations on first DB access |
 | `PGLITE_DATA_DIR` | `./.data/pglite` | Local database location; `memory://` for in-memory |
-| `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | empty | Enable Google sign-in (all three required) |
-| `AUTH_ALLOWED_EMAILS` | empty | Comma-separated allow-list of Google accounts |
+| `AUTH_SECRET` | dev fallback | Signs the session cookie; required in production |
+| `AUTH_ALLOWED_EMAILS` | empty | Comma-separated allow-list of e-mail addresses that may register |
 | `AI_PROVIDER` | `ollama` | `ollama` / `openai-compatible` / `mock` |
 | `OLLAMA_URL`, `OLLAMA_MODEL` | `http://localhost:11434`, empty | Ollama endpoint and preferred model |
 | `OPENAI_COMPATIBLE_*` | empty | Hosted OpenAI-style API |
@@ -178,12 +175,12 @@ npm start
 
 1. Create a PostgreSQL database (Neon, Supabase or Vercel Postgres).
 2. Import the GitHub repository in Vercel (framework preset: Next.js).
-3. Environment variables: `DATABASE_URL` (required), `APP_TIMEZONE=Asia/Kolkata`, the three `AUTH_*` values plus `AUTH_ALLOWED_EMAILS` for Google sign-in (add the production callback URL in Google Cloud), and optionally `AI_PROVIDER=openai-compatible` with the `OPENAI_COMPATIBLE_*` values.
+3. Environment variables: `DATABASE_URL` (required), `APP_TIMEZONE=Asia/Kolkata`, `AUTH_SECRET` (required) plus `AUTH_ALLOWED_EMAILS` (recommended), and optionally `AI_PROVIDER=openai-compatible` with the `OPENAI_COMPATIBLE_*` values.
 4. Deploy. Migrations run on the first request.
 
 ## Privacy
 
-Your financial data is stored in your configured database. When using local Ollama, AI requests are processed by your local Ollama instance and never leave your machine. Data is only sent to a third-party AI service if you deliberately configure the OpenAI-compatible provider on the server. Google sign-in is used only to identify you; no Google data other than name, e-mail and avatar is stored.
+Your financial data is stored in your configured database. When using local Ollama, AI requests are processed by your local Ollama instance and never leave your machine. Data is only sent to a third-party AI service if you deliberately configure the OpenAI-compatible provider on the server. Accounts store only your name, e-mail and a scrypt password hash.
 
 ## Known limitations
 

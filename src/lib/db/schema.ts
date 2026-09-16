@@ -45,8 +45,10 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").unique(),
   name: text("name"),
-  /** Avatar URL from the identity provider (Google), if any. */
+  /** Optional avatar URL. */
   image: text("image"),
+  /** scrypt hash of the account password (see lib/auth/password.ts). Null = cannot sign in. */
+  passwordHash: text("password_hash"),
   ...timestamps,
 });
 

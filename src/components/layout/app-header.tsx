@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { ChevronDown, LogOut, Plus, Search, Settings, Sparkles } from "lucide-react";
+import { ChevronDown, LogOut, Plus, Search, Settings, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -26,11 +27,10 @@ import type { MonthKey } from "@/types";
 
 export interface AppHeaderProps {
   user: CurrentUser | null;
-  authEnabled: boolean;
   currentMonth: MonthKey;
 }
 
-export function AppHeader({ user, authEnabled, currentMonth }: AppHeaderProps) {
+export function AppHeader({ user, currentMonth }: AppHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,7 +48,7 @@ export function AppHeader({ user, authEnabled, currentMonth }: AppHeaderProps) {
     router.push(q ? `/transactions?q=${encodeURIComponent(q)}` : "/transactions");
   };
 
-  const displayName = user?.name ?? user?.email ?? "Local user";
+  const displayName = user?.name ?? user?.email ?? "Account";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur supports-backdrop-filter:bg-background/70 sm:gap-3 sm:px-5 lg:px-6">
@@ -62,13 +62,7 @@ export function AppHeader({ user, authEnabled, currentMonth }: AppHeaderProps) {
         <h1 className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold">{current?.label ?? "Expenses"}</h1>
       )}
 
-      <Button
-        size="icon"
-        onClick={() => openCreate()}
-        aria-label="Add transaction"
-        className="rounded-full shadow-glow-brand"
-        data-testid="add-transaction"
-      >
+      <Button size="icon" onClick={() => openCreate()} aria-label="Add transaction" className="rounded-full shadow-glow-brand" data-testid="add-transaction">
         <Plus aria-hidden />
       </Button>
 
@@ -101,6 +95,7 @@ export function AppHeader({ user, authEnabled, currentMonth }: AppHeaderProps) {
             <button
               type="button"
               aria-label="Account menu"
+              data-testid="account-menu"
               className="ml-auto flex h-9 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-2.5 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 md:ml-0"
             />
           }
@@ -110,31 +105,33 @@ export function AppHeader({ user, authEnabled, currentMonth }: AppHeaderProps) {
           <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel className="flex items-center gap-2 py-2">
-            <UserAvatar name={user?.name} email={user?.email} image={user?.image} />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-foreground">{displayName}</span>
-              <span className="block truncate text-xs text-muted-foreground">{authEnabled ? user?.email : "Local mode · sign-in not configured"}</span>
-            </span>
-          </DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex items-center gap-2 py-2">
+              <UserAvatar name={user?.name} email={user?.email} image={user?.image} />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium text-foreground">{displayName}</span>
+                <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>
+              </span>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <div className="flex items-center justify-between px-1.5 py-1 text-sm">
             <span className="text-muted-foreground">Theme</span>
             <ThemeToggle />
           </div>
+          <DropdownMenuItem onClick={() => router.push("/settings?tab=account")}>
+            <UserRound aria-hidden />
+            Account
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/settings")}>
             <Settings aria-hidden />
             Settings
           </DropdownMenuItem>
-          {authEnabled && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={() => void signOutAction()}>
-                <LogOut aria-hidden />
-                Sign out
-              </DropdownMenuItem>
-            </>
-          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => void signOutAction()} data-testid="sign-out">
+            <LogOut aria-hidden />
+            Sign out
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

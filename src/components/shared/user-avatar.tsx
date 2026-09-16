@@ -15,7 +15,7 @@ function initials(name?: string | null, email?: string | null): string {
   return letters.toUpperCase() || "?";
 }
 
-/** Google avatar when available, initials otherwise. Plain <img> avoids next/image domain config. */
+/** Avatar image when available, initials otherwise. Plain <img> avoids next/image domain config. */
 export function UserAvatar({ name, email, image, size = "md", className }: UserAvatarProps) {
   const box = size === "sm" ? "size-7 text-[11px]" : size === "lg" ? "size-12 text-base" : "size-8 text-xs";
   if (image) {

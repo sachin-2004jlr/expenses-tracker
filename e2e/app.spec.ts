@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
+import { E2E_USER } from "./fixtures";
 
 /**
- * End-to-end flow against a fresh in-memory database with the mock AI provider and no Google
- * credentials (local single-user mode). Tests run serially and build on each other.
+ * End-to-end flow against a production build with a fresh in-memory database and the mock AI
+ * provider. The `setup` project has registered E2E_USER; these tests reuse its session and run
+ * serially because they build on each other (add → edit → duplicate → delete).
  */
 test.describe.configure({ mode: "serial" });
 
@@ -26,14 +28,45 @@ async function pickCategory(page: Page, name: string) {
   await page.getByRole("option", { name }).click();
 }
 
-test("landing page and login in local mode", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByTestId("hero-title")).toContainText(/know where/i);
-  await expect(page.getByTestId("cta-primary")).toHaveAttribute("href", "/dashboard");
-  await page.goto("/login");
-  await expect(page.getByText("local single-user mode")).toBeVisible();
-  await page.getByRole("link", { name: "Open dashboard" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+test.describe("signed out", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("landing page points to registration and protected pages redirect to login", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("hero-title")).toContainText(/know where/i);
+    await expect(page.getByTestId("cta-primary")).toHaveAttribute("href", "/register");
+    await expect(page.getByTestId("nav-signin")).toHaveAttribute("href", "/login");
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL(/\/login/);
+    const api = await page.request.get("/api/transactions");
+    expect(api.status()).toBe(401);
+  });
+
+  test("wrong password is rejected, duplicate registration is refused", async ({ page }) => {
+    await page.goto("/login");
+    await page.locator("#login-email").fill(E2E_USER.email);
+    await page.locator("#login-password").fill("definitely-wrong");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toContainText("Incorrect e-mail or password");
+    await expect(page).toHaveURL(/\/login/);
+
+    await page.goto("/register");
+    await page.locator("#reg-name").fill("Someone");
+    await page.locator("#reg-email").fill(E2E_USER.email);
+    await page.locator("#reg-password").fill("another-password-1");
+    await page.locator("#reg-confirm").fill("another-password-1");
+    await page.getByRole("button", { name: "Create account" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toContainText("already exists");
+  });
+
+  test("sign in with the right password lands on the dashboard", async ({ page }) => {
+    await page.goto("/login?next=/analytics");
+    await page.locator("#login-email").fill(E2E_USER.email);
+    await page.locator("#login-password").fill(E2E_USER.password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/analytics$/);
+    await expect(page.getByTestId("account-menu")).toContainText(E2E_USER.name);
+  });
 });
 
 test("dashboard loads with empty state", async ({ page }) => {
@@ -202,7 +235,7 @@ test("export JSON backup", async ({ request }) => {
   expect(await csv.text()).toContain("Dinner at Swiggy");
 });
 
-test("settings: categories and AI status", async ({ page }) => {
+test("settings: categories, AI status and account", async ({ page }) => {
   await page.goto("/settings?tab=categories");
   await expect(page.getByText("Expense categories")).toBeVisible();
   await expect(page.getByText("Food", { exact: true })).toBeVisible();
@@ -210,4 +243,22 @@ test("settings: categories and AI status", async ({ page }) => {
   await expect(page.getByText("Mock AI (testing)").first()).toBeVisible();
   await page.goto("/settings?tab=data");
   await expect(page.getByText("Export JSON backup")).toBeVisible();
+
+  await page.goto("/settings?tab=account");
+  await expect(page.getByText(E2E_USER.email)).toBeVisible();
+  await page.locator("#acct-current").fill("wrong-password");
+  await page.locator("#acct-new").fill("new-password-456");
+  await page.locator("#acct-confirm").fill("new-password-456");
+  await page.getByRole("button", { name: "Update password" }).click();
+  await expect(page.getByText("Current password is incorrect")).toBeVisible();
+});
+
+test("sign out returns to the landing page", async ({ page }) => {
+  await page.goto("/dashboard");
+  await page.getByTestId("account-menu").click();
+  await page.getByTestId("sign-out").click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId("nav-signin")).toHaveAttribute("href", "/login");
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/login/);
 });
