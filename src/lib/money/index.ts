@@ -134,6 +134,27 @@ export function formatCurrency(paise: Paise, options: FormatCurrencyOptions = {}
   return formatter.format(rupees);
 }
 
+export interface CurrencyParts {
+  sign: string;
+  symbol: string;
+  /** Grouped integer part, e.g. "1,24,500". */
+  integer: string;
+  /** Two-digit fraction, e.g. "14". */
+  fraction: string;
+}
+
+/** Split an amount for "big number, small decimals" hero displays: ₹24,511 .14 */
+export function formatCurrencyParts(paise: Paise, options: { locale?: string; currency?: string } = {}): CurrencyParts {
+  const { locale = "en-IN", currency = "INR" } = options;
+  const negative = paise < 0;
+  const abs = Math.abs(paise);
+  const whole = Math.floor(abs / PAISE_PER_RUPEE);
+  const fraction = (abs % PAISE_PER_RUPEE).toString().padStart(2, "0");
+  const integer = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(whole);
+  const symbol = currency === "INR" ? "₹" : `${currency} `;
+  return { sign: negative ? "−" : "", symbol, integer, fraction };
+}
+
 /** Compact Indian-style formatting used for chart axes: ₹55K, ₹1.2L, ₹2.5Cr. */
 export function formatCompactCurrency(
   paise: Paise,

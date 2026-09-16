@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { MonthSelector } from "@/components/shared/month-selector";
 import { PageHeader } from "@/components/shared/page-header";
 import { MonthCalendar } from "@/features/calendar/month-calendar";
 import { formatMonthLabel, isValidIsoDate, monthRange } from "@/lib/dates";
@@ -26,10 +25,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         eyebrow="Calendar"
         description={
           transactions.length === 0
-            ? "No transactions this month yet."
+            ? "No transactions this month yet. Use the month selector in the top bar to move around."
             : `${transactions.length} transactions · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out`
         }
-        actions={<MonthSelector month={month} currentMonth={context.currentMonth} />}
       />
       <MonthCalendar
         key={month}

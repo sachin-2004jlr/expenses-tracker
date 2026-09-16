@@ -22,10 +22,12 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `npm run dev -- --port ${PORT}`,
+    // A production build on its own port: does not conflict with a running `next dev`
+    // (Next.js allows only one dev server per project) and exercises the real build output.
+    command: `npm run build && npm run start -- --port ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: false,
-    timeout: 180_000,
+    timeout: 300_000,
     stdout: "ignore",
     stderr: "pipe",
     env: {

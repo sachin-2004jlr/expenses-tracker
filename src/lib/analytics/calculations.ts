@@ -1,8 +1,9 @@
-import { addMonths, compareIsoDates, monthKeyOf, monthRange, previousMonthKey } from "@/lib/dates";
+import { addDays, addMonths, compareIsoDates, monthKeyOf, monthRange, previousMonthKey } from "@/lib/dates";
 import type {
   Category,
   CategoryBreakdownItem,
   CategoryChange,
+  DailyBalancePoint,
   IsoDate,
   MetricComparison,
   MonthKey,
@@ -241,6 +242,42 @@ export function averageMonthly(series: MonthTotals[]): { income: number; expense
   const income = Math.round(series.reduce((sum, m) => sum + m.income, 0) / series.length);
   const expenses = Math.round(series.reduce((sum, m) => sum + m.expenses, 0) / series.length);
   return { income, expenses, savings: income - expenses };
+}
+
+/**
+ * Day-by-day running balance through a month, starting from `openingBalance` (the all-time
+ * balance the day before the month starts). Days after `untilDate` are omitted, so the current
+ * month stops at today instead of drawing a flat line into the future.
+ */
+export function dailyBalanceSeries(
+  transactions: Iterable<TransactionLike>,
+  month: MonthKey,
+  openingBalance: number,
+  untilDate?: IsoDate | null,
+): DailyBalancePoint[] {
+  const { start, end } = monthRange(month);
+  const last = untilDate && compareIsoDates(untilDate, end) < 0 ? untilDate : end;
+  if (compareIsoDates(last, start) < 0) return [];
+  const perDay = new Map<IsoDate, { income: number; expenses: number }>();
+  for (const tx of transactions) {
+    if (compareIsoDates(tx.date, start) < 0 || compareIsoDates(tx.date, end) > 0) continue;
+    const bucket = perDay.get(tx.date) ?? { income: 0, expenses: 0 };
+    if (tx.type === "INCOME") bucket.income += tx.amount;
+    else bucket.expenses += tx.amount;
+    perDay.set(tx.date, bucket);
+  }
+  const points: DailyBalancePoint[] = [];
+  let balance = openingBalance;
+  let date = start;
+  let guard = 0;
+  while (compareIsoDates(date, last) <= 0 && guard < 62) {
+    const bucket = perDay.get(date) ?? { income: 0, expenses: 0 };
+    balance += bucket.income - bucket.expenses;
+    points.push({ date, balance, income: bucket.income, expenses: bucket.expenses });
+    date = addDays(date, 1);
+    guard += 1;
+  }
+  return points;
 }
 
 /** Month keys covered by a range preset ending at `endMonth`. `null` for "all". */

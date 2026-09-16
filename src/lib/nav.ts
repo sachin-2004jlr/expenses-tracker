@@ -8,8 +8,10 @@ export interface NavItem {
   short?: string;
 }
 
+export const DASHBOARD_PATH = "/dashboard";
+
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, short: "Home" },
+  { href: DASHBOARD_PATH, label: "Dashboard", icon: LayoutDashboard, short: "Home" },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight, short: "Activity" },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/analytics", label: "Analytics", icon: ChartColumn },
@@ -18,6 +20,8 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export function isActivePath(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/** Pages that are scoped to a month and therefore show the month selector in the top bar. */
+export const MONTH_SCOPED_PATHS = [DASHBOARD_PATH, "/calendar", "/analytics", "/assistant"];

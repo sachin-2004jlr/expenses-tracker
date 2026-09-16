@@ -1,7 +1,7 @@
-import { and, asc, count, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, count, eq, gte, lt, lte, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
-import { listMonthKeys, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
+import { listMonthKeys, monthKeyOf, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
 import { listCategories } from "@/lib/services/categories";
 import { listTransactions, listTransactionsInRange } from "@/lib/services/transactions";
 import { transactionFiltersSchema } from "@/lib/validation/transaction";
@@ -9,6 +9,7 @@ import type {
   AnalyticsOverview,
   CategoryBreakdownItem,
   DashboardSummary,
+  IsoDate,
   MonthKey,
   MonthTotals,
   RangePreset,
@@ -20,6 +21,7 @@ import {
   calculateSavings,
   calculateSavingsRate,
   categoryBreakdown,
+  dailyBalanceSeries,
   largestExpenses,
   monthlyComparison,
   monthsForRange,
@@ -63,6 +65,18 @@ export async function getAllTimeTotals(userId: string): Promise<AllTimeTotals> {
     firstMonth: row?.first ? String(row.first).slice(0, 7) : null,
     lastMonth: row?.last ? String(row.last).slice(0, 7) : null,
   };
+}
+
+/** All-time balance from transactions dated strictly before `date`. */
+export async function getBalanceBefore(userId: string, date: IsoDate): Promise<number> {
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      balance: sql<string>`coalesce(sum(case when ${transactions.type} = 'INCOME' then ${transactions.amount} else -${transactions.amount} end), 0)`,
+    })
+    .from(transactions)
+    .where(and(eq(transactions.userId, userId), lt(transactions.date, date)));
+  return Number(row?.balance ?? 0);
 }
 
 /** Month-by-month totals straight from SQL, zero-filled for the requested months. */
@@ -152,13 +166,14 @@ export async function getCategoryTotals(
     .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
 }
 
-export async function getDashboardSummary(userId: string, month: MonthKey): Promise<DashboardSummary> {
+export async function getDashboardSummary(userId: string, month: MonthKey, today?: IsoDate): Promise<DashboardSummary> {
   const previous = previousMonthKey(month);
   const currentRange = monthRange(month);
   const previousRange = monthRange(previous);
 
-  const [allTime, currentTx, previousTx, categories, series] = await Promise.all([
+  const [allTime, openingBalance, currentTx, previousTx, categories, series] = await Promise.all([
     getAllTimeTotals(userId),
+    getBalanceBefore(userId, currentRange.start),
     listTransactionsInRange(userId, currentRange.start, currentRange.end),
     listTransactionsInRange(userId, previousRange.start, previousRange.end),
     listCategories(userId),
@@ -166,11 +181,14 @@ export async function getDashboardSummary(userId: string, month: MonthKey): Prom
   ]);
 
   const bothMonths = [...currentTx, ...previousTx];
+  const untilDate = today && monthKeyOf(today) === month ? today : null;
   return {
     month,
     totalBalance: allTime.balance,
     allTimeIncome: allTime.income,
     allTimeExpenses: allTime.expenses,
+    openingBalance,
+    dailyBalance: dailyBalanceSeries(currentTx, month, openingBalance, untilDate),
     current: calculateMonthTotals(currentTx, month),
     previous: calculateMonthTotals(previousTx, previous),
     comparison: monthlyComparison(bothMonths, month, categories, previous),

@@ -141,11 +141,23 @@ export interface MonthlyComparison {
 
 export type RangePreset = "3m" | "6m" | "12m" | "all";
 
+export interface DailyBalancePoint {
+  date: IsoDate;
+  /** Running balance at the end of this day (all-time). */
+  balance: number;
+  income: number;
+  expenses: number;
+}
+
 export interface DashboardSummary {
   month: MonthKey;
   totalBalance: number;
   allTimeIncome: number;
   allTimeExpenses: number;
+  /** Balance at the start of the selected month. */
+  openingBalance: number;
+  /** Day-by-day running balance through the selected month. */
+  dailyBalance: DailyBalancePoint[];
   current: MonthTotals;
   previous: MonthTotals;
   comparison: MonthlyComparison;

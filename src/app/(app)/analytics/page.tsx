@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ArrowDownRight, ArrowUpRight, PiggyBank, TrendingUp } from "lucide-react";
-import { MonthSelector } from "@/components/shared/month-selector";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { AnalyticsRange } from "@/features/analytics/analytics-range";
@@ -39,13 +38,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       <PageHeader
         title="Analytics"
         eyebrow={`${formatMonthLabel(first, { style: "short" })} – ${formatMonthLabel(last, { style: "short" })}`}
-        description={`Trends and breakdowns for the ${RANGE_LABEL[range]} ending ${formatMonthLabel(month)}.`}
-        actions={
-          <>
-            <AnalyticsRange value={range} />
-            <MonthSelector month={month} currentMonth={context.currentMonth} size="sm" />
-          </>
-        }
+        description={`Trends and breakdowns for the ${RANGE_LABEL[range]} ending ${formatMonthLabel(month)}. Change the end month in the top bar.`}
+        actions={<AnalyticsRange value={range} />}
       />
 
       <section aria-label="Range totals" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

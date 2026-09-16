@@ -1,14 +1,23 @@
 import { asc, eq } from "drizzle-orm";
-import { getDb, type Db } from "@/lib/db";
-import { DEFAULT_CATEGORIES } from "@/lib/db/defaults";
-import { appSettings, categories, users } from "@/lib/db/schema";
+import { cache } from "react";
+import { auth, isAuthConfigured } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { AppError } from "@/lib/errors";
+import { ensureUserDefaults } from "./user-identity";
+
+export { ensureUserDefaults } from "./user-identity";
 
 /**
  * Current-user resolution.
  *
- * The app is single-user today: a "local" user row is created on first run. Every service takes
- * a `userId`, so plugging in real authentication later only changes this file: resolve the user
- * from the session instead of picking the default row.
+ * - When Google sign-in is configured (AUTH_SECRET + AUTH_GOOGLE_ID + AUTH_GOOGLE_SECRET) the
+ *   user comes from the Auth.js session; unauthenticated requests get a 401 AppError, which API
+ *   routes turn into JSON and the app layout turns into a redirect to /login.
+ * - Otherwise (local development, tests, CI) a single "local" user row is used, so the app
+ *   works with zero configuration.
+ *
+ * Every service takes a `userId`, so this file is the only place that knows about sessions.
  */
 
 export const DEFAULT_USER_EMAIL = "local@expenses-tracker.local";
@@ -16,7 +25,19 @@ export const DEFAULT_USER_EMAIL = "local@expenses-tracker.local";
 type UserGlobals = { __expensesUserId?: Promise<string> };
 const globals = globalThis as unknown as UserGlobals;
 
-export function getCurrentUserId(): Promise<string> {
+/** Resolve the current user's id, memoised per request. */
+export const getCurrentUserId = cache(async (): Promise<string> => {
+  if (isAuthConfigured()) {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new AppError(401, "unauthenticated", "Sign in to continue");
+    return userId;
+  }
+  return getDefaultUserId();
+});
+
+/** Id of the zero-config local user (created on first use). */
+export function getDefaultUserId(): Promise<string> {
   if (!globals.__expensesUserId) {
     globals.__expensesUserId = resolveDefaultUser().catch((error: unknown) => {
       globals.__expensesUserId = undefined;
@@ -28,7 +49,12 @@ export function getCurrentUserId(): Promise<string> {
 
 async function resolveDefaultUser(): Promise<string> {
   const db = await getDb();
-  const existing = await db.select({ id: users.id }).from(users).orderBy(asc(users.createdAt)).limit(1);
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, DEFAULT_USER_EMAIL))
+    .orderBy(asc(users.createdAt))
+    .limit(1);
   if (existing[0]) {
     await ensureUserDefaults(db, existing[0].id);
     return existing[0].id;
@@ -44,51 +70,7 @@ async function resolveDefaultUser(): Promise<string> {
   return userId;
 }
 
-/** Idempotently create default categories and a settings row for a user. */
-export async function ensureUserDefaults(db: Db, userId: string): Promise<void> {
-  const existingCategories = await db
-    .select({ id: categories.id })
-    .from(categories)
-    .where(eq(categories.userId, userId))
-    .limit(1);
-  if (existingCategories.length === 0) {
-    await db
-      .insert(categories)
-      .values(
-        DEFAULT_CATEGORIES.map((category, index) => ({
-          userId,
-          name: category.name,
-          type: category.type,
-          icon: category.icon,
-          color: category.color,
-          isDefault: true,
-          sortOrder: index,
-        })),
-      )
-      .onConflictDoNothing();
-  }
-
-  const existingSettings = await db
-    .select({ id: appSettings.id })
-    .from(appSettings)
-    .where(eq(appSettings.userId, userId))
-    .limit(1);
-  if (existingSettings.length === 0) {
-    const provider = process.env.AI_PROVIDER;
-    await db
-      .insert(appSettings)
-      .values({
-        userId,
-        timeZone: process.env.APP_TIMEZONE || "Asia/Kolkata",
-        aiProvider: provider === "openai-compatible" || provider === "mock" ? provider : "ollama",
-        ollamaUrl: (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, ""),
-        ollamaModel: process.env.OLLAMA_MODEL || null,
-      })
-      .onConflictDoNothing({ target: appSettings.userId });
-  }
-}
-
-/** Test/reset helper: forget the memoised user so the next call re-resolves. */
+/** Test/reset helper: forget the memoised local user so the next call re-resolves. */
 export function resetCurrentUserCache(): void {
   globals.__expensesUserId = undefined;
 }

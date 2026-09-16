@@ -45,6 +45,8 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").unique(),
   name: text("name"),
+  /** Avatar URL from the identity provider (Google), if any. */
+  image: text("image"),
   ...timestamps,
 });
 

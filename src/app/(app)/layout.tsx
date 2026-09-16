@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { DatabaseUnavailable } from "@/components/shared/database-unavailable";
+import { auth, getCurrentUser, isAuthConfigured } from "@/lib/auth";
 import { isDatabaseUnavailableError } from "@/lib/db/errors";
 import { loadAppContext, type AppContext } from "@/lib/services/bootstrap";
 
@@ -19,13 +21,28 @@ async function safeLoadContext(): Promise<LoadResult> {
 }
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  const authEnabled = isAuthConfigured();
+  if (authEnabled) {
+    const session = await auth();
+    if (!session?.user?.id) redirect("/login");
+  }
+
   const result = await safeLoadContext();
   if (!result.ok) {
     return <DatabaseUnavailable kind={result.kind} message={result.message} />;
   }
   const { context } = result;
+  const user = await getCurrentUser();
+
   return (
-    <AppShell categories={context.categories} tagSuggestions={context.tagNames} today={context.today}>
+    <AppShell
+      categories={context.categories}
+      tagSuggestions={context.tagNames}
+      today={context.today}
+      currentMonth={context.currentMonth}
+      user={user}
+      authEnabled={authEnabled}
+    >
       {children}
     </AppShell>
   );

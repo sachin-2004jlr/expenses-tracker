@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * End-to-end flow against a fresh in-memory database with the mock AI provider.
- * Tests run serially and build on each other (add → edit → duplicate → delete).
+ * End-to-end flow against a fresh in-memory database with the mock AI provider and no Google
+ * credentials (local single-user mode). Tests run serially and build on each other.
  */
 test.describe.configure({ mode: "serial" });
 
@@ -26,16 +26,26 @@ async function pickCategory(page: Page, name: string) {
   await page.getByRole("option", { name }).click();
 }
 
-test("dashboard loads with empty state", async ({ page }) => {
+test("landing page and login in local mode", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 2 })).toContainText(/Good (morning|afternoon|evening|night)/);
-  await expect(page.getByText("Total balance")).toBeVisible();
+  await expect(page.getByTestId("hero-title")).toContainText(/know where/i);
+  await expect(page.getByTestId("cta-primary")).toHaveAttribute("href", "/dashboard");
+  await page.goto("/login");
+  await expect(page.getByText("local single-user mode")).toBeVisible();
+  await page.getByRole("link", { name: "Open dashboard" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test("dashboard loads with empty state", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { level: 2 }).first()).toContainText(/Good (morning|afternoon|evening|night)/);
+  await expect(page.getByTestId("total-balance")).toContainText("₹0");
   await expect(page.getByText("No transactions yet")).toBeVisible();
   await expect(page.getByText(monthLabel(), { exact: true })).toBeVisible();
 });
 
 test("add income", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/dashboard");
   await openAddDialog(page);
   await page.getByRole("radio", { name: "Income" }).click();
   await expect(page.locator("#tx-amount")).toBeFocused();
@@ -45,11 +55,12 @@ test("add income", async ({ page }) => {
   await page.getByRole("button", { name: "Add income" }).click();
   await expect(page.getByText("Income added")).toBeVisible();
   await expect(page.getByTestId("transaction-form")).toBeHidden();
-  await expect(page.getByLabel("Financial summary")).toContainText("₹55,000");
+  await expect(page.getByTestId("income-amount")).toContainText("₹55,000");
+  await expect(page.getByTestId("total-balance")).toContainText("₹55,000");
 });
 
 test("add expense and see savings", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/dashboard");
   await openAddDialog(page);
   await page.getByRole("radio", { name: "Expense" }).click();
   await page.locator("#tx-amount").fill("850");
@@ -59,14 +70,13 @@ test("add expense and see savings", async ({ page }) => {
   await page.locator("#tx-tags").press("Enter");
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
-  const summary = page.getByLabel("Financial summary");
-  await expect(summary).toContainText("₹850");
-  await expect(summary).toContainText("₹54,150");
-  await expect(summary).toContainText("98.5%");
+  await expect(page.getByTestId("expense-amount")).toContainText("₹850");
+  await expect(page.getByTestId("savings-rate")).toContainText("98.5%");
+  await expect(page.getByTestId("top-category-amount")).toContainText("₹850");
 });
 
 test("validation blocks an empty form", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/dashboard");
   await openAddDialog(page);
   await page.getByRole("button", { name: /Add (expense|income)/ }).click();
   await expect(page.getByText("Amount is required")).toBeVisible();
@@ -78,19 +88,28 @@ test("validation blocks an empty form", async ({ page }) => {
 test("transactions page: search and filter", async ({ page }) => {
   await page.goto("/transactions");
   await expect(page.getByTestId("transaction-row")).toHaveCount(2);
-  await page.getByLabel("Search transactions").fill("dinner");
+  await page.getByTestId("transaction-filters").getByLabel("Search transactions").fill("dinner");
   await expect(page.getByTestId("transaction-row")).toHaveCount(1);
   await expect(page.getByTestId("transaction-row").first()).toContainText("Dinner");
-  await page.getByLabel("Search transactions").fill("");
+  await page.getByTestId("transaction-filters").getByLabel("Search transactions").fill("");
   await expect(page).not.toHaveURL(/q=/);
   await expect(page.getByTestId("transaction-row")).toHaveCount(2);
-  await page.getByRole("radio", { name: "Income" }).click();
+  await page.getByTestId("transaction-filters").getByRole("radio", { name: "Income" }).click();
   await expect(page).toHaveURL(/type=INCOME/);
   await expect(page.getByTestId("transaction-row")).toHaveCount(1);
   await expect(page.getByTestId("transaction-row").first()).toContainText("Salary");
   await page.goto("/transactions?tags=personal");
   await expect(page.getByTestId("transaction-row")).toHaveCount(1);
   await expect(page.getByTestId("transaction-row").first()).toContainText("Dinner");
+});
+
+test("top bar search jumps to filtered transactions", async ({ page }) => {
+  await page.goto("/dashboard");
+  const search = page.getByRole("search").getByLabel("Search transactions");
+  await search.fill("salary");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/transactions\?q=salary/);
+  await expect(page.getByTestId("transaction-row")).toHaveCount(1);
 });
 
 test("edit expense", async ({ page }) => {
@@ -126,15 +145,15 @@ test("duplicate and delete with confirmation", async ({ page }) => {
   await expect(page.getByTestId("transaction-row")).toHaveCount(1);
 });
 
-test("change month on the dashboard", async ({ page }) => {
-  await page.goto("/");
+test("change month from the top bar", async ({ page }) => {
+  await page.goto("/dashboard");
   await page.getByRole("button", { name: /Previous month/ }).click();
   await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
-  await expect(page.getByText(monthLabel(-1)).first()).toBeVisible();
+  await expect(page.getByText(monthLabel(-1), { exact: true })).toBeVisible();
   await expect(page.getByText("No transactions yet")).toBeVisible();
   await page.getByRole("button", { name: /Next month/ }).click();
   await expect(page).not.toHaveURL(/month=/);
-  await expect(page.getByLabel("Financial summary")).toContainText("₹55,000");
+  await expect(page.getByTestId("income-amount")).toContainText("₹55,000");
 });
 
 test("calendar shows the day's transactions", async ({ page }) => {
@@ -156,7 +175,7 @@ test("analytics renders totals and breakdowns", async ({ page }) => {
 });
 
 test("AI summary uses the mock provider", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/dashboard");
   const card = page.getByTestId("ai-summary-card");
   await expect(card).toContainText("Mock AI");
   await page.getByTestId("analyze-button").click();
