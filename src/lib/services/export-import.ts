@@ -1,15 +1,14 @@
-import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { aiInsights, categories, recurringTransactions, tags, transactions, transactionTags } from "@/lib/db/schema";
+import { newId, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { paiseToDecimalString } from "@/lib/money";
 import { BACKUP_FORMAT, BACKUP_VERSION, validateBackup, type BackupFile, type ImportMode } from "@/lib/validation/import";
 import type { Category, Transaction } from "@/types";
 import { listCategories } from "./categories";
-import { ensureTags } from "./tags";
-import { listAllTransactions } from "./transactions";
 import { listRecurring } from "./recurring";
-import { ensureUserDefaults } from "./user";
+import { normaliseTags } from "./tags";
+import { listAllTransactions } from "./transactions";
+import { ensureUserDefaults } from "./user-identity";
 
 /**
  * Backup export (JSON / CSV) and validated JSON import.
@@ -120,9 +119,9 @@ export interface ImportResult {
 }
 
 /**
- * Import a validated backup. `merge` adds to existing data; `replace` wipes transactions, tags
- * and recurring rules first (categories are kept and extended). Runs in one DB transaction so a
- * bad file never leaves the database half-imported.
+ * Import a validated backup. `merge` adds to existing data; `replace` wipes transactions and
+ * recurring rules first (categories are kept and extended). The file is fully validated before
+ * anything is written, so a malformed backup never touches the database.
  */
 export async function importBackup(userId: string, raw: unknown, mode: ImportMode = "merge"): Promise<ImportResult> {
   const validation = validateBackup(raw);
@@ -131,108 +130,106 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
   }
   const backup: BackupFile = validation.data;
   const db = await getDb();
+  const now = new Date();
 
-  return db.transaction(async (tx) => {
-    let transactionsDeleted = 0;
-    if (mode === "replace") {
-      const removed = await tx.delete(transactions).where(eq(transactions.userId, userId)).returning({ id: transactions.id });
-      transactionsDeleted = removed.length;
-      await tx.delete(tags).where(eq(tags.userId, userId));
-      await tx.delete(recurringTransactions).where(eq(recurringTransactions.userId, userId));
+  let transactionsDeleted = 0;
+  if (mode === "replace") {
+    const removed = await db.transactions.deleteMany({ userId });
+    transactionsDeleted = removed.deletedCount;
+    await db.recurring.deleteMany({ userId });
+  }
+  await db.insights.deleteMany({ userId });
+  await ensureUserDefaults(db, userId);
+
+  // Categories: existing by (type, lower(name)); create any that are missing.
+  const existing = await db.categories.find({ userId }).toArray();
+  const catKey = (type: string, name: string) => `${type}:${name.trim().toLowerCase()}`;
+  const catMap = new Map(existing.map((c) => [catKey(c.type, c.name), c._id]));
+  let sortOrder = existing.reduce((max, c) => Math.max(max, c.sortOrder), 0);
+
+  const wanted = new Map<string, { name: string; type: "INCOME" | "EXPENSE"; icon: string; color: string }>();
+  for (const c of backup.categories) wanted.set(catKey(c.type, c.name), { name: c.name.trim(), type: c.type, icon: c.icon, color: c.color });
+  for (const t of backup.transactions) {
+    const key = catKey(t.type, t.category);
+    if (!wanted.has(key)) wanted.set(key, { name: t.category.trim(), type: t.type, icon: "tag", color: "slate" });
+  }
+  for (const r of backup.recurring) {
+    const key = catKey(r.type, r.category);
+    if (!wanted.has(key)) wanted.set(key, { name: r.category.trim(), type: r.type, icon: "tag", color: "slate" });
+  }
+  const newCategories: CategoryDoc[] = [];
+  for (const [key, c] of wanted) {
+    if (catMap.has(key)) continue;
+    sortOrder += 1;
+    const doc: CategoryDoc = {
+      _id: newId(),
+      userId,
+      name: c.name,
+      nameLower: c.name.toLowerCase(),
+      type: c.type,
+      icon: c.icon,
+      color: c.color,
+      isDefault: false,
+      sortOrder,
+      createdAt: now,
+      updatedAt: now,
+    };
+    newCategories.push(doc);
+    catMap.set(key, doc._id);
+  }
+  if (newCategories.length > 0) await db.categories.insertMany(newCategories);
+
+  // Transactions (batched inserts)
+  let transactionsImported = 0;
+  const BATCH = 500;
+  for (let i = 0; i < backup.transactions.length; i += BATCH) {
+    const slice = backup.transactions.slice(i, i + BATCH);
+    const docs: TransactionDoc[] = slice.map((t) => ({
+      _id: newId(),
+      userId,
+      type: t.type,
+      amount: t.amount,
+      currency: t.currency,
+      description: t.description,
+      categoryId: catMap.get(catKey(t.type, t.category))!,
+      date: t.date,
+      notes: t.notes,
+      tags: normaliseTags(t.tags),
+      recurringId: null,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    if (docs.length > 0) {
+      const inserted = await db.transactions.insertMany(docs);
+      transactionsImported += inserted.insertedCount;
     }
-    await tx.delete(aiInsights).where(eq(aiInsights.userId, userId));
-    await ensureUserDefaults(tx as unknown as Parameters<typeof ensureUserDefaults>[0], userId);
+  }
 
-    // Categories: existing by (type, lower(name)); create any that are missing.
-    const existing = await tx.select().from(categories).where(eq(categories.userId, userId));
-    const catKey = (type: string, name: string) => `${type}:${name.trim().toLowerCase()}`;
-    const catMap = new Map(existing.map((c) => [catKey(c.type, c.name), c.id]));
-    let categoriesCreated = 0;
-    let sortOrder = existing.reduce((max, c) => Math.max(max, c.sortOrder), 0);
+  // Recurring rules
+  let recurringImported = 0;
+  if (backup.recurring.length > 0) {
+    const docs: RecurringDoc[] = backup.recurring.map((r) => ({
+      _id: newId(),
+      userId,
+      type: r.type,
+      amount: r.amount,
+      currency: r.currency,
+      description: r.description,
+      categoryId: catMap.get(catKey(r.type, r.category))!,
+      notes: r.notes,
+      frequency: r.frequency,
+      interval: r.interval,
+      startDate: r.startDate,
+      endDate: r.endDate,
+      nextRunDate: r.nextRunDate,
+      lastRunDate: null,
+      isActive: r.isActive,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    const inserted = await db.recurring.insertMany(docs);
+    recurringImported = inserted.insertedCount;
+  }
 
-    const wanted = new Map<string, { name: string; type: "INCOME" | "EXPENSE"; icon: string; color: string }>();
-    for (const c of backup.categories) wanted.set(catKey(c.type, c.name), { name: c.name.trim(), type: c.type, icon: c.icon, color: c.color });
-    for (const t of backup.transactions) {
-      const key = catKey(t.type, t.category);
-      if (!wanted.has(key)) wanted.set(key, { name: t.category.trim(), type: t.type, icon: "tag", color: "slate" });
-    }
-    for (const r of backup.recurring) {
-      const key = catKey(r.type, r.category);
-      if (!wanted.has(key)) wanted.set(key, { name: r.category.trim(), type: r.type, icon: "tag", color: "slate" });
-    }
-    for (const [key, c] of wanted) {
-      if (catMap.has(key)) continue;
-      sortOrder += 1;
-      const [row] = await tx
-        .insert(categories)
-        .values({ userId, name: c.name, type: c.type, icon: c.icon, color: c.color, sortOrder })
-        .returning({ id: categories.id });
-      catMap.set(key, row!.id);
-      categoriesCreated += 1;
-    }
-
-    // Tags
-    const allTagNames = Array.from(new Set(backup.transactions.flatMap((t) => t.tags)));
-    const tagRows = await ensureTags(tx, userId, allTagNames);
-    const tagIdByName = new Map(tagRows.map((t) => [t.name, t.id]));
-
-    // Transactions (batched inserts)
-    let transactionsImported = 0;
-    const BATCH = 500;
-    for (let i = 0; i < backup.transactions.length; i += BATCH) {
-      const slice = backup.transactions.slice(i, i + BATCH);
-      const inserted = await tx
-        .insert(transactions)
-        .values(
-          slice.map((t) => ({
-            userId,
-            type: t.type,
-            amount: t.amount,
-            currency: t.currency,
-            description: t.description,
-            categoryId: catMap.get(catKey(t.type, t.category))!,
-            date: t.date,
-            notes: t.notes,
-          })),
-        )
-        .returning({ id: transactions.id });
-      const links: { transactionId: string; tagId: string }[] = [];
-      inserted.forEach((row, index) => {
-        for (const name of slice[index]!.tags) {
-          const tagId = tagIdByName.get(name);
-          if (tagId) links.push({ transactionId: row.id, tagId });
-        }
-      });
-      if (links.length > 0) await tx.insert(transactionTags).values(links).onConflictDoNothing();
-      transactionsImported += inserted.length;
-    }
-
-    // Recurring rules
-    let recurringImported = 0;
-    if (backup.recurring.length > 0) {
-      const rows = await tx
-        .insert(recurringTransactions)
-        .values(
-          backup.recurring.map((r) => ({
-            userId,
-            type: r.type,
-            amount: r.amount,
-            currency: r.currency,
-            description: r.description,
-            categoryId: catMap.get(catKey(r.type, r.category))!,
-            notes: r.notes,
-            frequency: r.frequency,
-            interval: r.interval,
-            startDate: r.startDate,
-            endDate: r.endDate,
-            nextRunDate: r.nextRunDate,
-            isActive: r.isActive,
-          })),
-        )
-        .returning({ id: recurringTransactions.id });
-      recurringImported = rows.length;
-    }
-
-    return { mode, categoriesCreated, transactionsImported, recurringImported, transactionsDeleted };
-  });
+  return { mode, categoriesCreated: newCategories.length, transactionsImported, recurringImported, transactionsDeleted };
 }

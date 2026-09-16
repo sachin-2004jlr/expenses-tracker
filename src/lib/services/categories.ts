@@ -1,78 +1,75 @@
-import { and, asc, count, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { categories, recurringTransactions, transactions, type CategoryRow } from "@/lib/db/schema";
+import { newId, type CategoryDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { categoryInputSchema, categoryUpdateSchema, type CategoryInput, type CategoryUpdate } from "@/lib/validation/category";
 import type { Category, CategoryWithStats } from "@/types";
 
-export function toCategory(row: CategoryRow): Category {
+export function toCategory(doc: CategoryDoc): Category {
   return {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    icon: row.icon,
-    color: row.color,
-    isDefault: row.isDefault,
-    sortOrder: row.sortOrder,
+    id: doc._id,
+    name: doc.name,
+    type: doc.type,
+    icon: doc.icon,
+    color: doc.color,
+    isDefault: doc.isDefault,
+    sortOrder: doc.sortOrder,
   };
 }
 
+const ORDER = { type: 1, sortOrder: 1, name: 1 } as const;
+
 export async function listCategories(userId: string): Promise<Category[]> {
   const db = await getDb();
-  const rows = await db
-    .select()
-    .from(categories)
-    .where(eq(categories.userId, userId))
-    .orderBy(asc(categories.type), asc(categories.sortOrder), asc(categories.name));
-  return rows.map(toCategory);
+  const docs = await db.categories.find({ userId }).sort(ORDER).toArray();
+  return docs.map(toCategory);
 }
 
 export async function listCategoriesWithStats(userId: string): Promise<CategoryWithStats[]> {
   const db = await getDb();
-  const rows = await db
-    .select({
-      category: categories,
-      transactionCount: sql<number>`cast(count(${transactions.id}) as integer)`,
-    })
-    .from(categories)
-    .leftJoin(transactions, eq(transactions.categoryId, categories.id))
-    .where(eq(categories.userId, userId))
-    .groupBy(categories.id)
-    .orderBy(asc(categories.type), asc(categories.sortOrder), asc(categories.name));
-  return rows.map((row) => ({ ...toCategory(row.category), transactionCount: Number(row.transactionCount) }));
+  const [docs, counts] = await Promise.all([
+    db.categories.find({ userId }).sort(ORDER).toArray(),
+    db.transactions.aggregate<{ _id: string; count: number }>([{ $match: { userId } }, { $group: { _id: "$categoryId", count: { $sum: 1 } } }]).toArray(),
+  ]);
+  const countById = new Map(counts.map((c) => [c._id, c.count]));
+  return docs.map((doc) => ({ ...toCategory(doc), transactionCount: countById.get(doc._id) ?? 0 }));
 }
 
 export async function getCategory(userId: string, id: string): Promise<Category> {
   const db = await getDb();
-  const rows = await db
-    .select()
-    .from(categories)
-    .where(and(eq(categories.id, id), eq(categories.userId, userId)))
-    .limit(1);
-  if (!rows[0]) throw AppError.notFound("Category");
-  return toCategory(rows[0]);
+  const doc = await db.categories.findOne({ _id: id, userId });
+  if (!doc) throw AppError.notFound("Category");
+  return toCategory(doc);
 }
 
 export async function createCategory(userId: string, rawInput: CategoryInput): Promise<Category> {
   const input = categoryInputSchema.parse(rawInput);
   const db = await getDb();
-  const duplicate = await db
-    .select({ id: categories.id })
-    .from(categories)
-    .where(and(eq(categories.userId, userId), eq(categories.type, input.type), sql`lower(${categories.name}) = lower(${input.name})`))
-    .limit(1);
-  if (duplicate[0]) throw AppError.conflict(`A ${input.type.toLowerCase()} category named "${input.name}" already exists`);
+  const nameLower = input.name.toLowerCase();
+  const duplicate = await db.categories.findOne({ userId, type: input.type, nameLower }, { projection: { _id: 1 } });
+  if (duplicate) throw AppError.conflict(`A ${input.type.toLowerCase()} category named "${input.name}" already exists`);
 
-  const [{ maxOrder }] = await db
-    .select({ maxOrder: sql<number>`coalesce(max(${categories.sortOrder}), 0)` })
-    .from(categories)
-    .where(eq(categories.userId, userId));
-
-  const [row] = await db
-    .insert(categories)
-    .values({ ...input, userId, sortOrder: Number(maxOrder) + 1 })
-    .returning();
-  return toCategory(row!);
+  const [last] = await db.categories.find({ userId }).sort({ sortOrder: -1 }).limit(1).project<{ sortOrder: number }>({ sortOrder: 1 }).toArray();
+  const now = new Date();
+  const doc: CategoryDoc = {
+    _id: newId(),
+    userId,
+    name: input.name,
+    nameLower,
+    type: input.type,
+    icon: input.icon,
+    color: input.color,
+    isDefault: false,
+    sortOrder: (last?.sortOrder ?? 0) + 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  try {
+    await db.categories.insertOne(doc);
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) throw AppError.conflict(`A category named "${input.name}" already exists`);
+    throw error;
+  }
+  return toCategory(doc);
 }
 
 export async function updateCategory(userId: string, id: string, rawUpdate: CategoryUpdate): Promise<Category> {
@@ -81,38 +78,29 @@ export async function updateCategory(userId: string, id: string, rawUpdate: Cate
   const existing = await getCategory(userId, id);
 
   if (update.type && update.type !== existing.type) {
-    const [{ used }] = await db
-      .select({ used: count() })
-      .from(transactions)
-      .where(eq(transactions.categoryId, id));
-    if (Number(used) > 0) {
-      throw AppError.conflict("Cannot change the type of a category that already has transactions");
-    }
+    const used = await db.transactions.countDocuments({ userId, categoryId: id }, { limit: 1 });
+    if (used > 0) throw AppError.conflict("Cannot change the type of a category that already has transactions");
   }
 
+  const nextType = update.type ?? existing.type;
   if (update.name && update.name.toLowerCase() !== existing.name.toLowerCase()) {
-    const duplicate = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(
-        and(
-          eq(categories.userId, userId),
-          eq(categories.type, update.type ?? existing.type),
-          sql`lower(${categories.name}) = lower(${update.name})`,
-        ),
-      )
-      .limit(1);
-    if (duplicate[0] && duplicate[0].id !== id) {
-      throw AppError.conflict(`A category named "${update.name}" already exists`);
-    }
+    const duplicate = await db.categories.findOne({ userId, type: nextType, nameLower: update.name.toLowerCase(), _id: { $ne: id } }, { projection: { _id: 1 } });
+    if (duplicate) throw AppError.conflict(`A category named "${update.name}" already exists`);
   }
 
-  const [row] = await db
-    .update(categories)
-    .set(update)
-    .where(and(eq(categories.id, id), eq(categories.userId, userId)))
-    .returning();
-  return toCategory(row!);
+  const $set: Partial<CategoryDoc> = { updatedAt: new Date() };
+  if (update.name !== undefined) {
+    $set.name = update.name;
+    $set.nameLower = update.name.toLowerCase();
+  }
+  if (update.type !== undefined) $set.type = update.type;
+  if (update.icon !== undefined) $set.icon = update.icon;
+  if (update.color !== undefined) $set.color = update.color;
+  if (update.sortOrder !== undefined) $set.sortOrder = update.sortOrder;
+
+  const result = await db.categories.findOneAndUpdate({ _id: id, userId }, { $set }, { returnDocument: "after" });
+  if (!result) throw AppError.notFound("Category");
+  return toCategory(result);
 }
 
 export interface DeleteCategoryOptions {
@@ -129,55 +117,36 @@ export interface DeleteCategoryResult {
  * Delete a category. If transactions (or recurring rules) use it, they must be reassigned to
  * another category of the same type; otherwise a 409 is thrown that the UI turns into a prompt.
  */
-export async function deleteCategory(
-  userId: string,
-  id: string,
-  options: DeleteCategoryOptions = {},
-): Promise<DeleteCategoryResult> {
+export async function deleteCategory(userId: string, id: string, options: DeleteCategoryOptions = {}): Promise<DeleteCategoryResult> {
   const db = await getDb();
   const existing = await getCategory(userId, id);
 
-  const [{ used }] = await db.select({ used: count() }).from(transactions).where(eq(transactions.categoryId, id));
-  const [{ usedRecurring }] = await db
-    .select({ usedRecurring: count() })
-    .from(recurringTransactions)
-    .where(eq(recurringTransactions.categoryId, id));
-  const inUse = Number(used) + Number(usedRecurring);
+  const [used, usedRecurring] = await Promise.all([
+    db.transactions.countDocuments({ userId, categoryId: id }),
+    db.recurring.countDocuments({ userId, categoryId: id }),
+  ]);
+  const inUse = used + usedRecurring;
 
   if (inUse > 0 && !options.reassignTo) {
     throw new AppError(
       409,
       "category_in_use",
-      `"${existing.name}" is used by ${Number(used)} transaction${Number(used) === 1 ? "" : "s"}. Choose a category to move them to.`,
-      { transactionCount: Number(used), recurringCount: Number(usedRecurring) },
+      `"${existing.name}" is used by ${used} transaction${used === 1 ? "" : "s"}. Choose a category to move them to.`,
+      { transactionCount: used, recurringCount: usedRecurring },
     );
   }
 
   let reassigned = 0;
-  await db.transaction(async (tx) => {
-    if (inUse > 0 && options.reassignTo) {
-      if (options.reassignTo === id) throw AppError.badRequest("Choose a different category to move transactions to");
-      const target = await tx
-        .select()
-        .from(categories)
-        .where(and(eq(categories.id, options.reassignTo), eq(categories.userId, userId)))
-        .limit(1);
-      if (!target[0]) throw AppError.notFound("Target category");
-      if (target[0].type !== existing.type) throw AppError.badRequest("Transactions can only be moved to a category of the same type");
-      const moved = await tx
-        .update(transactions)
-        .set({ categoryId: options.reassignTo })
-        .where(and(eq(transactions.categoryId, id), eq(transactions.userId, userId)))
-        .returning({ id: transactions.id });
-      reassigned = moved.length;
-      await tx
-        .update(recurringTransactions)
-        .set({ categoryId: options.reassignTo })
-        .where(and(eq(recurringTransactions.categoryId, id), eq(recurringTransactions.userId, userId)));
-    }
-    await tx.delete(categories).where(and(eq(categories.id, id), eq(categories.userId, userId)));
-  });
-
+  if (inUse > 0 && options.reassignTo) {
+    if (options.reassignTo === id) throw AppError.badRequest("Choose a different category to move transactions to");
+    const target = await db.categories.findOne({ _id: options.reassignTo, userId });
+    if (!target) throw AppError.notFound("Target category");
+    if (target.type !== existing.type) throw AppError.badRequest("Transactions can only be moved to a category of the same type");
+    const moved = await db.transactions.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+    reassigned = moved.modifiedCount;
+    await db.recurring.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+  }
+  await db.categories.deleteOne({ _id: id, userId });
   return { deleted: true, reassignedTransactions: reassigned };
 }
 
@@ -189,11 +158,7 @@ export async function findOrCreateCategoryByName(
   extras: { icon?: string; color?: string } = {},
 ): Promise<Category> {
   const db = await getDb();
-  const rows = await db
-    .select()
-    .from(categories)
-    .where(and(eq(categories.userId, userId), eq(categories.type, type), sql`lower(${categories.name}) = lower(${name})`))
-    .limit(1);
-  if (rows[0]) return toCategory(rows[0]);
+  const doc = await db.categories.findOne({ userId, type, nameLower: name.trim().toLowerCase() });
+  if (doc) return toCategory(doc);
   return createCategory(userId, categoryInputSchema.parse({ name, type, icon: extras.icon ?? "tag", color: extras.color ?? "slate" }));
 }

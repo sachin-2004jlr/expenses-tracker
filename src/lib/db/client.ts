@@ -1,115 +1,139 @@
-import path from "node:path";
-import type { ExtractTablesWithRelations } from "drizzle-orm";
-import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { MongoClient, type Collection, type Db as MongoDatabase } from "mongodb";
 import { DatabaseUnavailableError } from "./errors";
-import * as schema from "./schema";
+import {
+  COLLECTIONS,
+  type AiInsightDoc,
+  type AppSettingsDoc,
+  type CategoryDoc,
+  type RecurringDoc,
+  type TransactionDoc,
+  type UserDoc,
+} from "./schema";
 
 /**
- * Database access.
+ * MongoDB access.
  *
- * - When `DATABASE_URL` is set: PostgreSQL via node-postgres (production / Vercel).
- * - Otherwise (local development): embedded PGlite stored in `./.data/pglite`.
+ * - `DATABASE_URL` (or `MONGODB_URI`): any MongoDB connection string, e.g.
+ *   `mongodb://127.0.0.1:27017/expenses_tracker` locally or an Atlas `mongodb+srv://...` URI
+ *   in production. When unset, the local server on 127.0.0.1:27017 is used.
+ * - `memory://` starts an in-memory MongoDB (mongodb-memory-server) for tests.
  *
- * Both share the same Drizzle schema and migrations, so the app behaves identically.
- * The connection is memoised on `globalThis` so hot reloads do not open new pools.
+ * The client is memoised on `globalThis` so hot reloads do not open new connection pools, and
+ * indexes are created once per process on first use (MongoDB has no schema migrations).
  */
-export type Db = PgDatabase<
-  PgQueryResultHKT,
-  typeof schema,
-  ExtractTablesWithRelations<typeof schema>
->;
 
-export type DbKind = "postgres" | "pglite";
+export const DEFAULT_MONGODB_URI = "mongodb://127.0.0.1:27017/expenses_tracker";
+export const DEFAULT_DB_NAME = "expenses_tracker";
+
+export interface Db {
+  client: MongoClient;
+  database: MongoDatabase;
+  users: Collection<UserDoc>;
+  categories: Collection<CategoryDoc>;
+  transactions: Collection<TransactionDoc>;
+  recurring: Collection<RecurringDoc>;
+  insights: Collection<AiInsightDoc>;
+  settings: Collection<AppSettingsDoc>;
+}
+
+export type DbKind = "mongodb" | "memory";
 
 type DbGlobals = {
-  __expensesDb?: Promise<Db>;
+  __expensesMongo?: Promise<Db>;
 };
 
 const globals = globalThis as unknown as DbGlobals;
 
-const MIGRATIONS_FOLDER = path.join(process.cwd(), "drizzle");
+export function getDatabaseUri(): string {
+  return process.env.DATABASE_URL || process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+}
 
 export function getDbKind(): DbKind {
-  return process.env.DATABASE_URL ? "postgres" : "pglite";
+  return getDatabaseUri() === "memory://" ? "memory" : "mongodb";
 }
 
 export function getDb(): Promise<Db> {
-  if (!globals.__expensesDb) {
-    globals.__expensesDb = initialise().catch((error: unknown) => {
+  if (!globals.__expensesMongo) {
+    globals.__expensesMongo = initialise().catch((error: unknown) => {
       // Allow a retry on the next request instead of caching a failed connection forever.
-      globals.__expensesDb = undefined;
+      globals.__expensesMongo = undefined;
       throw error;
     });
   }
-  return globals.__expensesDb;
+  return globals.__expensesMongo;
 }
 
-function shouldUseSsl(connectionString: string): boolean {
-  const flag = process.env.DATABASE_SSL;
-  if (flag === "disable" || flag === "false" || flag === "0") return false;
+function databaseNameFrom(uri: string): string {
   try {
-    const host = new URL(connectionString).hostname;
-    return !["localhost", "127.0.0.1", "::1", "db", "postgres"].includes(host);
+    const path = new URL(uri).pathname.replace(/^\/+/, "");
+    return path || DEFAULT_DB_NAME;
   } catch {
-    return true;
+    return DEFAULT_DB_NAME;
   }
+}
+
+async function resolveUri(): Promise<string> {
+  const configured = getDatabaseUri();
+  if (configured !== "memory://") return configured;
+  const { MongoMemoryServer } = await import("mongodb-memory-server");
+  const server = await MongoMemoryServer.create({ instance: { dbName: "expenses_e2e" } });
+  return `${server.getUri()}expenses_e2e`;
 }
 
 async function initialise(): Promise<Db> {
-  const connectionString = process.env.DATABASE_URL;
-  const autoMigrate = process.env.DB_AUTO_MIGRATE !== "false";
-
-  if (connectionString) {
-    const { Pool } = await import("pg");
-    const { drizzle } = await import("drizzle-orm/node-postgres");
-    const { migrate } = await import("drizzle-orm/node-postgres/migrator");
-
-    const pool = new Pool({
-      connectionString,
-      max: 5,
-      ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : undefined,
-    });
-
-    const db = drizzle(pool, { schema });
-    try {
-      if (autoMigrate) await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
-      await pool.query("select 1");
-    } catch (error) {
-      throw new DatabaseUnavailableError(
-        "connection-failed",
-        "Could not connect to the PostgreSQL database defined by DATABASE_URL.",
-        error,
-      );
-    }
-    return db as unknown as Db;
-  }
-
-  if (process.env.VERCEL) {
+  if (!process.env.DATABASE_URL && !process.env.MONGODB_URI && process.env.VERCEL) {
     throw new DatabaseUnavailableError(
       "not-configured",
-      "DATABASE_URL is not set. Add a PostgreSQL connection string to your Vercel environment variables.",
+      "DATABASE_URL is not set. Add a MongoDB connection string (for example a MongoDB Atlas URI) to your Vercel environment variables.",
     );
   }
 
-  const { PGlite } = await import("@electric-sql/pglite");
-  const { drizzle } = await import("drizzle-orm/pglite");
-  const { migrate } = await import("drizzle-orm/pglite/migrator");
-
-  const dataDir = process.env.PGLITE_DATA_DIR || path.join(process.cwd(), ".data", "pglite");
-  if (dataDir !== "memory://") {
-    const { mkdir } = await import("node:fs/promises");
-    await mkdir(dataDir, { recursive: true });
-  }
-  const client = dataDir === "memory://" ? new PGlite() : new PGlite(dataDir);
-  const db = drizzle(client, { schema });
+  const uri = await resolveUri();
+  const client = new MongoClient(uri, {
+    serverSelectionTimeoutMS: 5_000,
+    connectTimeoutMS: 5_000,
+    maxPoolSize: 10,
+  });
   try {
-    await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
   } catch (error) {
-    throw new DatabaseUnavailableError(
-      "connection-failed",
-      `Could not open the local PGlite database at ${dataDir}.`,
-      error,
-    );
+    await client.close().catch(() => undefined);
+    const hint =
+      getDatabaseUri() === DEFAULT_MONGODB_URI
+        ? " No DATABASE_URL is set, so the app tried the local MongoDB on 127.0.0.1:27017. Install and start MongoDB Community Server, or set DATABASE_URL."
+        : "";
+    throw new DatabaseUnavailableError("connection-failed", `Could not connect to MongoDB.${hint}`, error);
   }
-  return db as unknown as Db;
+
+  const database = client.db(databaseNameFrom(uri));
+  const db: Db = {
+    client,
+    database,
+    users: database.collection<UserDoc>(COLLECTIONS.users),
+    categories: database.collection<CategoryDoc>(COLLECTIONS.categories),
+    transactions: database.collection<TransactionDoc>(COLLECTIONS.transactions),
+    recurring: database.collection<RecurringDoc>(COLLECTIONS.recurring),
+    insights: database.collection<AiInsightDoc>(COLLECTIONS.insights),
+    settings: database.collection<AppSettingsDoc>(COLLECTIONS.settings),
+  };
+  await ensureIndexes(db);
+  return db;
+}
+
+/** Create the indexes the services rely on. Idempotent; safe to run on every start. */
+export async function ensureIndexes(db: Db): Promise<void> {
+  await Promise.all([
+    db.users.createIndex({ email: 1 }, { unique: true, name: "users_email_unique" }),
+    db.categories.createIndex({ userId: 1, type: 1, nameLower: 1 }, { unique: true, name: "categories_user_type_name_unique" }),
+    db.categories.createIndex({ userId: 1, sortOrder: 1 }, { name: "categories_user_sort" }),
+    db.transactions.createIndex({ userId: 1, date: -1, createdAt: -1 }, { name: "transactions_user_date" }),
+    db.transactions.createIndex({ userId: 1, categoryId: 1 }, { name: "transactions_user_category" }),
+    db.transactions.createIndex({ userId: 1, type: 1, date: 1 }, { name: "transactions_user_type_date" }),
+    db.transactions.createIndex({ userId: 1, tags: 1 }, { name: "transactions_user_tags" }),
+    db.transactions.createIndex({ userId: 1, recurringId: 1 }, { name: "transactions_user_recurring", sparse: true }),
+    db.recurring.createIndex({ userId: 1, nextRunDate: 1 }, { name: "recurring_user_next_run" }),
+    db.insights.createIndex({ userId: 1, kind: 1, monthKey: 1 }, { unique: true, name: "insights_user_kind_month_unique" }),
+    db.settings.createIndex({ userId: 1 }, { unique: true, name: "settings_user_unique" }),
+  ]);
 }

@@ -48,7 +48,7 @@ const MONTHLY_TEMPLATE: DemoRow[] = [
 ];
 
 async function main(): Promise<void> {
-  console.log(`Seeding ${getDbKind() === "postgres" ? "PostgreSQL" : "local PGlite"} database...`);
+  console.log(`Seeding ${getDbKind() === "memory" ? "in-memory MongoDB" : "MongoDB"} database...`);
   await getDb();
   const account = await ensureDemoAccount();
   const categories = await listCategories(account.id);

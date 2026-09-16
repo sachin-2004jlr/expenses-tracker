@@ -1,8 +1,6 @@
-import { and, eq } from "drizzle-orm";
 import { getDashboardSummary } from "@/lib/analytics/queries";
-import { getDb } from "@/lib/db";
-import { aiInsights } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
+import { findInsight, saveInsight } from "@/lib/services/insights-cache";
 import { getSettings } from "@/lib/services/settings";
 import { aiInsightSchema, parseInsight } from "@/lib/validation/ai";
 import type { AiInsightResult, DashboardSummary, InsightKind, MonthKey } from "@/types";
@@ -16,7 +14,7 @@ import { getAIProvider } from "./registry";
  *
  * Flow: calculate facts (app code) -> hash them -> reuse the cached insight when the hash
  * matches -> otherwise ask the provider for JSON -> validate with Zod (degrade gracefully) -> store.
- * Cache rows are also deleted whenever transactions in the month change (see insights-cache.ts).
+ * Cache entries are also deleted whenever transactions in the month change (see insights-cache.ts).
  */
 
 export interface GetInsightOptions {
@@ -27,23 +25,17 @@ export interface GetInsightOptions {
 }
 
 export async function getCachedInsight(userId: string, kind: InsightKind, month: MonthKey): Promise<AiInsightResult | null> {
-  const db = await getDb();
-  const rows = await db
-    .select()
-    .from(aiInsights)
-    .where(and(eq(aiInsights.userId, userId), eq(aiInsights.kind, kind), eq(aiInsights.monthKey, month)))
-    .limit(1);
-  const row = rows[0];
-  if (!row) return null;
-  const parsed = aiInsightSchema.safeParse(row.content);
+  const doc = await findInsight(userId, kind, month);
+  if (!doc) return null;
+  const parsed = aiInsightSchema.safeParse(doc.content);
   if (!parsed.success) return null;
   return {
     kind,
     month,
     insight: parsed.data,
-    provider: row.provider,
-    model: row.model,
-    generatedAt: row.updatedAt.toISOString(),
+    provider: doc.provider,
+    model: doc.model,
+    generatedAt: doc.updatedAt.toISOString(),
     cached: true,
     degraded: false,
   };
@@ -62,24 +54,18 @@ export async function getInsight(
   const modelForHash = settings.ollamaModel ?? process.env.OLLAMA_MODEL ?? null;
   const dataHash = hashFacts(facts, provider.id, modelForHash);
 
-  const db = await getDb();
   if (!options.force) {
-    const rows = await db
-      .select()
-      .from(aiInsights)
-      .where(and(eq(aiInsights.userId, userId), eq(aiInsights.kind, kind), eq(aiInsights.monthKey, month)))
-      .limit(1);
-    const row = rows[0];
-    if (row && row.dataHash === dataHash) {
-      const parsed = aiInsightSchema.safeParse(row.content);
+    const doc = await findInsight(userId, kind, month);
+    if (doc && doc.dataHash === dataHash) {
+      const parsed = aiInsightSchema.safeParse(doc.content);
       if (parsed.success) {
         return {
           kind,
           month,
           insight: parsed.data,
-          provider: row.provider,
-          model: row.model,
-          generatedAt: row.updatedAt.toISOString(),
+          provider: doc.provider,
+          model: doc.model,
+          generatedAt: doc.updatedAt.toISOString(),
           cached: true,
           degraded: false,
         };
@@ -111,20 +97,18 @@ export async function getInsight(
     if (isAIProviderError(error)) {
       throw new AppError(503, "ai_unavailable", error.message);
     }
-    throw new AppError(503, "ai_unavailable", provider.isLocal ? "Local AI is unavailable. Start Ollama to enable AI insights." : "The AI provider is unavailable right now.");
+    throw new AppError(
+      503,
+      "ai_unavailable",
+      provider.isLocal ? "Local AI is unavailable. Start Ollama to enable AI insights." : "The AI provider is unavailable right now.",
+    );
   }
 
   const { insight, degraded } = parseInsight(text);
 
   // Only cache well-formed insights; degraded text is shown once but re-tried next time.
   if (!degraded) {
-    await db
-      .insert(aiInsights)
-      .values({ userId, kind, monthKey: month, dataHash, provider: provider.id, model, content: insight })
-      .onConflictDoUpdate({
-        target: [aiInsights.userId, aiInsights.kind, aiInsights.monthKey],
-        set: { dataHash, provider: provider.id, model, content: insight, updatedAt: new Date() },
-      });
+    await saveInsight({ userId, kind, monthKey: month, dataHash, provider: provider.id, model, content: insight });
   }
 
   return {

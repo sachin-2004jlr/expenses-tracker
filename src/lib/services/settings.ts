@@ -1,43 +1,68 @@
-import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { appSettings, type AppSettingsRow } from "@/lib/db/schema";
+import { newId, type AppSettingsDoc } from "@/lib/db/schema";
 import { settingsUpdateSchema, type SettingsUpdate } from "@/lib/validation/settings";
 import type { AppSettings } from "@/types";
 
-export function toSettings(row: AppSettingsRow): AppSettings {
-  const provider = row.aiProvider;
+export function toSettings(doc: AppSettingsDoc): AppSettings {
+  const provider = doc.aiProvider;
   return {
-    currency: row.currency,
-    locale: row.locale,
-    dateFormat: row.dateFormat,
-    firstDayOfWeek: row.firstDayOfWeek === 0 ? 0 : 1,
-    timeZone: row.timeZone,
-    aiEnabled: row.aiEnabled,
+    currency: doc.currency,
+    locale: doc.locale,
+    dateFormat: doc.dateFormat,
+    firstDayOfWeek: doc.firstDayOfWeek === 0 ? 0 : 1,
+    timeZone: doc.timeZone,
+    aiEnabled: doc.aiEnabled,
     aiProvider: provider === "openai-compatible" || provider === "mock" ? provider : "ollama",
-    ollamaUrl: row.ollamaUrl,
-    ollamaModel: row.ollamaModel,
-    aiAutoAnalyze: row.aiAutoAnalyze,
+    ollamaUrl: doc.ollamaUrl,
+    ollamaModel: doc.ollamaModel,
+    aiAutoAnalyze: doc.aiAutoAnalyze,
+  };
+}
+
+function defaultDoc(userId: string): AppSettingsDoc {
+  const provider = process.env.AI_PROVIDER;
+  const now = new Date();
+  return {
+    _id: newId(),
+    userId,
+    currency: "INR",
+    locale: "en-IN",
+    dateFormat: "dd MMM yyyy",
+    firstDayOfWeek: 1,
+    timeZone: process.env.APP_TIMEZONE || "Asia/Kolkata",
+    aiEnabled: true,
+    aiProvider: provider === "openai-compatible" || provider === "mock" ? provider : "ollama",
+    ollamaUrl: (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, ""),
+    ollamaModel: process.env.OLLAMA_MODEL || null,
+    aiAutoAnalyze: false,
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
 export async function getSettings(userId: string): Promise<AppSettings> {
   const db = await getDb();
-  const rows = await db.select().from(appSettings).where(eq(appSettings.userId, userId)).limit(1);
-  if (rows[0]) return toSettings(rows[0]);
-  const [created] = await db
-    .insert(appSettings)
-    .values({ userId })
-    .onConflictDoNothing({ target: appSettings.userId })
-    .returning();
-  if (created) return toSettings(created);
-  const again = await db.select().from(appSettings).where(eq(appSettings.userId, userId)).limit(1);
-  return toSettings(again[0]!);
+  const existing = await db.settings.findOne({ userId });
+  if (existing) return toSettings(existing);
+  const doc = defaultDoc(userId);
+  try {
+    await db.settings.insertOne(doc);
+    return toSettings(doc);
+  } catch (error) {
+    if ((error as { code?: number }).code !== 11000) throw error;
+    const again = await db.settings.findOne({ userId });
+    return toSettings(again ?? doc);
+  }
 }
 
 export async function updateSettings(userId: string, rawUpdate: SettingsUpdate): Promise<AppSettings> {
   const update = settingsUpdateSchema.parse(rawUpdate);
   const db = await getDb();
-  await getSettings(userId); // make sure the row exists
-  const [row] = await db.update(appSettings).set(update).where(eq(appSettings.userId, userId)).returning();
-  return toSettings(row!);
+  await getSettings(userId); // make sure the document exists
+  const $set: Partial<AppSettingsDoc> = { updatedAt: new Date() };
+  for (const [key, value] of Object.entries(update)) {
+    if (value !== undefined) ($set as Record<string, unknown>)[key] = value;
+  }
+  const result = await db.settings.findOneAndUpdate({ userId }, { $set }, { returnDocument: "after" });
+  return toSettings(result ?? defaultDoc(userId));
 }

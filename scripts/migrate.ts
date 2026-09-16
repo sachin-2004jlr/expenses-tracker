@@ -1,20 +1,24 @@
 import "dotenv/config";
-import { getDb, getDbKind } from "../src/lib/db/client";
+import { getDatabaseUri, getDb, getDbKind } from "../src/lib/db/client";
 
 /**
- * Apply pending Drizzle migrations to DATABASE_URL (or the local PGlite database).
- * The app also auto-migrates on first access; this script exists for explicit deploy steps.
+ * MongoDB has no schema migrations; this script connects and creates the indexes the app relies
+ * on (the app also does this automatically on first access). Useful as an explicit deploy step.
  */
 async function main(): Promise<void> {
   const kind = getDbKind();
-  console.log(`Applying migrations to ${kind === "postgres" ? "PostgreSQL (DATABASE_URL)" : "local PGlite database"}...`);
-  await getDb();
-  console.log("Migrations are up to date.");
+  const target = kind === "memory" ? "in-memory MongoDB" : getDatabaseUri().replace(/\/\/([^@]+)@/, "//***@");
+  console.log(`Ensuring indexes on ${target}...`);
+  const db = await getDb();
+  const collections = await db.database.listCollections().toArray();
+  console.log(`Connected. Collections: ${collections.map((c) => c.name).join(", ") || "(none yet)"}`);
+  console.log("Indexes are in place.");
+  await db.client.close();
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Migration failed:", error);
+    console.error("Index setup failed:", error);
     process.exit(1);
   });

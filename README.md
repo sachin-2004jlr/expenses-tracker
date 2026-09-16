@@ -1,6 +1,6 @@
 # Expenses Tracker
 
-A personal finance tracker for income, expenses, savings and monthly budgets in **Indian Rupees (₹, en-IN)**, with **local AI insights powered by Ollama** and **e-mail + password accounts**. Dark, trading-desk style interface. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, Auth.js and PostgreSQL. Deploys to Vercel.
+A personal finance tracker for income, expenses, savings and monthly budgets in **Indian Rupees (₹, en-IN)**, with **local AI insights powered by Ollama** and **e-mail + password accounts**. Dark, trading-desk style interface. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
 
 Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
@@ -40,14 +40,13 @@ src/
     auth/  dashboard/  transactions/  calendar/  analytics/  ai/  settings/  recurring/
   lib/
     auth.ts  password.ts    Auth.js configuration (credentials provider, JWT sessions, allow-list), scrypt hashing
-    db/                     Drizzle schema, client (PGlite locally, Postgres in production), migrations
+    db/                     MongoDB document types, client (local MongoDB or Atlas), index setup
     money/  dates/          Integer-paise money utilities, timezone-safe date helpers, recurrence
-    analytics/              Pure financial calculations (tested) + SQL-backed queries
+    analytics/              Pure financial calculations (tested) + MongoDB aggregation queries
     validation/             Zod schemas for every input, import files and AI output
     ai/                     AIProvider interface, Ollama / OpenAI-compatible / mock providers, prompts, facts, insights, chat
     services/               Transactions, categories, tags, settings, recurring, export/import, users
     api/                    JSON helpers, error mapping, rate limiting
-drizzle/                    Generated SQL migrations
 scripts/                    db:migrate and db:seed
 e2e/                        Playwright tests
 ```
@@ -58,13 +57,13 @@ e2e/                        Playwright tests
 
 **Dates**: transactions store a calendar date (`YYYY-MM-DD`). "Today" and "this month" are resolved in the configured time zone (`Asia/Kolkata` by default).
 
-**Users**: every table carries a `user_id` and every service takes a `userId`. `src/lib/services/user.ts` resolves it from the Auth.js session; unauthenticated requests get a 401 (API) or a redirect to `/login` (pages).
+**Users**: every document carries a `userId` and every service takes a `userId`. `src/lib/services/user.ts` resolves it from the Auth.js session; unauthenticated requests get a 401 (API) or a redirect to `/login` (pages).
 
 ## Authentication
 
 Accounts are e-mail + password, handled by Auth.js v5 with a credentials provider:
 
-- Passwords are hashed with Node's built-in **scrypt** (random salt, timing-safe compare) and stored in `users.password_hash`; nothing is ever stored in plain text.
+- Passwords are hashed with Node's built-in **scrypt** (random salt, timing-safe compare) and stored in the `users` collection as `passwordHash`; nothing is ever stored in plain text.
 - Sessions are JWTs in an encrypted, HttpOnly cookie signed with `AUTH_SECRET` (30-day expiry). No session tables.
 - `/register` creates an account (and its default categories/settings), `/login` signs in, Settings → Account changes the name or password, the account menu signs out.
 - `/dashboard`, every app page and every `/api/*` route require a session (pages redirect to `/login`, the API returns 401).
@@ -83,8 +82,8 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 | Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons, Montserrat via `next/font` |
 | Charts | Recharts 3 |
 | Auth | Auth.js v5 credentials provider, scrypt password hashing, JWT sessions |
-| Database | PostgreSQL (production) / PGlite embedded Postgres (local dev, tests) |
-| ORM | Drizzle ORM + Drizzle Kit migrations |
+| Database | MongoDB (local MongoDB Community Server in development, MongoDB Atlas in production, in-memory server for tests) |
+| Driver | Official `mongodb` Node.js driver, aggregation pipelines for analytics |
 | Validation / forms | Zod 4, React Hook Form |
 | AI | Ollama (local) via HTTP; OpenAI-compatible provider; mock provider |
 | Testing | Vitest + React Testing Library, Playwright |
@@ -92,17 +91,16 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 
 ## Database
 
-The schema (`src/lib/db/schema.ts`) defines `users`, `categories`, `transactions`, `tags`, `transaction_tags`, `recurring_transactions`, `ai_insights` and `app_settings`.
+The document shapes (`src/lib/db/schema.ts`) define the `users`, `categories`, `transactions` (tags embedded), `recurring_transactions`, `ai_insights` and `app_settings` collections, all keyed by UUID strings and scoped by `userId`.
 
-- **Local development**: leave `DATABASE_URL` empty. An embedded PGlite database is created in `./.data/pglite` and migrations run automatically.
-- **Production**: set `DATABASE_URL` to any PostgreSQL connection string (Neon, Supabase, Vercel Postgres, RDS). Migrations run automatically on the first request (`DB_AUTO_MIGRATE=false` disables that) or explicitly with `npm run db:migrate`.
+- **Local development**: leave `DATABASE_URL` empty and the app uses the MongoDB server on your machine (`mongodb://127.0.0.1:27017/expenses_tracker`). Install MongoDB Community Server if you do not have it.
+- **Production**: set `DATABASE_URL` to a MongoDB Atlas connection string (`mongodb+srv://...`). Indexes are created automatically on the first connection; there are no migrations. `npm run db:migrate` only creates the indexes explicitly.
+- **Tests**: `DATABASE_URL=memory://` starts a throwaway in-memory MongoDB (`mongodb-memory-server`).
 
 ```bash
-npm run db:generate   # generate a migration after editing the schema
-npm run db:migrate    # apply migrations
+npm run db:migrate    # create indexes (also done automatically on first connection)
 npm run db:seed       # default user, categories and settings
 npm run db:seed -- --demo   # ...plus demo transactions tagged "demo" (refused in production)
-npm run db:studio     # Drizzle Studio
 ```
 
 ## Local setup
@@ -132,7 +130,7 @@ Installed models are detected through Ollama's `/api/tags`; embedding-only model
 
 ```
 LOCAL                                  PRODUCTION (Vercel)
-Browser → Next.js → Ollama:11434       Browser → Vercel → PostgreSQL
+Browser → Next.js → Ollama:11434       Browser → Vercel → MongoDB Atlas
                                                    ↘ optional remote AI provider
 ```
 
@@ -144,10 +142,7 @@ See `.env.example`. Never commit `.env`.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | empty | PostgreSQL connection string. Empty = local PGlite |
-| `DATABASE_SSL` | auto | `disable` for non-TLS hosts |
-| `DB_AUTO_MIGRATE` | `true` | Run migrations on first DB access |
-| `PGLITE_DATA_DIR` | `./.data/pglite` | Local database location; `memory://` for in-memory |
+| `DATABASE_URL` | empty | MongoDB connection string. Empty = `mongodb://127.0.0.1:27017/expenses_tracker`; `memory://` = in-memory |
 | `AUTH_SECRET` | dev fallback | Signs the session cookie; required in production |
 | `AUTH_ALLOWED_EMAILS` | empty | Comma-separated allow-list of e-mail addresses that may register |
 | `AI_PROVIDER` | `ollama` | `ollama` / `openai-compatible` / `mock` |
@@ -173,7 +168,7 @@ npm start
 
 ## Vercel deployment
 
-1. Create a PostgreSQL database (Neon, Supabase or Vercel Postgres).
+1. Create a free MongoDB Atlas cluster (https://www.mongodb.com/atlas), add a database user, allow access from anywhere (Vercel has no fixed IP), and copy the `mongodb+srv://` connection string with `/expenses_tracker` as the database name.
 2. Import the GitHub repository in Vercel (framework preset: Next.js).
 3. Environment variables: `DATABASE_URL` (required), `APP_TIMEZONE=Asia/Kolkata`, `AUTH_SECRET` (required) plus `AUTH_ALLOWED_EMAILS` (recommended), and optionally `AI_PROVIDER=openai-compatible` with the `OPENAI_COMPATIBLE_*` values.
 4. Deploy. Migrations run on the first request.
@@ -184,11 +179,10 @@ Your financial data is stored in your configured database. When using local Olla
 
 ## Known limitations
 
-- PGlite allows a single process per data directory; run one `next dev` at a time locally.
+- Multi-document transactions are not used (they need a MongoDB replica set), so a failed import can leave partially imported rows; re-run it in replace mode.
 - The PWA manifest makes the app installable, but there is no service worker / offline sync.
 - The AI rate limiter is in-memory (per server instance).
 - Larger local models (e.g. `llama3.1` 8B) can take minutes per summary on a laptop CPU; choose a smaller model such as `qwen2.5:3b` for faster answers.
-- `npm audit` reports a moderate advisory in `esbuild` pulled in transitively by `drizzle-kit`; it affects development tooling only.
 
 ## License
 

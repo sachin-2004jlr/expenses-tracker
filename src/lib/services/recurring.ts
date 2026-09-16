@@ -1,6 +1,5 @@
-import { and, asc, eq, lte } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { categories, recurringTransactions, transactions, type CategoryRow, type RecurringTransactionRow } from "@/lib/db/schema";
+import { newId, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
 import { addDays, compareIsoDates, monthKeyOf, todayIso } from "@/lib/dates";
 import { nextOccurrenceOnOrAfter, occurrencesBetween } from "@/lib/dates/recurrence";
 import { AppError } from "@/lib/errors";
@@ -9,82 +8,85 @@ import type { IsoDate, RecurringTransaction } from "@/types";
 import { toCategory } from "./categories";
 import { invalidateInsightsForMonths } from "./insights-cache";
 
-function toRecurring(row: RecurringTransactionRow, category: CategoryRow): RecurringTransaction {
+function toRecurring(doc: RecurringDoc, category: CategoryDoc): RecurringTransaction {
   return {
-    id: row.id,
-    type: row.type,
-    amount: Number(row.amount),
-    currency: row.currency,
-    description: row.description,
-    categoryId: row.categoryId,
+    id: doc._id,
+    type: doc.type,
+    amount: doc.amount,
+    currency: doc.currency,
+    description: doc.description,
+    categoryId: doc.categoryId,
     category: toCategory(category),
-    notes: row.notes,
-    frequency: row.frequency,
-    interval: row.interval,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    nextRunDate: row.nextRunDate,
-    lastRunDate: row.lastRunDate,
-    isActive: row.isActive,
+    notes: doc.notes,
+    frequency: doc.frequency,
+    interval: doc.interval,
+    startDate: doc.startDate,
+    endDate: doc.endDate,
+    nextRunDate: doc.nextRunDate,
+    lastRunDate: doc.lastRunDate,
+    isActive: doc.isActive,
   };
+}
+
+async function hydrate(userId: string, docs: RecurringDoc[]): Promise<RecurringTransaction[]> {
+  if (docs.length === 0) return [];
+  const db = await getDb();
+  const categories = await db.categories.find({ userId, _id: { $in: docs.map((d) => d.categoryId) } }).toArray();
+  const byId = new Map(categories.map((c) => [c._id, c]));
+  return docs.flatMap((doc) => {
+    const category = byId.get(doc.categoryId);
+    return category ? [toRecurring(doc, category)] : [];
+  });
 }
 
 export async function listRecurring(userId: string): Promise<RecurringTransaction[]> {
   const db = await getDb();
-  const rows = await db
-    .select({ rule: recurringTransactions, category: categories })
-    .from(recurringTransactions)
-    .innerJoin(categories, eq(categories.id, recurringTransactions.categoryId))
-    .where(eq(recurringTransactions.userId, userId))
-    .orderBy(asc(recurringTransactions.nextRunDate), asc(recurringTransactions.description));
-  return rows.map((r) => toRecurring(r.rule, r.category));
+  const docs = await db.recurring.find({ userId }).sort({ nextRunDate: 1, description: 1 }).toArray();
+  return hydrate(userId, docs);
 }
 
 export async function getRecurring(userId: string, id: string): Promise<RecurringTransaction> {
   const db = await getDb();
-  const rows = await db
-    .select({ rule: recurringTransactions, category: categories })
-    .from(recurringTransactions)
-    .innerJoin(categories, eq(categories.id, recurringTransactions.categoryId))
-    .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)))
-    .limit(1);
-  if (!rows[0]) throw AppError.notFound("Recurring transaction");
-  return toRecurring(rows[0].rule, rows[0].category);
+  const doc = await db.recurring.findOne({ _id: id, userId });
+  if (!doc) throw AppError.notFound("Recurring transaction");
+  const [rule] = await hydrate(userId, [doc]);
+  if (!rule) throw AppError.notFound("Recurring transaction");
+  return rule;
 }
 
 async function assertCategory(userId: string, categoryId: string, type: RecurringInput["type"]): Promise<void> {
   const db = await getDb();
-  const rows = await db
-    .select({ type: categories.type })
-    .from(categories)
-    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
-    .limit(1);
-  if (!rows[0]) throw AppError.badRequest("Choose a valid category");
-  if (rows[0].type !== type) throw AppError.badRequest("The category type must match the transaction type");
+  const category = await db.categories.findOne({ _id: categoryId, userId }, { projection: { type: 1 } });
+  if (!category) throw AppError.badRequest("Choose a valid category");
+  if (category.type !== type) throw AppError.badRequest("The category type must match the transaction type");
 }
 
 export async function createRecurring(userId: string, rawInput: RecurringInput): Promise<RecurringTransaction> {
   const input = recurringInputSchema.parse(rawInput);
   await assertCategory(userId, input.categoryId, input.type);
   const db = await getDb();
-  const [row] = await db
-    .insert(recurringTransactions)
-    .values({
-      userId,
-      type: input.type,
-      amount: input.amount,
-      description: input.description,
-      categoryId: input.categoryId,
-      notes: input.notes,
-      frequency: input.frequency,
-      interval: input.interval,
-      startDate: input.startDate,
-      endDate: input.endDate,
-      nextRunDate: input.startDate,
-      isActive: input.isActive,
-    })
-    .returning({ id: recurringTransactions.id });
-  return getRecurring(userId, row!.id);
+  const now = new Date();
+  const doc: RecurringDoc = {
+    _id: newId(),
+    userId,
+    type: input.type,
+    amount: input.amount,
+    currency: "INR",
+    description: input.description,
+    categoryId: input.categoryId,
+    notes: input.notes,
+    frequency: input.frequency,
+    interval: input.interval,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    nextRunDate: input.startDate,
+    lastRunDate: null,
+    isActive: input.isActive,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.recurring.insertOne(doc);
+  return getRecurring(userId, doc._id);
 }
 
 export async function updateRecurring(userId: string, id: string, rawInput: RecurringInput): Promise<RecurringTransaction> {
@@ -99,40 +101,41 @@ export async function updateRecurring(userId: string, id: string, rawInput: Recu
     compareIsoDates(resumeFrom, input.startDate) > 0 ? resumeFrom : input.startDate,
   );
   const db = await getDb();
-  await db
-    .update(recurringTransactions)
-    .set({
-      type: input.type,
-      amount: input.amount,
-      description: input.description,
-      categoryId: input.categoryId,
-      notes: input.notes,
-      frequency: input.frequency,
-      interval: input.interval,
-      startDate: input.startDate,
-      endDate: input.endDate,
-      nextRunDate,
-      isActive: input.isActive,
-    })
-    .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)));
+  await db.recurring.updateOne(
+    { _id: id, userId },
+    {
+      $set: {
+        type: input.type,
+        amount: input.amount,
+        description: input.description,
+        categoryId: input.categoryId,
+        notes: input.notes,
+        frequency: input.frequency,
+        interval: input.interval,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        nextRunDate,
+        isActive: input.isActive,
+        updatedAt: new Date(),
+      },
+    },
+  );
   return getRecurring(userId, id);
 }
 
 export async function setRecurringActive(userId: string, id: string, isActive: boolean): Promise<RecurringTransaction> {
   await getRecurring(userId, id);
   const db = await getDb();
-  await db
-    .update(recurringTransactions)
-    .set({ isActive })
-    .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)));
+  await db.recurring.updateOne({ _id: id, userId }, { $set: { isActive, updatedAt: new Date() } });
   return getRecurring(userId, id);
 }
 
 export async function deleteRecurring(userId: string, id: string): Promise<void> {
   await getRecurring(userId, id);
   const db = await getDb();
-  // Generated transactions are kept; their recurring_id becomes null via ON DELETE SET NULL.
-  await db.delete(recurringTransactions).where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)));
+  // Generated transactions are kept; they just lose the link to the rule.
+  await db.transactions.updateMany({ userId, recurringId: id }, { $set: { recurringId: null } });
+  await db.recurring.deleteOne({ _id: id, userId });
 }
 
 export interface MaterialiseResult {
@@ -142,67 +145,48 @@ export interface MaterialiseResult {
 
 /**
  * Create the transactions that recurring rules are due for, up to and including `today`.
- * Idempotent: each rule advances its `nextRunDate` inside the same DB transaction.
+ * Each rule's `nextRunDate` is advanced right after its transactions are inserted.
  */
 export async function materialiseDueRecurring(userId: string, today: IsoDate = todayIso()): Promise<MaterialiseResult> {
   const db = await getDb();
-  const due = await db
-    .select()
-    .from(recurringTransactions)
-    .where(
-      and(
-        eq(recurringTransactions.userId, userId),
-        eq(recurringTransactions.isActive, true),
-        lte(recurringTransactions.nextRunDate, today),
-      ),
-    );
+  const due = await db.recurring.find({ userId, isActive: true, nextRunDate: { $lte: today } }).toArray();
   if (due.length === 0) return { created: 0, rulesProcessed: 0 };
 
   let created = 0;
   const touchedMonths = new Set<string>();
+  const now = new Date();
 
-  await db.transaction(async (tx) => {
-    for (const rule of due) {
-      const dates = occurrencesBetween(
-        rule.startDate,
-        rule.frequency,
-        rule.interval,
-        rule.nextRunDate,
-        today,
-        rule.endDate,
-      );
-      if (dates.length > 0) {
-        await tx.insert(transactions).values(
-          dates.map((date) => ({
-            userId,
-            type: rule.type,
-            amount: Number(rule.amount),
-            currency: rule.currency,
-            description: rule.description,
-            categoryId: rule.categoryId,
-            date,
-            notes: rule.notes,
-            recurringId: rule.id,
-          })),
-        );
-        created += dates.length;
-        for (const date of dates) touchedMonths.add(monthKeyOf(date));
-      }
-      const lastRun = dates.length > 0 ? dates[dates.length - 1]! : rule.lastRunDate;
-      const nextRunDate = nextOccurrenceOnOrAfter(
-        rule.startDate,
-        rule.frequency,
-        rule.interval,
-        addDays(lastRun ?? rule.nextRunDate, 1),
-      );
-      const finished = rule.endDate !== null && compareIsoDates(nextRunDate, rule.endDate) > 0;
-      await tx
-        .update(recurringTransactions)
-        .set({ nextRunDate, lastRunDate: lastRun ?? null, isActive: finished ? false : rule.isActive })
-        .where(eq(recurringTransactions.id, rule.id));
+  for (const rule of due) {
+    const dates = occurrencesBetween(rule.startDate, rule.frequency, rule.interval, rule.nextRunDate, today, rule.endDate);
+    if (dates.length > 0) {
+      const docs: TransactionDoc[] = dates.map((date) => ({
+        _id: newId(),
+        userId,
+        type: rule.type,
+        amount: rule.amount,
+        currency: rule.currency,
+        description: rule.description,
+        categoryId: rule.categoryId,
+        date,
+        notes: rule.notes,
+        tags: [],
+        recurringId: rule._id,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      await db.transactions.insertMany(docs);
+      created += docs.length;
+      for (const date of dates) touchedMonths.add(monthKeyOf(date));
     }
-    if (touchedMonths.size > 0) await invalidateInsightsForMonths(userId, touchedMonths, tx);
-  });
+    const lastRun = dates.length > 0 ? dates[dates.length - 1]! : rule.lastRunDate;
+    const nextRunDate = nextOccurrenceOnOrAfter(rule.startDate, rule.frequency, rule.interval, addDays(lastRun ?? rule.nextRunDate, 1));
+    const finished = rule.endDate !== null && compareIsoDates(nextRunDate, rule.endDate) > 0;
+    await db.recurring.updateOne(
+      { _id: rule._id },
+      { $set: { nextRunDate, lastRunDate: lastRun ?? null, isActive: finished ? false : rule.isActive, updatedAt: now } },
+    );
+  }
+  if (touchedMonths.size > 0) await invalidateInsightsForMonths(userId, touchedMonths);
 
   return { created, rulesProcessed: due.length };
 }

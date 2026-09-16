@@ -17,7 +17,7 @@
 # production
 /build
 
-# local database (PGlite) and other local data
+# local data
 /.data
 
 # misc

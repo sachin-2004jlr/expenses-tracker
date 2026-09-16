@@ -1,56 +1,63 @@
-import { eq } from "drizzle-orm";
 import { getDb, type Db } from "@/lib/db";
 import { DEFAULT_CATEGORIES } from "@/lib/db/defaults";
-import { appSettings, categories, users } from "@/lib/db/schema";
+import { newId } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
 /**
- * Account rows (e-mail + password) and their default data. Kept separate from `user.ts` so the
- * auth layer can import it without a circular dependency.
+ * Account documents (e-mail + password) and their default data. Kept separate from `user.ts`
+ * so the auth layer can import it without a circular dependency.
  */
 
-/** Idempotently create default categories and a settings row for a user. */
+/** Idempotently create default categories and a settings document for a user. */
 export async function ensureUserDefaults(db: Db, userId: string): Promise<void> {
-  const existingCategories = await db
-    .select({ id: categories.id })
-    .from(categories)
-    .where(eq(categories.userId, userId))
-    .limit(1);
-  if (existingCategories.length === 0) {
-    await db
-      .insert(categories)
-      .values(
-        DEFAULT_CATEGORIES.map((category, index) => ({
-          userId,
-          name: category.name,
-          type: category.type,
-          icon: category.icon,
-          color: category.color,
-          isDefault: true,
-          sortOrder: index,
-        })),
-      )
-      .onConflictDoNothing();
+  const now = new Date();
+  const hasCategories = await db.categories.countDocuments({ userId }, { limit: 1 });
+  if (hasCategories === 0) {
+    await db.categories.insertMany(
+      DEFAULT_CATEGORIES.map((category, index) => ({
+        _id: newId(),
+        userId,
+        name: category.name,
+        nameLower: category.name.toLowerCase(),
+        type: category.type,
+        icon: category.icon,
+        color: category.color,
+        isDefault: true,
+        sortOrder: index,
+        createdAt: now,
+        updatedAt: now,
+      })),
+      { ordered: false },
+    ).catch((error: unknown) => {
+      // Duplicate-key errors mean a parallel request seeded first; that is fine.
+      if ((error as { code?: number }).code !== 11000) throw error;
+    });
   }
 
-  const existingSettings = await db
-    .select({ id: appSettings.id })
-    .from(appSettings)
-    .where(eq(appSettings.userId, userId))
-    .limit(1);
-  if (existingSettings.length === 0) {
+  const hasSettings = await db.settings.countDocuments({ userId }, { limit: 1 });
+  if (hasSettings === 0) {
     const provider = process.env.AI_PROVIDER;
-    await db
-      .insert(appSettings)
-      .values({
+    await db.settings
+      .insertOne({
+        _id: newId(),
         userId,
+        currency: "INR",
+        locale: "en-IN",
+        dateFormat: "dd MMM yyyy",
+        firstDayOfWeek: 1,
         timeZone: process.env.APP_TIMEZONE || "Asia/Kolkata",
+        aiEnabled: true,
         aiProvider: provider === "openai-compatible" || provider === "mock" ? provider : "ollama",
         ollamaUrl: (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, ""),
         ollamaModel: process.env.OLLAMA_MODEL || null,
+        aiAutoAnalyze: false,
+        createdAt: now,
+        updatedAt: now,
       })
-      .onConflictDoNothing({ target: appSettings.userId });
+      .catch((error: unknown) => {
+        if ((error as { code?: number }).code !== 11000) throw error;
+      });
   }
 }
 
@@ -75,31 +82,34 @@ function normaliseEmail(email: string): string {
 
 export async function findUserByEmail(email: string): Promise<AccountRecord | null> {
   const db = await getDb();
-  const rows = await db
-    .select({ id: users.id, email: users.email, name: users.name, image: users.image, passwordHash: users.passwordHash })
-    .from(users)
-    .where(eq(users.email, normaliseEmail(email)))
-    .limit(1);
-  const row = rows[0];
-  if (!row || !row.email) return null;
-  return { ...row, email: row.email };
+  const doc = await db.users.findOne({ email: normaliseEmail(email) });
+  if (!doc) return null;
+  return { id: doc._id, email: doc.email, name: doc.name, image: doc.image, passwordHash: doc.passwordHash };
 }
 
 /** Create an account. Throws a 409 AppError when the e-mail is already registered. */
 export async function createUserWithPassword(input: { name: string; email: string; password: string }): Promise<string> {
   const email = normaliseEmail(input.email);
   const db = await getDb();
-  const existing = await findUserByEmail(email);
-  if (existing) throw AppError.conflict("An account with this e-mail already exists");
-  const passwordHash = await hashPassword(input.password);
-  const [row] = await db
-    .insert(users)
-    .values({ email, name: input.name.trim(), passwordHash })
-    .onConflictDoNothing({ target: users.email })
-    .returning({ id: users.id });
-  if (!row) throw AppError.conflict("An account with this e-mail already exists");
-  await ensureUserDefaults(db, row.id);
-  return row.id;
+  if (await findUserByEmail(email)) throw AppError.conflict("An account with this e-mail already exists");
+  const now = new Date();
+  const id = newId();
+  try {
+    await db.users.insertOne({
+      _id: id,
+      email,
+      name: input.name.trim(),
+      image: null,
+      passwordHash: await hashPassword(input.password),
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) throw AppError.conflict("An account with this e-mail already exists");
+    throw error;
+  }
+  await ensureUserDefaults(db, id);
+  return id;
 }
 
 /** Verify a password for an existing account; returns the account on success. */
@@ -112,37 +122,30 @@ export async function authenticateUser(email: string, password: string): Promise
 
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
   const db = await getDb();
-  const rows = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, userId)).limit(1);
-  return verifyPassword(password, rows[0]?.passwordHash);
+  const doc = await db.users.findOne({ _id: userId }, { projection: { passwordHash: 1 } });
+  return verifyPassword(password, doc?.passwordHash);
 }
 
 export async function updateUserPassword(userId: string, password: string): Promise<void> {
   const db = await getDb();
-  await db
-    .update(users)
-    .set({ passwordHash: await hashPassword(password), updatedAt: new Date() })
-    .where(eq(users.id, userId));
+  await db.users.updateOne({ _id: userId }, { $set: { passwordHash: await hashPassword(password), updatedAt: new Date() } });
 }
 
 export async function updateUserProfile(userId: string, profile: { name: string }): Promise<UserProfile> {
   const db = await getDb();
-  const [row] = await db
-    .update(users)
-    .set({ name: profile.name.trim(), updatedAt: new Date() })
-    .where(eq(users.id, userId))
-    .returning({ id: users.id, email: users.email, name: users.name, image: users.image });
-  if (!row) throw AppError.notFound("User");
-  return row;
+  const result = await db.users.findOneAndUpdate(
+    { _id: userId },
+    { $set: { name: profile.name.trim(), updatedAt: new Date() } },
+    { returnDocument: "after" },
+  );
+  if (!result) throw AppError.notFound("User");
+  return { id: result._id, email: result.email, name: result.name, image: result.image };
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const db = await getDb();
-  const rows = await db
-    .select({ id: users.id, email: users.email, name: users.name, image: users.image })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-  return rows[0] ?? null;
+  const doc = await db.users.findOne({ _id: userId });
+  return doc ? { id: doc._id, email: doc.email, name: doc.name, image: doc.image } : null;
 }
 
 export const DEMO_ACCOUNT = { email: "demo@expenses.local", password: "demo12345", name: "Demo" } as const;
@@ -151,8 +154,7 @@ export const DEMO_ACCOUNT = { email: "demo@expenses.local", password: "demo12345
 export async function ensureDemoAccount(): Promise<{ id: string; email: string; password: string }> {
   const existing = await findUserByEmail(DEMO_ACCOUNT.email);
   if (existing) {
-    const db = await getDb();
-    await ensureUserDefaults(db, existing.id);
+    await ensureUserDefaults(await getDb(), existing.id);
     return { id: existing.id, email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password };
   }
   const id = await createUserWithPassword(DEMO_ACCOUNT);

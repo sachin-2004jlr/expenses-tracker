@@ -195,7 +195,7 @@ export default async function LandingPage() {
             </div>
             <ul className="grid gap-4 sm:grid-cols-3">
               {[
-                { icon: Lock, title: "Your database", text: "Transactions live in the PostgreSQL you configure, or an embedded local database on your laptop." },
+                { icon: Lock, title: "Your database", text: "Transactions live in the MongoDB you configure: the server on your own laptop, or your own Atlas cluster." },
                 { icon: ShieldCheck, title: "Local AI", text: "With Ollama, AI requests are processed on your computer. No financial data goes to a cloud model unless you choose one." },
                 { icon: BrainCircuit, title: "AI never decides", text: "Every total, percentage and comparison is computed by the app. The model only explains the result." },
               ].map((item) => {

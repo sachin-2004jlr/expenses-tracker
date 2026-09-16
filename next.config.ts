@@ -1,13 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Database drivers use Node.js APIs (sockets, WASM, fs) and must not be bundled.
-  serverExternalPackages: ["@electric-sql/pglite", "pg"],
-  // Drizzle migrations are read from disk at runtime (auto-migrate), so trace them into
-  // every server function when deploying to Vercel.
-  outputFileTracingIncludes: {
-    "/*": ["./drizzle/**/*"],
-  },
+  // The MongoDB driver (and the in-memory server used by tests) use Node.js APIs and must not be bundled.
+  serverExternalPackages: ["mongodb", "mongodb-memory-server"],
   poweredByHeader: false,
 };
 
