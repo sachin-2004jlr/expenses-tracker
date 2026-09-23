@@ -64,6 +64,11 @@ export const importRecurringSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+export const importBudgetSchema = z.object({
+  category: z.string().trim().min(1).max(40),
+  amount: importAmountSchema,
+});
+
 export const backupFileSchema = z.object({
   format: z.literal(BACKUP_FORMAT, { error: "This file is not an Expenses Tracker backup" }),
   version: z.number().int().min(1).max(BACKUP_VERSION),
@@ -71,6 +76,7 @@ export const backupFileSchema = z.object({
   categories: z.array(importCategorySchema).max(500).default([]),
   transactions: z.array(importTransactionSchema).max(100_000),
   recurring: z.array(importRecurringSchema).max(1000).default([]),
+  budgets: z.array(importBudgetSchema).max(500).default([]),
 });
 
 export type BackupFile = z.infer<typeof backupFileSchema>;

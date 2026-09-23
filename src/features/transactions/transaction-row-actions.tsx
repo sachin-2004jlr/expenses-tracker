@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Copy, Ellipsis, Pencil, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +14,7 @@ import {
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { formatCurrency } from "@/lib/money";
 import type { Transaction } from "@/types";
-import { deleteTransactionAction, duplicateTransactionAction } from "./actions";
+import { createTransactionAction, deleteTransactionAction, duplicateTransactionAction } from "./actions";
 import { useTransactionDialog } from "./transaction-dialog-provider";
 
 export interface TransactionRowActionsProps {
@@ -26,7 +25,6 @@ export interface TransactionRowActionsProps {
 
 /** Edit / Duplicate / Delete menu. Deletion always asks for confirmation. */
 export function TransactionRowActions({ transaction, duplicateDate }: TransactionRowActionsProps) {
-  const router = useRouter();
   const { openEdit } = useTransactionDialog();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,17 +38,36 @@ export function TransactionRowActions({ transaction, duplicateDate }: Transactio
       return;
     }
     toast.success("Transaction duplicated", { description: `${result.data.description} · ${formatCurrency(result.data.amount)}` });
-    router.refresh();
   };
 
   const remove = async () => {
-    const result = await deleteTransactionAction(transaction.id);
+    const snapshot = transaction;
+    const result = await deleteTransactionAction(snapshot.id);
     if (!result.ok) {
       toast.error("Could not delete", { description: result.error });
       return;
     }
-    toast.success("Transaction deleted", { description: transaction.description });
-    router.refresh();
+    toast.success("Transaction deleted", {
+      description: snapshot.description,
+      duration: 8000,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          void createTransactionAction({
+            type: snapshot.type,
+            amount: snapshot.amount,
+            description: snapshot.description,
+            categoryId: snapshot.categoryId,
+            date: snapshot.date,
+            notes: snapshot.notes,
+            tags: snapshot.tags.map((t) => t.name),
+          }).then((restored) => {
+            if (restored.ok) toast.success("Transaction restored", { description: snapshot.description });
+            else toast.error("Could not restore", { description: restored.error });
+          });
+        },
+      },
+    });
   };
 
   return (
@@ -83,7 +100,7 @@ export function TransactionRowActions({ transaction, duplicateDate }: Transactio
         title="Delete this transaction?"
         description={
           <>
-            <strong>{transaction.description}</strong> ({formatCurrency(transaction.amount)}) will be permanently removed. This cannot be undone.
+            <strong>{transaction.description}</strong> ({formatCurrency(transaction.amount)}) will be removed. You can undo this from the notification for a few seconds.
           </>
         }
         confirmLabel="Delete"

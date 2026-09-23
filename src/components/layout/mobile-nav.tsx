@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { DASHBOARD_PATH, NAV_ITEMS, isActivePath, type NavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { NavPending } from "./nav-pending";
 
 const TAB_HREFS = [DASHBOARD_PATH, "/transactions", "/calendar"];
 const TABS = TAB_HREFS.map((href) => NAV_ITEMS.find((item) => item.href === href)!);
@@ -77,12 +78,13 @@ export function MobileNav() {
                     onClick={() => setMoreOpen(false)}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex flex-col items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition-colors",
+                      "relative flex flex-col items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition-colors",
                       active ? "border-brand/40 bg-brand/10 text-brand" : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
                     <Icon className="size-5" aria-hidden />
                     {item.short ?? item.label}
+                    <NavPending className="inset-0 rounded-2xl ring-2 ring-brand/50" />
                   </Link>
                 </li>
               );
@@ -106,12 +108,13 @@ function TabItem({ item, active }: { item: NavItem; active: boolean }) {
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex min-h-14 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-colors",
+          "relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-colors",
           active ? "text-brand" : "text-muted-foreground",
         )}
       >
         <Icon className={cn("size-5", active && "stroke-[2.25]")} aria-hidden />
         <span>{item.short ?? item.label}</span>
+        <NavPending className="left-1/2 top-1 h-0.5 w-8 -translate-x-1/2 rounded-full bg-brand" />
       </Link>
     </li>
   );

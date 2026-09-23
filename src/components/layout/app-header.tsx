@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ChevronDown, LogOut, Plus, Search, Settings, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,26 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
   const searchParams = useSearchParams();
   const { openCreate } = useTransactionDialog();
   const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Shortcuts: "n" adds a transaction, "/" focuses search. Ignored while typing or when an overlay is open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      if (document.querySelector("[role=dialog], [role=alertdialog], [role=menu], [role=listbox]")) return;
+      if (event.key === "n" || event.key === "N") {
+        event.preventDefault();
+        openCreate();
+      } else if (event.key === "/" && searchRef.current && searchRef.current.offsetParent !== null) {
+        event.preventDefault();
+        searchRef.current.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openCreate]);
 
   const current = NAV_ITEMS.find((item) => isActivePath(pathname, item.href));
   const monthScoped = MONTH_SCOPED_PATHS.some((path) => isActivePath(pathname, path));
@@ -62,7 +82,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
         <h1 className="min-w-0 truncate rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold">{current?.label ?? "Expenses"}</h1>
       )}
 
-      <Button size="icon" onClick={() => openCreate()} aria-label="Add transaction" className="shrink-0 rounded-full shadow-glow-brand" data-testid="add-transaction">
+      <Button size="icon" onClick={() => openCreate()} aria-label="Add transaction" title="Add transaction (N)" className="shrink-0 rounded-full shadow-glow-brand" data-testid="add-transaction">
         <Plus aria-hidden />
       </Button>
 
@@ -70,6 +90,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
         <label className="flex h-9 w-full items-center gap-2 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground transition-colors focus-within:border-ring focus-within:text-foreground">
           <Search className="size-4 shrink-0" aria-hidden />
           <input
+            ref={searchRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -77,6 +98,11 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
             aria-label="Search transactions"
             className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           />
+          {!query && (
+            <kbd className="hidden shrink-0 rounded border border-border px-1.5 font-mono text-[10px] text-muted-foreground lg:inline" aria-hidden>
+              /
+            </kbd>
+          )}
         </label>
       </form>
 

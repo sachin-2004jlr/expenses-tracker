@@ -135,6 +135,39 @@ export interface MonthlyComparison {
 
 export type RangePreset = "3m" | "6m" | "12m" | "all";
 
+/** Monthly spending limit for one expense category, in paise. */
+export interface Budget {
+  id: string;
+  categoryId: string;
+  amount: number;
+}
+
+export type BudgetStatus = "ok" | "warning" | "over";
+
+export interface BudgetProgress {
+  categoryId: string;
+  name: string;
+  icon: string;
+  color: string;
+  budget: number;
+  spent: number;
+  /** budget - spent; negative when over budget. */
+  remaining: number;
+  /** spent / budget as a percentage with one decimal (can exceed 100). */
+  percentage: number;
+  status: BudgetStatus;
+}
+
+export interface BudgetSummary {
+  items: BudgetProgress[];
+  totalBudget: number;
+  totalSpent: number;
+  totalRemaining: number;
+  percentage: number;
+  status: BudgetStatus;
+  overCount: number;
+}
+
 export interface DailyBalancePoint {
   date: IsoDate;
   /** Running balance at the end of this day (all-time). */

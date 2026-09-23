@@ -146,7 +146,7 @@ export async function deleteCategory(userId: string, id: string, options: Delete
     reassigned = moved.modifiedCount;
     await db.recurring.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
   }
-  await db.categories.deleteOne({ _id: id, userId });
+  await Promise.all([db.categories.deleteOne({ _id: id, userId }), db.budgets.deleteMany({ userId, categoryId: id })]);
   return { deleted: true, reassignedTransactions: reassigned };
 }
 

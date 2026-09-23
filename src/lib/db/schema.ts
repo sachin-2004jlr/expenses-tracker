@@ -18,6 +18,7 @@ export const COLLECTIONS = {
   transactions: "transactions",
   recurring: "recurring_transactions",
   settings: "app_settings",
+  budgets: "budgets",
 } as const;
 
 export function newId(): string {
@@ -83,6 +84,15 @@ export interface RecurringDoc extends Timestamps {
   nextRunDate: string;
   lastRunDate: string | null;
   isActive: boolean;
+}
+
+/** Monthly limit for one expense category (applies to every month until changed). */
+export interface BudgetDoc extends Timestamps {
+  _id: string;
+  userId: string;
+  categoryId: string;
+  /** Integer paise, > 0. A budget of zero is stored as "no budget" (the document is removed). */
+  amount: number;
 }
 
 export interface AppSettingsDoc extends Timestamps {

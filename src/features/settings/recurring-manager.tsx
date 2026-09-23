@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Pencil, Play, Plus, Repeat, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -64,7 +63,6 @@ function fromRule(rule: RecurringTransaction): FormState {
 }
 
 export function RecurringManager({ rules, categories, today, dateFormat }: { rules: RecurringTransaction[]; categories: Category[]; today: IsoDate; dateFormat: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RecurringTransaction | null>(null);
   const [form, setForm] = useState<FormState>(() => emptyForm(today));
@@ -120,13 +118,11 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
     }
     toast.success(editing ? "Recurring rule updated" : "Recurring rule created", { description: result.data.description });
     setOpen(false);
-    router.refresh();
   };
 
   const toggle = async (rule: RecurringTransaction, isActive: boolean) => {
     const result = await toggleRecurringAction(rule.id, isActive);
     if (!result.ok) toast.error("Could not update rule", { description: result.error });
-    else router.refresh();
   };
 
   const remove = async () => {
@@ -138,7 +134,6 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
     }
     toast.success("Recurring rule deleted", { description: "Already-created transactions were kept." });
     setDeleting(null);
-    router.refresh();
   };
 
   const runNow = async () => {
@@ -148,7 +143,6 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
     if (!result.ok) toast.error("Could not run recurring rules", { description: result.error });
     else {
       toast.success(result.data.created > 0 ? `${result.data.created} transaction${result.data.created === 1 ? "" : "s"} created` : "Nothing due today");
-      router.refresh();
     }
   };
 

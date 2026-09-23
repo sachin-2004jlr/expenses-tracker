@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/money";
@@ -39,10 +38,9 @@ export interface TransactionDialogProviderProps {
 
 /**
  * Mounts one global Add/Edit dialog so any button (header, FAB, table row, calendar day) can
- * open it. On save the router refreshes so server-rendered totals, charts and lists update.
+ * open it. On save the server action revalidates the app, so totals, charts and lists update.
  */
 export function TransactionDialogProvider({ categories, tagSuggestions, today, children }: TransactionDialogProviderProps) {
-  const router = useRouter();
   const [state, setState] = useState<DialogState>({ open: false, mode: "create", transaction: null, defaults: {} });
   // Incremented on every open so the dialog remounts with fresh default values.
   const [nonce, setNonce] = useState(0);
@@ -65,9 +63,9 @@ export function TransactionDialogProvider({ categories, tagSuggestions, today, c
       toast.success(mode === "create" ? `${label} added` : `${label} updated`, {
         description: `${transaction.description} · ${formatCurrency(transaction.amount)}`,
       });
-      router.refresh();
+      // The server action already revalidated the app; no second router.refresh() round trip.
     },
-    [router],
+    [],
   );
 
   const value = useMemo<TransactionDialogContextValue>(

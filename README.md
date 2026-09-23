@@ -12,14 +12,16 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
 - **Landing page** (`/`) with a bold uppercase hero, product preview built from the real dashboard cards, feature grid and privacy section.
 - **Accounts** (`/register`, `/login`) with e-mail and password: scrypt-hashed passwords, encrypted session cookies, optional allow-list of e-mail addresses, name and password changes in Settings → Account.
-- **Dashboard** (`/dashboard`): total balance hero with a day-by-day balance line, saved-this-month panel, recent activity with per-day burn rate, quick-action tiles, bright-green income card with trend, expenses card with trend and daily rate, dotted savings-rate gauge, top category with share slider, monthly spending bars (current month highlighted), category donut and month-over-month comparison.
+- **Dashboard** (`/dashboard`): total balance hero with a day-by-day balance line, saved-this-month panel, recent activity with per-day burn rate, quick-action tiles, bright-green income card with trend, expenses card with trend and daily rate, dotted savings-rate gauge, top category with share slider, monthly budgets with a daily allowance for the rest of the month, monthly spending bars (current month highlighted), category donut and month-over-month comparison.
 - **Top bar**: month selector pill (previous / next / today, future months allowed), orange add button, global search that jumps to filtered transactions, quick links, account menu with theme switch and sign-out.
 - **Add money in seconds**: income / expense toggle, amount auto-focused, category, date, tags and notes, validated on the client and again on the server. Edit, duplicate and confirmed delete on every transaction.
 - **Transactions**: full-text search across description, notes, category and tags, type / category / tag / date-range / amount-range filters, sortable columns, pagination; tables become cards on phones.
 - **Calendar**: month grid with per-day income and expense totals, week view, day panel, add-on-this-day.
 - **Analytics**: income / expense / savings trends, category spending, income sources, largest expenses, averages, best month, month comparison with percentages calculated in application code.
 - **Categories, tags, recurring rules** (salary, rent, EMIs, subscriptions post themselves on due dates).
-- **Settings**: general (currency, locale, date format, first day of week, time zone), account, categories, recurring, data (JSON / CSV export, validated import, clear data), appearance (dark by default, light and system available).
+- **Budgets**: a monthly limit per expense category, set in Settings → Budgets. The dashboard shows spent vs limit per category (green, amber from 80%, red when over), the total left and an even daily allowance. Budgets are included in JSON backups and available at `GET/PUT /api/budgets`.
+- **Speed and polish**: pages you visited stay cached in the browser for 30 seconds, navigation links show a pending state immediately, `N` adds a transaction and `/` focuses search, and deleting a transaction can be undone from the notification.
+- **Settings**: general (currency, locale, date format, first day of week, time zone), account, categories, budgets, recurring, data (JSON / CSV export, validated import, clear data), appearance (dark by default, light and system available).
 - Skeleton loading states, empty states, error boundaries, database-not-configured screen, keyboard-accessible dialogs and menus, labelled icon buttons, reduced-motion support, installable PWA manifest.
 
 ## Architecture
@@ -30,13 +32,13 @@ src/
     page.tsx                Landing page
     login/  register/       Sign-in and account creation pages
     (app)/                  Signed-in shell: dashboard, transactions, calendar, analytics, settings
-    api/                    Route handlers: auth, transactions, categories, analytics, settings, export, import
+    api/                    Route handlers: auth, transactions, categories, budgets, analytics, settings, export, import, health
   components/
     ui/                     shadcn/ui primitives (Base UI)
     layout/                 Icon rail sidebar, top bar, mobile tab bar, app shell
     shared/                 Brand logo, avatar, money formatting, stat cards, dialogs, selectors
   features/
-    auth/  dashboard/  transactions/  calendar/  analytics/  settings/  recurring/
+    auth/  dashboard/  transactions/  calendar/  analytics/  budgets/  settings/  recurring/
   lib/
     auth.ts  password.ts    Auth.js configuration (credentials provider, JWT sessions, allow-list), scrypt hashing
     db/                     MongoDB document types, client (local MongoDB or Atlas), index setup
@@ -88,7 +90,7 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 
 ## Database
 
-The document shapes (`src/lib/db/schema.ts`) define the `users`, `categories`, `transactions` (tags embedded), `recurring_transactions` and `app_settings` collections, all keyed by UUID strings and scoped by `userId`.
+The document shapes (`src/lib/db/schema.ts`) define the `users`, `categories`, `transactions` (tags embedded), `recurring_transactions`, `budgets` and `app_settings` collections, all keyed by UUID strings and scoped by `userId`.
 
 - **Local development**: leave `DATABASE_URL` empty and the app uses the MongoDB server on your machine (`mongodb://127.0.0.1:27017/expenses_tracker`). Install MongoDB Community Server if you do not have it, or point `DATABASE_URL` at an Atlas cluster instead.
 - **Production**: set `DATABASE_URL` to a MongoDB Atlas connection string. Indexes are created automatically on the first connection; there are no migrations. `npm run db:migrate` only creates the indexes explicitly.
@@ -148,7 +150,9 @@ npm start
 1. Create a free MongoDB Atlas cluster (https://www.mongodb.com/atlas), add a database user, allow access from anywhere (Vercel has no fixed IP), and copy the connection string with `/expenses_tracker` as the database name.
 2. Import the GitHub repository in Vercel (framework preset: Next.js).
 3. Environment variables: `DATABASE_URL` (required), `AUTH_SECRET` (required), `AUTH_ALLOWED_EMAILS` (recommended) and `APP_TIMEZONE=Asia/Kolkata`.
-4. Deploy. Indexes are created on the first request. Every push to `main` redeploys automatically.
+4. Deploy. Indexes are created in the background on the first request. Every push to `main` redeploys automatically.
+
+**Keep the functions next to the database.** Every page makes several MongoDB round trips, so the distance between the Vercel function and the Atlas cluster decides how fast the app feels. `vercel.json` pins functions to `bom1` (Mumbai) because the Atlas cluster runs in AWS `ap-south-1`. If your cluster is elsewhere, change the region to the closest one (Vercel → Project → Settings → Functions, or `regions` in `vercel.json`). `GET /api/health` returns the serving region and the database ping; on a matched region the ping is a few milliseconds.
 
 ## Privacy
 
@@ -159,6 +163,7 @@ Your financial data is stored only in the MongoDB database you configure. No thi
 - Multi-document transactions are not used (they need a MongoDB replica set), so a failed import can leave partially imported rows; re-run it in replace mode.
 - The PWA manifest makes the app installable, but there is no service worker / offline sync.
 - The login / registration rate limiter is in-memory (per server instance).
+- Budgets are monthly and category-level; there is no rollover of unspent amounts.
 
 ## License
 

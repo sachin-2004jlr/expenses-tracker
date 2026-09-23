@@ -93,7 +93,6 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
       return;
     }
     toast.success("Data cleared", { description: `${result.data.transactions} transactions removed.` });
-    router.refresh();
   };
 
   return (

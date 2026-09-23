@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Pencil, Plus, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +28,6 @@ interface EditorState {
 const EMPTY: EditorState = { open: false, category: null, name: "", type: "EXPENSE", icon: "tag", color: "slate" };
 
 export function CategoryManager({ categories }: { categories: CategoryWithStats[] }) {
-  const router = useRouter();
   const [editor, setEditor] = useState<EditorState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +50,6 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
     }
     toast.success(editor.category ? "Category updated" : "Category created", { description: result.data.name });
     setEditor(EMPTY);
-    router.refresh();
   };
 
   const remove = async () => {
@@ -67,7 +64,6 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
     });
     setDeleting(null);
     setReassignTo("");
-    router.refresh();
   };
 
   const groups: { type: TransactionType; title: string }[] = [

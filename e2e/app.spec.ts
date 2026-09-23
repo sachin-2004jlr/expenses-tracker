@@ -234,6 +234,34 @@ test("settings: categories, data and account", async ({ page }) => {
   await expect(page.getByText("Current password is incorrect")).toBeVisible();
 });
 
+test("budgets: set a limit in settings and track it on the dashboard", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("budgets-cta")).toBeVisible();
+
+  await page.goto("/settings?tab=budgets");
+  await page.getByTestId("budget-input-Food").fill("1000");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Food budget saved")).toBeVisible();
+
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("budget-card")).toContainText("of ₹1,000");
+  await expect(page.getByTestId("budget-spent")).toContainText("₹900");
+  await expect(page.getByRole("progressbar", { name: "Food budget used" })).toHaveAttribute("aria-valuenow", "90");
+
+  const api = await page.request.get("/api/budgets");
+  const body = (await api.json()) as { progress: { totalBudget: number; items: { status: string }[] } };
+  expect(body.progress.totalBudget).toBe(100_000);
+  expect(body.progress.items[0]?.status).toBe("warning");
+});
+
+test("health endpoint reports status and database round trip", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.ok()).toBeTruthy();
+  const body = (await response.json()) as { status: string; database: { pingMs: number } };
+  expect(body.status).toBe("ok");
+  expect(typeof body.database.pingMs).toBe("number");
+});
+
 test("sign out returns to the landing page", async ({ page }) => {
   await page.goto("/dashboard");
   await page.getByTestId("account-menu").click();

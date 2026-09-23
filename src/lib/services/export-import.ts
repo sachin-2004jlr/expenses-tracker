@@ -1,9 +1,10 @@
 import { getDb } from "@/lib/db";
-import { newId, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
+import { newId, type BudgetDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { paiseToDecimalString } from "@/lib/money";
 import { BACKUP_FORMAT, BACKUP_VERSION, validateBackup, type BackupFile, type ImportMode } from "@/lib/validation/import";
 import type { Category, Transaction } from "@/types";
+import { listBudgets } from "./budgets";
 import { listCategories } from "./categories";
 import { listRecurring } from "./recurring";
 import { normaliseTags } from "./tags";
@@ -45,10 +46,12 @@ export interface ExportedBackup {
     nextRunDate: string;
     isActive: boolean;
   }>;
+  budgets: Array<{ category: string; amount: string }>;
 }
 
 export async function exportBackup(userId: string): Promise<ExportedBackup> {
-  const [cats, txs, recurring] = await Promise.all([listCategories(userId), listAllTransactions(userId), listRecurring(userId)]);
+  const [cats, txs, recurring, budgets] = await Promise.all([listCategories(userId), listAllTransactions(userId), listRecurring(userId), listBudgets(userId)]);
+  const categoryName = new Map(cats.map((c) => [c.id, c.name]));
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
@@ -79,6 +82,10 @@ export async function exportBackup(userId: string): Promise<ExportedBackup> {
       nextRunDate: r.nextRunDate,
       isActive: r.isActive,
     })),
+    budgets: budgets.flatMap((b) => {
+      const category = categoryName.get(b.categoryId);
+      return category ? [{ category, amount: paiseToDecimalString(b.amount) }] : [];
+    }),
   };
 }
 
@@ -156,6 +163,10 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
     const key = catKey(r.type, r.category);
     if (!wanted.has(key)) wanted.set(key, { name: r.category.trim(), type: r.type, icon: "tag", color: "slate" });
   }
+  for (const b of backup.budgets) {
+    const key = catKey("EXPENSE", b.category);
+    if (!wanted.has(key)) wanted.set(key, { name: b.category.trim(), type: "EXPENSE", icon: "tag", color: "slate" });
+  }
   const newCategories: CategoryDoc[] = [];
   for (const [key, c] of wanted) {
     if (catMap.has(key)) continue;
@@ -228,6 +239,21 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
     }));
     const inserted = await db.recurring.insertMany(docs);
     recurringImported = inserted.insertedCount;
+  }
+
+  // Budgets: one per expense category; the backup's value wins over an existing one.
+  if (backup.budgets.length > 0) {
+    const byCategory = new Map<string, number>();
+    for (const b of backup.budgets) byCategory.set(catMap.get(catKey("EXPENSE", b.category))!, b.amount);
+    await db.budgets.bulkWrite(
+      Array.from(byCategory, ([categoryId, amount]) => ({
+        updateOne: {
+          filter: { userId, categoryId },
+          update: { $set: { amount, updatedAt: now }, $setOnInsert: { _id: newId(), createdAt: now } satisfies Partial<BudgetDoc> },
+          upsert: true,
+        },
+      })),
+    );
   }
 
   return { mode, categoriesCreated: newCategories.length, transactionsImported, recurringImported, transactionsDeleted };

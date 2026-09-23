@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BudgetCard } from "@/features/budgets/budget-card";
 import { BalanceHero } from "@/features/dashboard/balance-hero";
 import { CategoryDonut } from "@/features/dashboard/category-donut";
 import { ExpenseCard } from "@/features/dashboard/expense-card";
@@ -9,9 +10,11 @@ import { QuickActions } from "@/features/dashboard/quick-actions";
 import { RecentOperations } from "@/features/dashboard/recent-operations";
 import { SavingsGauge } from "@/features/dashboard/savings-gauge";
 import { TopCategoryCard } from "@/features/dashboard/top-category-card";
+import { calculateBudgetProgress } from "@/lib/analytics/budgets";
 import { getDashboardSummary } from "@/lib/analytics/queries";
 import { currentHour, daysInMonth, formatMonthLabel, greetingForHour, parseIsoDate, parseMonthKey } from "@/lib/dates";
 import { loadAppContext, resolveMonthParam } from "@/lib/services/bootstrap";
+import { listBudgets } from "@/lib/services/budgets";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -19,13 +22,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const context = await loadAppContext();
   const month = resolveMonthParam(params.month, context.currentMonth);
-  const summary = await getDashboardSummary(context.userId, month, context.today);
+  const [summary, budgets] = await Promise.all([getDashboardSummary(context.userId, month, context.today), listBudgets(context.userId)]);
 
   const { year, month: monthNumber } = parseMonthKey(month);
   const daysElapsed = month === context.currentMonth ? parseIsoDate(context.today).day : daysInMonth(year, monthNumber);
   const perDay = Math.round(summary.current.expenses / Math.max(1, daysElapsed));
   const monthLabel = formatMonthLabel(month);
   const greeting = greetingForHour(currentHour(context.settings.timeZone));
+  const budgetSummary = calculateBudgetProgress(budgets, summary.expenseCategories, context.categories);
+  const daysLeft = month === context.currentMonth ? daysInMonth(year, monthNumber) - parseIsoDate(context.today).day + 1 : null;
 
   return (
     <div className="space-y-4">
@@ -70,6 +75,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <SavingsGauge rate={summary.current.savingsRate} savings={summary.current.savings} />
         <TopCategoryCard item={summary.expenseCategories[0] ?? null} month={month} />
       </div>
+
+      <BudgetCard summary={budgetSummary} monthLabel={monthLabel} daysLeft={daysLeft} />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <MonthlyBars series={summary.series} currentMonth={month} />

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ const LOCALE_LABELS: Record<(typeof SUPPORTED_LOCALES)[number], string> = {
 };
 
 export function GeneralSettings({ settings, today }: { settings: AppSettings; today: string }) {
-  const router = useRouter();
   const [form, setForm] = useState({
     currency: settings.currency,
     locale: settings.locale,
@@ -55,7 +53,6 @@ export function GeneralSettings({ settings, today }: { settings: AppSettings; to
       return;
     }
     toast.success("Settings saved");
-    router.refresh();
   };
 
   return (

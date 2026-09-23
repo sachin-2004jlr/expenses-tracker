@@ -275,6 +275,6 @@ export async function clearUserData(userId: string, options: ClearDataOptions = 
   const db = await getDb();
   const deleted = await db.transactions.deleteMany({ userId });
   await db.recurring.deleteMany({ userId });
-  if (options.resetCategories) await db.categories.deleteMany({ userId });
+  if (options.resetCategories) await Promise.all([db.categories.deleteMany({ userId }), db.budgets.deleteMany({ userId })]);
   return { transactions: deleted.deletedCount };
 }

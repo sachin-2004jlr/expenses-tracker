@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "@/lib/services/user-identity";
@@ -89,8 +90,8 @@ export interface CurrentUser {
   image: string | null;
 }
 
-/** The signed-in user for display purposes, or null. */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+/** The signed-in user for display purposes, or null. Cached per request. */
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!getAuthSecret()) return null;
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -100,4 +101,4 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     email: session.user.email ?? null,
     image: session.user.image ?? null,
   };
-}
+});

@@ -1,6 +1,6 @@
 import { MongoClient, type Collection, type Db as MongoDatabase } from "mongodb";
 import { DatabaseUnavailableError } from "./errors";
-import { COLLECTIONS, type AppSettingsDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc, type UserDoc } from "./schema";
+import { COLLECTIONS, type AppSettingsDoc, type BudgetDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc, type UserDoc } from "./schema";
 
 /**
  * MongoDB access.
@@ -25,6 +25,7 @@ export interface Db {
   transactions: Collection<TransactionDoc>;
   recurring: Collection<RecurringDoc>;
   settings: Collection<AppSettingsDoc>;
+  budgets: Collection<BudgetDoc>;
 }
 
 export type DbKind = "mongodb" | "memory";
@@ -84,10 +85,13 @@ async function initialise(): Promise<Db> {
     serverSelectionTimeoutMS: 5_000,
     connectTimeoutMS: 5_000,
     maxPoolSize: 10,
+    // Serverless instances are frozen between requests; drop idle sockets instead of reusing dead ones.
+    maxIdleTimeMS: 60_000,
+    appName: "expenses-tracker",
   });
   try {
+    // connect() already performs the handshake and server selection; no extra ping round trip.
     await client.connect();
-    await client.db("admin").command({ ping: 1 });
   } catch (error) {
     await client.close().catch(() => undefined);
     const hint =
@@ -106,8 +110,16 @@ async function initialise(): Promise<Db> {
     transactions: database.collection<TransactionDoc>(COLLECTIONS.transactions),
     recurring: database.collection<RecurringDoc>(COLLECTIONS.recurring),
     settings: database.collection<AppSettingsDoc>(COLLECTIONS.settings),
+    budgets: database.collection<BudgetDoc>(COLLECTIONS.budgets),
   };
-  await ensureIndexes(db);
+  if (getDbKind() === "memory") {
+    // Tests start from an empty database and rely on the unique indexes immediately.
+    await ensureIndexes(db);
+  } else {
+    // Existing deployments already have the indexes; creating them is a no-op that would cost a
+    // round trip on every cold start, so do it in the background instead of blocking the request.
+    ensureIndexes(db).catch((error: unknown) => console.error("[db] ensureIndexes failed", error));
+  }
   return db;
 }
 
@@ -124,5 +136,6 @@ export async function ensureIndexes(db: Db): Promise<void> {
     db.transactions.createIndex({ userId: 1, recurringId: 1 }, { name: "transactions_user_recurring", sparse: true }),
     db.recurring.createIndex({ userId: 1, nextRunDate: 1 }, { name: "recurring_user_next_run" }),
     db.settings.createIndex({ userId: 1 }, { unique: true, name: "settings_user_unique" }),
+    db.budgets.createIndex({ userId: 1, categoryId: 1 }, { unique: true, name: "budgets_user_category_unique" }),
   ]);
 }

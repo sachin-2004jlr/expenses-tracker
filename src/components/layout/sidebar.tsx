@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
+import { NavPending } from "./nav-pending";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NAV_ITEMS, isActivePath } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,7 @@ export function Sidebar() {
                     aria-label={item.label}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex size-11 items-center justify-center rounded-xl transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                      "relative flex size-11 items-center justify-center rounded-xl transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                       active
                         ? "bg-brand/15 text-brand shadow-[0_0_0_1px_color-mix(in_oklch,var(--brand)_35%,transparent),0_10px_30px_-10px_color-mix(in_oklch,var(--brand)_70%,transparent)]"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
@@ -45,6 +46,7 @@ export function Sidebar() {
                 }
               >
                 <Icon className="size-[18px]" aria-hidden />
+                <NavPending className="inset-0 rounded-xl ring-2 ring-brand/60" />
               </TooltipTrigger>
               <TooltipContent side="right">{item.label}</TooltipContent>
             </Tooltip>
