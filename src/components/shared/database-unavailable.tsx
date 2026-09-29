@@ -1,13 +1,42 @@
-import { Database } from "lucide-react";
+import { Database, RotateCw } from "lucide-react";
+
+const RETRY_SECONDS = 8;
 
 export function DatabaseUnavailable({ kind, message }: { kind: "not-configured" | "connection-failed"; message: string }) {
+  if (kind === "connection-failed") {
+    // Usually a brief network or Atlas blip: retry on its own instead of leaving a dead page.
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-background px-6">
+        <meta httpEquiv="refresh" content={String(RETRY_SECONDS)} />
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center text-card-foreground" role="alert">
+          <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <Database className="size-6" aria-hidden />
+          </span>
+          <h1 className="text-xl font-semibold tracking-tight">Reconnecting to your data…</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The database did not answer in time. Your data is safe. This page retries automatically in {RETRY_SECONDS} seconds.
+          </p>
+          {/* A plain link reloads the page without needing client JavaScript. */}
+          <a
+            href=""
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground"
+          >
+            <RotateCw className="size-4" aria-hidden />
+            Retry now
+          </a>
+          <p className="mt-4 text-xs text-muted-foreground">If this persists, check that the Atlas cluster is running and allows access from anywhere (0.0.0.0/0).</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-svh items-center justify-center bg-background px-6">
       <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-8 text-card-foreground">
         <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <Database className="size-6" aria-hidden />
         </span>
-        <h1 className="text-xl font-semibold tracking-tight">{kind === "not-configured" ? "Database not configured" : "Database unavailable"}</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Database not configured</h1>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
         <div className="mt-6 space-y-3 text-sm">
           <p className="font-medium">How to fix</p>
@@ -18,9 +47,9 @@ export function DatabaseUnavailable({ kind, message }: { kind: "not-configured" 
               <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">DATABASE_URL</code> at any MongoDB.
             </li>
             <li>
-              Hosted: create a free MongoDB Atlas cluster, copy its <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">mongodb+srv://</code> connection
-              string and set it as <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">DATABASE_URL</code> (Vercel → Project → Settings → Environment
-              Variables), then redeploy.
+              Hosted: create a free MongoDB Atlas cluster, copy its connection string and set it as{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">DATABASE_URL</code> (Vercel → Project → Settings → Environment Variables), then
+              redeploy.
             </li>
             <li>Indexes are created automatically on first connection; there are no migrations to run.</li>
           </ol>

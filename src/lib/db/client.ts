@@ -82,8 +82,8 @@ async function initialise(): Promise<Db> {
 
   const uri = await resolveUri();
   const client = new MongoClient(uri, {
-    serverSelectionTimeoutMS: 5_000,
-    connectTimeoutMS: 5_000,
+    serverSelectionTimeoutMS: 8_000,
+    connectTimeoutMS: 8_000,
     maxPoolSize: 10,
     // Serverless instances are frozen between requests; drop idle sockets instead of reusing dead ones.
     maxIdleTimeMS: 60_000,
@@ -91,7 +91,11 @@ async function initialise(): Promise<Db> {
   });
   try {
     // connect() already performs the handshake and server selection; no extra ping round trip.
-    await client.connect();
+    // One retry absorbs transient DNS/TLS/Atlas failover blips on a cold start.
+    await client.connect().catch(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 750));
+      return client.connect();
+    });
   } catch (error) {
     await client.close().catch(() => undefined);
     const hint =

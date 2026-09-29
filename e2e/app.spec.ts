@@ -42,6 +42,13 @@ test.describe("signed out", () => {
     expect(api.status()).toBe(401);
   });
 
+  test("unknown pages show a friendly 404 instead of an error", async ({ page }) => {
+    const response = await page.goto("/this-page-does-not-exist");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open dashboard" })).toBeVisible();
+  });
+
   test("wrong password is rejected, duplicate registration is refused", async ({ page }) => {
     await page.goto("/login");
     await page.locator("#login-email").fill(E2E_USER.email);

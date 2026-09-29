@@ -60,7 +60,10 @@ export async function loginAction(_previous: AuthFormState, formData: FormData):
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Incorrect e-mail or password.", values };
+      if (error.type === "CredentialsSignin") return { error: "Incorrect e-mail or password.", values };
+      // Anything else (usually a brief database hiccup inside authorize) is worth retrying.
+      console.error("[auth] sign-in failed", error);
+      return { error: "Could not sign in right now. Please try again in a moment.", values };
     }
     throw error; // NEXT_REDIRECT on success
   }

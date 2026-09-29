@@ -116,10 +116,17 @@ export function TransactionDialog(props: TransactionDialogProps) {
       notes: values.notes.trim() ? values.notes.trim() : null,
       tags: values.tags,
     };
-    const result =
-      mode === "edit" && transaction
-        ? await updateTransactionAction(transaction.id, input)
-        : await createTransactionAction(input);
+    let result: Awaited<ReturnType<typeof createTransactionAction>>;
+    try {
+      result =
+        mode === "edit" && transaction
+          ? await updateTransactionAction(transaction.id, input)
+          : await createTransactionAction(input);
+    } catch {
+      // The request never reached the server (offline, or the app was redeployed mid-session).
+      setServerError("Could not reach the server. Check your connection and try again; nothing was saved.");
+      return;
+    }
     if (!result.ok) {
       if (result.fieldErrors) {
         for (const [field, message] of Object.entries(result.fieldErrors)) {
