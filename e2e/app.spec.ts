@@ -261,6 +261,51 @@ test("budgets: set a limit in settings and track it on the dashboard", async ({ 
   expect(body.progress.items[0]?.status).toBe("warning");
 });
 
+test("savings: entry with a journal note, goal progress, notepad, balance untouched", async ({ page }) => {
+  await page.goto("/savings");
+  await page.getByTestId("add-savings").click();
+  const form = page.getByTestId("transaction-form");
+  await expect(form).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Savings" })).toHaveAttribute("aria-checked", "true");
+  await page.locator("#tx-amount").fill("5000");
+  await page.locator("#tx-description").fill("Monthly SIP");
+  await pickCategory(page, "Mutual funds / SIP");
+  await page.locator("#tx-journal").fill("Started a SIP in the Nifty 50 index fund");
+  await form.getByRole("button", { name: "Add savings" }).click();
+  await expect(page.getByText("Savings added")).toBeVisible();
+
+  // The journal note shows up in the notepad, linked to the entry.
+  await expect(page.getByTestId("journal-note").filter({ hasText: "Nifty 50" })).toContainText("₹5,000");
+  await expect(page.getByLabel("Savings totals")).toContainText("₹5,000");
+
+  // Goals count savings made to their destination.
+  await page.getByRole("button", { name: "New goal" }).click();
+  await page.locator("#goal-name").fill("Retirement");
+  await page.locator("#goal-target").fill("100000");
+  await page.locator("#goal-destination").click();
+  await page.getByRole("option", { name: "Mutual funds / SIP" }).click();
+  await page.getByRole("button", { name: "Create goal" }).click();
+  await expect(page.getByTestId("savings-goal").filter({ hasText: "Retirement" })).toContainText("₹5,000");
+  await expect(page.getByRole("progressbar", { name: "Retirement progress" })).toHaveAttribute("aria-valuenow", "5");
+
+  // A standalone note in the notepad.
+  await page.locator("#journal-body").fill("Moved the old FD into a liquid fund");
+  await page.getByRole("button", { name: "Save note" }).click();
+  await expect(page.getByTestId("journal-note").filter({ hasText: "liquid fund" })).toBeVisible();
+
+  // Savings are neither spending nor a change in balance.
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("expense-amount")).toContainText("₹900");
+  await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
+  await expect(page.getByTestId("saved-this-month")).toContainText("₹5,000");
+
+  const api = await page.request.get("/api/savings");
+  const body = (await api.json()) as { savedThisMonth: number; goals: { name: string; saved: number }[]; noteCount: number };
+  expect(body.savedThisMonth).toBe(500_000);
+  expect(body.goals[0]).toMatchObject({ name: "Retirement", saved: 500_000 });
+  expect(body.noteCount).toBe(2);
+});
+
 test("health endpoint reports status and database round trip", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.ok()).toBeTruthy();

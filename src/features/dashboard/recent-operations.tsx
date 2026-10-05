@@ -9,6 +9,7 @@ import { Amount } from "@/components/shared/money";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { relativeDayLabel } from "@/lib/dates";
 import { formatCurrency, formatCurrencyParts } from "@/lib/money";
+import { typeMeta } from "@/lib/transaction-types";
 import { cn } from "@/lib/utils";
 import type { IsoDate, MonthKey, Transaction } from "@/types";
 
@@ -73,7 +74,7 @@ export function RecentOperations({ transactions, expenses, perDay, month, today,
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{tx.description}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {tx.type === "INCOME" ? "Received" : "Spent"} · {relativeDayLabel(tx.date, today, dateFormat)} · {tx.category.name}
+                    {typeMeta(tx.type).verb} · {relativeDayLabel(tx.date, today, dateFormat)} · {tx.category.name}
                   </span>
                 </span>
                 <Amount paise={tx.amount} type={tx.type} className="shrink-0 text-sm font-semibold" />
@@ -83,7 +84,7 @@ export function RecentOperations({ transactions, expenses, perDay, month, today,
         </ul>
       )}
       {transactions.length > 0 && (
-        <Link href={`/transactions?month=${month}`} className="mt-3 text-center text-xs font-medium text-muted-foreground hover:text-foreground">
+        <Link href={`/transactions?month=${month}`} prefetch className="mt-3 text-center text-xs font-medium text-muted-foreground hover:text-foreground">
           View all transactions
         </Link>
       )}

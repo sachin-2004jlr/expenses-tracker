@@ -181,10 +181,11 @@ function trimNumber(value: number): string {
 /** Format with an explicit + / − prefix based on transaction type: "+ ₹55,000", "− ₹850". */
 export function formatSignedAmount(
   paise: Paise,
-  type: "INCOME" | "EXPENSE",
+  type: "INCOME" | "EXPENSE" | "SAVINGS",
   options: FormatCurrencyOptions = {},
 ): string {
-  const sign = type === "INCOME" ? "+" : "−";
+  // Savings are neither in nor out of the balance: shown with an arrow into the savings pot.
+  const sign = type === "INCOME" ? "+" : type === "EXPENSE" ? "−" : "→";
   return `${sign} ${formatCurrency(Math.abs(paise), options)}`;
 }
 

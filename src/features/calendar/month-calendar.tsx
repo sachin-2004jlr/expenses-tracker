@@ -26,6 +26,7 @@ export interface MonthCalendarProps {
 interface DayTotals {
   income: number;
   expenses: number;
+  saved: number;
   count: number;
   items: Transaction[];
 }
@@ -43,9 +44,10 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
   const byDay = useMemo(() => {
     const map = new Map<IsoDate, DayTotals>();
     for (const tx of transactions) {
-      const entry = map.get(tx.date) ?? { income: 0, expenses: 0, count: 0, items: [] };
+      const entry = map.get(tx.date) ?? { income: 0, expenses: 0, saved: 0, count: 0, items: [] };
       if (tx.type === "INCOME") entry.income += tx.amount;
-      else entry.expenses += tx.amount;
+      else if (tx.type === "EXPENSE") entry.expenses += tx.amount;
+      else entry.saved += tx.amount;
       entry.count += 1;
       entry.items.push(tx);
       map.set(tx.date, entry);
@@ -98,10 +100,12 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
             <span className="mt-auto flex gap-1 pt-1 sm:hidden" aria-hidden>
               {totals.income > 0 && <span className="size-1.5 rounded-full bg-income" />}
               {totals.expenses > 0 && <span className="size-1.5 rounded-full bg-expense" />}
+              {totals.saved > 0 && <span className="size-1.5 rounded-full bg-saved" />}
             </span>
             <span className="mt-auto hidden min-w-0 flex-col gap-0.5 text-[11px] leading-tight tabular-nums sm:flex">
               {totals.income > 0 && <span className="truncate text-income-foreground">+{formatCompactCurrency(totals.income)}</span>}
               {totals.expenses > 0 && <span className="truncate text-expense-foreground">−{formatCompactCurrency(totals.expenses)}</span>}
+              {totals.saved > 0 && <span className="truncate text-saved-foreground">→{formatCompactCurrency(totals.saved)}</span>}
             </span>
           </>
         )}
@@ -172,6 +176,11 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
                 {selectedTotals.expenses > 0 && (
                   <span>
                     Out <Amount paise={selectedTotals.expenses} className="font-medium text-expense-foreground" />
+                  </span>
+                )}
+                {selectedTotals.saved > 0 && (
+                  <span>
+                    Saved <Amount paise={selectedTotals.saved} className="font-medium text-saved-foreground" />
                   </span>
                 )}
               </span>

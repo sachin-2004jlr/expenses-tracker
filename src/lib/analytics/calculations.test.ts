@@ -149,6 +149,7 @@ describe("month filtering and monthly totals", () => {
       expenses: 1_655_000,
       savings: 3_845_000,
       savingsRate: 69.9,
+      saved: 0,
       transactionCount: 6,
     });
   });
@@ -160,6 +161,7 @@ describe("month filtering and monthly totals", () => {
       expenses: 0,
       savings: 0,
       savingsRate: null,
+      saved: 0,
       transactionCount: 0,
     });
   });

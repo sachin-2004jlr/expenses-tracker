@@ -145,6 +145,9 @@ export async function deleteCategory(userId: string, id: string, options: Delete
     const moved = await db.transactions.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
     reassigned = moved.modifiedCount;
     await db.recurring.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+    await db.savingsGoals.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+  } else {
+    await db.savingsGoals.updateMany({ userId, categoryId: id }, { $set: { categoryId: null, updatedAt: new Date() } });
   }
   await Promise.all([db.categories.deleteOne({ _id: id, userId }), db.budgets.deleteMany({ userId, categoryId: id })]);
   return { deleted: true, reassignedTransactions: reassigned };

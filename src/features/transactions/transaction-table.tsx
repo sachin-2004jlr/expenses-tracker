@@ -9,6 +9,7 @@ import { CategoryIcon } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Amount } from "@/components/shared/money";
 import { formatIsoDate } from "@/lib/dates";
+import { typeMeta } from "@/lib/transaction-types";
 import { cn } from "@/lib/utils";
 import type { TransactionFilters } from "@/lib/validation/transaction";
 import type { Transaction } from "@/types";
@@ -115,8 +116,8 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                   <Amount paise={tx.amount} type={tx.type} className="font-semibold" />
                 </TableCell>
                 <TableCell className="hidden px-3 lg:table-cell">
-                  <Badge variant="outline" className={cn(tx.type === "INCOME" ? "border-income/40 text-income-foreground" : "border-expense/40 text-expense-foreground")}>
-                    {tx.type === "INCOME" ? "Income" : "Expense"}
+                  <Badge variant="outline" className={cn(typeMeta(tx.type).badgeClass)}>
+                    {typeMeta(tx.type).label}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-3" onClick={(e) => e.stopPropagation()}>

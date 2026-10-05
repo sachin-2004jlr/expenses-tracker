@@ -78,6 +78,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
 
   const incomeCategories = categories.filter((c) => c.type === "INCOME" && (!filters.type || filters.type === "INCOME"));
   const expenseCategories = categories.filter((c) => c.type === "EXPENSE" && (!filters.type || filters.type === "EXPENSE"));
+  const savingsCategories = categories.filter((c) => c.type === "SAVINGS" && (!filters.type || filters.type === "SAVINGS"));
   const categoryItems = [{ value: ALL, label: "All categories" }, ...categories.map((c) => ({ value: c.id, label: c.name }))];
 
   const clearAll = () => {
@@ -106,6 +107,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
             { value: ALL, label: "All" },
             { value: "INCOME", label: "Income" },
             { value: "EXPENSE", label: "Expense" },
+            { value: "SAVINGS", label: "Savings" },
           ].map((option) => {
             const active = (filters.type ?? ALL) === option.value;
             return (
@@ -147,6 +149,17 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
               <SelectGroup>
                 <SelectLabel>Expenses</SelectLabel>
                 {expenseCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <CategoryIcon icon={c.icon} color={c.color} size="sm" />
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+            {savingsCategories.length > 0 && (
+              <SelectGroup>
+                <SelectLabel>Savings</SelectLabel>
+                {savingsCategories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     <CategoryIcon icon={c.icon} color={c.color} size="sm" />
                     {c.name}

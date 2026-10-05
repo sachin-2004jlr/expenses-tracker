@@ -107,6 +107,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <li key={item.id}>
                   <Link
                     href={`/settings?tab=${item.id}`}
+                    prefetch
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "relative flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",

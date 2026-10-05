@@ -32,6 +32,14 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   { name: "EMI", type: "EXPENSE", icon: "landmark", color: "red" },
   { name: "Family", type: "EXPENSE", icon: "users", color: "teal" },
   { name: "Other", type: "EXPENSE", icon: "tag", color: "slate" },
+  // Savings destinations (where set-aside money goes)
+  { name: "Emergency fund", type: "SAVINGS", icon: "shield", color: "sky" },
+  { name: "Mutual funds / SIP", type: "SAVINGS", icon: "trending-up", color: "emerald" },
+  { name: "Fixed deposit", type: "SAVINGS", icon: "vault", color: "indigo" },
+  { name: "Stocks", type: "SAVINGS", icon: "chart-candlestick", color: "violet" },
+  { name: "Gold", type: "SAVINGS", icon: "gem", color: "amber" },
+  { name: "PPF / EPF / NPS", type: "SAVINGS", icon: "landmark", color: "teal" },
+  { name: "Other savings", type: "SAVINGS", icon: "piggy-bank", color: "pink" },
 ];
 
 export const CATEGORY_ICONS = [
@@ -79,6 +87,12 @@ export const CATEGORY_ICONS = [
   "dog",
   "cat",
   "gamepad",
+  "piggy-bank",
+  "trending-up",
+  "vault",
+  "gem",
+  "chart-candlestick",
+  "target",
 ] as const;
 
 export const CATEGORY_COLORS = [

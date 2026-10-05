@@ -19,7 +19,9 @@ export function Amount({ paise, type, colorBySign = false, signed = true, classN
   const color = type
     ? type === "INCOME"
       ? "text-income-foreground"
-      : "text-expense-foreground"
+      : type === "EXPENSE"
+        ? "text-expense-foreground"
+        : "text-saved-foreground"
     : colorBySign
       ? paise > 0
         ? "text-income-foreground"

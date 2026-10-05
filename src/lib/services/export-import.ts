@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { newId, type BudgetDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc } from "@/lib/db/schema";
+import { newId, type BudgetDoc, type CategoryDoc, type RecurringDoc, type SavingsGoalDoc, type SavingsNoteDoc, type TransactionDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { paiseToDecimalString } from "@/lib/money";
 import { BACKUP_FORMAT, BACKUP_VERSION, validateBackup, type BackupFile, type ImportMode } from "@/lib/validation/import";
@@ -7,6 +7,8 @@ import type { Category, Transaction } from "@/types";
 import { listBudgets } from "./budgets";
 import { listCategories } from "./categories";
 import { listRecurring } from "./recurring";
+import { listSavingsGoals } from "./savings";
+import { listSavingsNotes } from "./savings-notes";
 import { normaliseTags } from "./tags";
 import { listAllTransactions } from "./transactions";
 import { ensureUserDefaults } from "./user-identity";
@@ -47,10 +49,19 @@ export interface ExportedBackup {
     isActive: boolean;
   }>;
   budgets: Array<{ category: string; amount: string }>;
+  savingsGoals: Array<{ name: string; targetAmount: string; targetDate: string | null; category: string | null; color: string; archived: boolean }>;
+  savingsJournal: Array<{ title: string; body: string; date: string; pinned: boolean }>;
 }
 
 export async function exportBackup(userId: string): Promise<ExportedBackup> {
-  const [cats, txs, recurring, budgets] = await Promise.all([listCategories(userId), listAllTransactions(userId), listRecurring(userId), listBudgets(userId)]);
+  const [cats, txs, recurring, budgets, goals, notes] = await Promise.all([
+    listCategories(userId),
+    listAllTransactions(userId),
+    listRecurring(userId),
+    listBudgets(userId),
+    listSavingsGoals(userId, { includeArchived: true }),
+    listSavingsNotes(userId, { limit: 500 }),
+  ]);
   const categoryName = new Map(cats.map((c) => [c.id, c.name]));
   return {
     format: BACKUP_FORMAT,
@@ -86,6 +97,15 @@ export async function exportBackup(userId: string): Promise<ExportedBackup> {
       const category = categoryName.get(b.categoryId);
       return category ? [{ category, amount: paiseToDecimalString(b.amount) }] : [];
     }),
+    savingsGoals: goals.map((g) => ({
+      name: g.name,
+      targetAmount: paiseToDecimalString(g.targetAmount),
+      targetDate: g.targetDate,
+      category: g.categoryId ? (categoryName.get(g.categoryId) ?? null) : null,
+      color: g.color,
+      archived: g.archived,
+    })),
+    savingsJournal: notes.map((n) => ({ title: n.title, body: n.body, date: n.date, pinned: n.pinned })),
   };
 }
 
@@ -153,7 +173,7 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
   const catMap = new Map(existing.map((c) => [catKey(c.type, c.name), c._id]));
   let sortOrder = existing.reduce((max, c) => Math.max(max, c.sortOrder), 0);
 
-  const wanted = new Map<string, { name: string; type: "INCOME" | "EXPENSE"; icon: string; color: string }>();
+  const wanted = new Map<string, { name: string; type: Category["type"]; icon: string; color: string }>();
   for (const c of backup.categories) wanted.set(catKey(c.type, c.name), { name: c.name.trim(), type: c.type, icon: c.icon, color: c.color });
   for (const t of backup.transactions) {
     const key = catKey(t.type, t.category);
@@ -162,6 +182,11 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
   for (const r of backup.recurring) {
     const key = catKey(r.type, r.category);
     if (!wanted.has(key)) wanted.set(key, { name: r.category.trim(), type: r.type, icon: "tag", color: "slate" });
+  }
+  for (const g of backup.savingsGoals) {
+    if (!g.category) continue;
+    const key = catKey("SAVINGS", g.category);
+    if (!wanted.has(key)) wanted.set(key, { name: g.category.trim(), type: "SAVINGS", icon: "piggy-bank", color: "pink" });
   }
   for (const b of backup.budgets) {
     const key = catKey("EXPENSE", b.category);
@@ -254,6 +279,37 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
         },
       })),
     );
+  }
+
+  // Savings goals and journal notes (imported notes are unlinked; entry ids change on import).
+  if (backup.savingsGoals.length > 0) {
+    const goals: SavingsGoalDoc[] = backup.savingsGoals.map((g) => ({
+      _id: newId(),
+      userId,
+      name: g.name,
+      targetAmount: g.targetAmount,
+      targetDate: g.targetDate,
+      categoryId: g.category ? (catMap.get(catKey("SAVINGS", g.category)) ?? null) : null,
+      color: g.color,
+      archived: g.archived,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    await db.savingsGoals.insertMany(goals);
+  }
+  if (backup.savingsJournal.length > 0) {
+    const notes: SavingsNoteDoc[] = backup.savingsJournal.map((n) => ({
+      _id: newId(),
+      userId,
+      title: n.title,
+      body: n.body,
+      date: n.date,
+      pinned: n.pinned,
+      transactionId: null,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    await db.savingsNotes.insertMany(notes);
   }
 
   return { mode, categoriesCreated: newCategories.length, transactionsImported, recurringImported, transactionsDeleted };

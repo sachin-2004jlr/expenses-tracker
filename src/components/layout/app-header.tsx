@@ -106,7 +106,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
         </label>
       </form>
 
-      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transactions" />} className="hidden shrink-0 rounded-full lg:inline-flex">
+      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transactions" prefetch />} className="hidden shrink-0 rounded-full lg:inline-flex">
         View all
       </Button>
 

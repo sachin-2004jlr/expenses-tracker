@@ -16,6 +16,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const { start, end } = monthRange(month);
   const transactions = await listTransactionsInRange(context.userId, start, end);
   const income = transactions.filter((t) => t.type === "INCOME").reduce((s, t) => s + t.amount, 0);
+  const saved = transactions.filter((t) => t.type === "SAVINGS").reduce((s, t) => s + t.amount, 0);
   const expenses = transactions.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
 
   return (
@@ -26,7 +27,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         description={
           transactions.length === 0
             ? "No transactions this month yet. Use the month selector in the top bar to move around."
-            : `${transactions.length} transactions · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out`
+            : `${transactions.length} transactions · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out${saved > 0 ? ` · ${formatCurrency(saved)} saved` : ""}`
         }
       />
       <MonthCalendar

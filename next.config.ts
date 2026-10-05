@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Keep visited pages in the client router cache so switching tabs is instant. Server actions
     // call revalidatePath, which clears this cache, so data never goes stale after a change.
-    staleTimes: { dynamic: 30, static: 180 },
+    staleTimes: { dynamic: 60, static: 300 },
   },
   async headers() {
     return [

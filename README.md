@@ -19,8 +19,9 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 - **Calendar**: month grid with per-day income and expense totals, week view, day panel, add-on-this-day.
 - **Analytics**: income / expense / savings trends, category spending, income sources, largest expenses, averages, best month, month comparison with percentages calculated in application code.
 - **Categories, tags, recurring rules** (salary, rent, EMIs, subscriptions post themselves on due dates).
+- **Savings** (`/savings`): a third entry type next to income and expense for money you set aside (SIP, FD, emergency fund, gold, stocks, PPF...). Savings never count as spending and never change the balance; they record where kept money went. Each savings entry can carry a **savings journal** note written right in the add form, and the Savings page is a notepad for those notes plus standalone ones (pin, edit, search). **Goals** (target, optional date, linked destination) show progress and the monthly amount needed. The page also shows set-aside vs kept vs not-yet-assigned money, where savings are kept, and a 12-month chart. Recurring rules can create savings too (monthly SIPs). API: `GET /api/savings`, `GET/POST /api/savings/notes`, `PATCH/DELETE /api/savings/notes/:id`, `GET/POST /api/savings/goals`, `PATCH/DELETE /api/savings/goals/:id`.
 - **Budgets**: a monthly limit per expense category, set in Settings → Budgets. The dashboard shows spent vs limit per category (green, amber from 80%, red when over), the total left and an even daily allowance. Budgets are included in JSON backups and available at `GET/PUT /api/budgets`.
-- **Speed and polish**: pages you visited stay cached in the browser for 30 seconds, navigation links show a pending state immediately, `N` adds a transaction and `/` focuses search, and deleting a transaction can be undone from the notification.
+- **Speed and polish**: navigation links and the month arrows prefetch their pages in the background so clicks render instantly from cache (kept for up to 5 minutes and cleared on any change), links show a pending state immediately, `N` adds a transaction and `/` focuses search, and deleting a transaction can be undone from the notification.
 - **Settings**: general (currency, locale, date format, first day of week, time zone), account, categories, budgets, recurring, data (JSON / CSV export, validated import, clear data), appearance (dark by default, light and system available).
 - Skeleton loading states, empty states, error boundaries, database-not-configured screen, keyboard-accessible dialogs and menus, labelled icon buttons, reduced-motion support, installable PWA manifest.
 
@@ -90,7 +91,7 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 
 ## Database
 
-The document shapes (`src/lib/db/schema.ts`) define the `users`, `categories`, `transactions` (tags embedded), `recurring_transactions`, `budgets` and `app_settings` collections, all keyed by UUID strings and scoped by `userId`.
+The document shapes (`src/lib/db/schema.ts`) define the `users`, `categories`, `transactions` (tags embedded), `recurring_transactions`, `budgets`, `savings_notes`, `savings_goals` and `app_settings` collections, all keyed by UUID strings and scoped by `userId`.
 
 - **Local development**: leave `DATABASE_URL` empty and the app uses the MongoDB server on your machine (`mongodb://127.0.0.1:27017/expenses_tracker`). Install MongoDB Community Server if you do not have it, or point `DATABASE_URL` at an Atlas cluster instead.
 - **Production**: set `DATABASE_URL` to a MongoDB Atlas connection string. Indexes are created automatically on the first connection; there are no migrations. `npm run db:migrate` only creates the indexes explicitly.

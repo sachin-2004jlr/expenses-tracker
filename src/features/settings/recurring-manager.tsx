@@ -19,6 +19,7 @@ import { Amount } from "@/components/shared/money";
 import { formatIsoDate } from "@/lib/dates";
 import { describeFrequency } from "@/lib/dates/recurrence";
 import { paiseToDecimalString, parseMoney } from "@/lib/money";
+import { typeMeta } from "@/lib/transaction-types";
 import { cn } from "@/lib/utils";
 import type { Category, IsoDate, RecurrenceFrequency, RecurringTransaction, TransactionType } from "@/types";
 import { createRecurringAction, deleteRecurringAction, runRecurringNowAction, toggleRecurringAction, updateRecurringAction } from "@/features/recurring/actions";
@@ -150,7 +151,7 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
     <Card>
       <CardHeader>
         <CardTitle className="max-sm:col-start-1 max-sm:row-start-1">Recurring transactions</CardTitle>
-        <CardDescription className="max-sm:col-start-1 max-sm:row-start-2">Salary, rent, EMIs and subscriptions are created automatically on their due dates when you open the app.</CardDescription>
+        <CardDescription className="max-sm:col-start-1 max-sm:row-start-2">Salary, rent, EMIs, subscriptions and monthly SIPs are created automatically on their due dates when you open the app.</CardDescription>
         <CardAction className="flex flex-wrap gap-2 max-sm:col-start-1 max-sm:row-start-3 max-sm:mt-1 max-sm:justify-self-start">
           <Button size="sm" variant="outline" onClick={runNow} disabled={running || rules.length === 0}>
             <Play data-icon="inline-start" aria-hidden />
@@ -217,8 +218,8 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
               void save();
             }}
           >
-            <div role="radiogroup" aria-label="Type" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-              {(["INCOME", "EXPENSE"] as const).map((type) => (
+            <div role="radiogroup" aria-label="Type" className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+              {(["INCOME", "EXPENSE", "SAVINGS"] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
@@ -227,10 +228,10 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
                   onClick={() => setForm((f) => ({ ...f, type, categoryId: "" }))}
                   className={cn(
                     "h-8 rounded-md text-sm font-medium transition-colors",
-                    form.type === type ? (type === "INCOME" ? "bg-background text-income-foreground shadow-sm" : "bg-background text-expense-foreground shadow-sm") : "text-muted-foreground",
+                    form.type === type ? typeMeta(type).activeToggleClass : "text-muted-foreground",
                   )}
                 >
-                  {type === "INCOME" ? "Income" : "Expense"}
+                  {typeMeta(type).label}
                 </button>
               ))}
             </div>

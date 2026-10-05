@@ -18,6 +18,9 @@ export interface BalanceHeroProps {
   savings: number;
   savingsRate: number | null;
   incomeChange: number | null;
+  /** Set aside with savings entries this month and all time. */
+  savedThisMonth?: number;
+  savedAllTime?: number;
   className?: string;
 }
 
@@ -40,7 +43,7 @@ function Badge({ value, label, good }: { value: string; label?: string; good: bo
 }
 
 /** "Evaluation" style hero: big balance, delta badges and a white running-balance line. */
-export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, savings, savingsRate, incomeChange, className }: BalanceHeroProps) {
+export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, savings, savingsRate, incomeChange, savedThisMonth = 0, savedAllTime = 0, className }: BalanceHeroProps) {
   const parts = formatCurrencyParts(totalBalance);
   const monthDelta = points.length ? points[points.length - 1]!.balance - openingBalance : 0;
   const data = useMemo(
@@ -70,9 +73,14 @@ export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, 
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card-elevated px-3 py-2 text-right">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Saved this month</p>
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Kept this month</p>
           <p className={cn("text-lg font-semibold tabular-nums", savings < 0 ? "text-expense-foreground" : "text-income-foreground")}>{formatCurrency(savings)}</p>
           <p className="text-[11px] text-muted-foreground">{savingsRate === null ? "no income yet" : `${formatPercent(savingsRate)} savings rate`}</p>
+          {(savedThisMonth > 0 || savedAllTime > 0) && (
+            <p className="mt-1 border-t border-border pt-1 text-[11px] text-muted-foreground" data-testid="saved-this-month">
+              <span className="font-semibold text-saved-foreground tabular-nums">{formatCurrency(savedThisMonth)}</span> set aside · {formatCurrency(savedAllTime)} total
+            </p>
+          )}
         </div>
       </div>
 

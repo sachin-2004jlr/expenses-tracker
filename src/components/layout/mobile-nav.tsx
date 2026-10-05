@@ -65,7 +65,7 @@ export function MobileNav() {
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <SheetHeader>
             <SheetTitle>More</SheetTitle>
-            <SheetDescription>Analytics and settings</SheetDescription>
+            <SheetDescription>Savings, analytics and settings</SheetDescription>
           </SheetHeader>
           <ul className="grid grid-cols-3 gap-2 px-4">
             {MORE_ITEMS.map((item) => {
@@ -75,6 +75,7 @@ export function MobileNav() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    prefetch
                     onClick={() => setMoreOpen(false)}
                     aria-current={active ? "page" : undefined}
                     className={cn(
@@ -106,6 +107,7 @@ function TabItem({ item, active }: { item: NavItem; active: boolean }) {
     <li>
       <Link
         href={item.href}
+        prefetch
         aria-current={active ? "page" : undefined}
         className={cn(
           "relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-colors",

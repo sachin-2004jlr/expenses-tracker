@@ -26,6 +26,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
         Income: m.income,
         Expenses: m.expenses,
         Savings: m.savings,
+        "Set aside": m.saved,
       })),
     [series],
   );
@@ -61,6 +62,9 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                 <Legend iconType="plainline" iconSize={12} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                 <Line type="monotone" dataKey="Income" stroke={SERIES_COLORS.income} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
                 <Line type="monotone" dataKey="Expenses" stroke={SERIES_COLORS.expense} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
+                {series.some((m) => m.saved > 0) && (
+                  <Line type="monotone" dataKey="Set aside" stroke="var(--saved)" strokeWidth={2} strokeDasharray="4 3" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
+                )}
                 <Line type="monotone" dataKey="Savings" stroke={SERIES_COLORS.savings} strokeWidth={2} strokeDasharray="0" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -76,6 +80,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                   <th className="py-1 pr-3 text-right font-medium">Income</th>
                   <th className="py-1 pr-3 text-right font-medium">Expenses</th>
                   <th className="py-1 pr-3 text-right font-medium">Savings</th>
+                  <th className="py-1 pr-3 text-right font-medium">Set aside</th>
                   <th className="py-1 text-right font-medium">Rate</th>
                 </tr>
               </thead>
@@ -86,6 +91,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                     <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.income)}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.expenses)}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.savings)}</td>
+                    <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.saved)}</td>
                     <td className="py-1 text-right tabular-nums">{m.savingsRate === null ? "—" : `${m.savingsRate.toFixed(1)}%`}</td>
                   </tr>
                 ))}

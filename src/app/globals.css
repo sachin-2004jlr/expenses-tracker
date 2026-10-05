@@ -35,6 +35,8 @@
   --color-expense-foreground: var(--expense-foreground);
   --color-savings: var(--savings);
   --color-savings-foreground: var(--savings-foreground);
+  --color-saved: var(--saved);
+  --color-saved-foreground: var(--saved-foreground);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-ring: var(--ring);
@@ -105,6 +107,9 @@
   --expense-foreground: #b91c1c;
   --savings: oklch(0.2 0.01 260);
   --savings-foreground: oklch(0.2 0.01 260);
+  /* Money set aside (SAVINGS entries): calm sky blue, distinct from income green. */
+  --saved: #0284c7;
+  --saved-foreground: #0369a1;
 
   --chart-1: #2a78d6;
   --chart-2: #eb6834;
@@ -159,6 +164,8 @@
   --expense-foreground: #ff6b6b;
   --savings: oklch(0.97 0.002 260);
   --savings-foreground: oklch(0.97 0.002 260);
+  --saved: #38bdf8;
+  --saved-foreground: #7dd3fc;
 
   --chart-1: #3987e5;
   --chart-2: #d95926;

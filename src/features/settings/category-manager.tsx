@@ -69,6 +69,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
   const groups: { type: TransactionType; title: string }[] = [
     { type: "INCOME", title: "Income categories" },
     { type: "EXPENSE", title: "Expense categories" },
+    { type: "SAVINGS", title: "Savings destinations" },
   ];
   const reassignOptions = deleting ? categories.filter((c) => c.type === deleting.type && c.id !== deleting.id) : [];
 
@@ -125,7 +126,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
       <Dialog open={editor.open} onOpenChange={(open) => !open && setEditor(EMPTY)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editor.category ? "Edit category" : `New ${editor.type === "INCOME" ? "income" : "expense"} category`}</DialogTitle>
+            <DialogTitle>{editor.category ? "Edit category" : `New ${editor.type === "INCOME" ? "income category" : editor.type === "EXPENSE" ? "expense category" : "savings destination"}`}</DialogTitle>
             <DialogDescription>Pick a name, an icon and a colour.</DialogDescription>
           </DialogHeader>
           <form
@@ -148,6 +149,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                   items={[
                     { value: "EXPENSE", label: "Expense" },
                     { value: "INCOME", label: "Income" },
+                    { value: "SAVINGS", label: "Savings destination" },
                   ]}
                 >
                   <SelectTrigger id="cat-type" className="w-full">
@@ -156,6 +158,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                   <SelectContent>
                     <SelectItem value="EXPENSE">Expense</SelectItem>
                     <SelectItem value="INCOME">Income</SelectItem>
+                    <SelectItem value="SAVINGS">Savings destination</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

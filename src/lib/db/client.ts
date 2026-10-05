@@ -1,6 +1,6 @@
 import { MongoClient, type Collection, type Db as MongoDatabase } from "mongodb";
 import { DatabaseUnavailableError } from "./errors";
-import { COLLECTIONS, type AppSettingsDoc, type BudgetDoc, type CategoryDoc, type RecurringDoc, type TransactionDoc, type UserDoc } from "./schema";
+import { COLLECTIONS, type AppSettingsDoc, type BudgetDoc, type CategoryDoc, type SavingsGoalDoc, type SavingsNoteDoc, type RecurringDoc, type TransactionDoc, type UserDoc } from "./schema";
 
 /**
  * MongoDB access.
@@ -26,6 +26,8 @@ export interface Db {
   recurring: Collection<RecurringDoc>;
   settings: Collection<AppSettingsDoc>;
   budgets: Collection<BudgetDoc>;
+  savingsNotes: Collection<SavingsNoteDoc>;
+  savingsGoals: Collection<SavingsGoalDoc>;
 }
 
 export type DbKind = "mongodb" | "memory";
@@ -115,6 +117,8 @@ async function initialise(): Promise<Db> {
     recurring: database.collection<RecurringDoc>(COLLECTIONS.recurring),
     settings: database.collection<AppSettingsDoc>(COLLECTIONS.settings),
     budgets: database.collection<BudgetDoc>(COLLECTIONS.budgets),
+    savingsNotes: database.collection<SavingsNoteDoc>(COLLECTIONS.savingsNotes),
+    savingsGoals: database.collection<SavingsGoalDoc>(COLLECTIONS.savingsGoals),
   };
   if (getDbKind() === "memory") {
     // Tests start from an empty database and rely on the unique indexes immediately.
@@ -141,5 +145,12 @@ export async function ensureIndexes(db: Db): Promise<void> {
     db.recurring.createIndex({ userId: 1, nextRunDate: 1 }, { name: "recurring_user_next_run" }),
     db.settings.createIndex({ userId: 1 }, { unique: true, name: "settings_user_unique" }),
     db.budgets.createIndex({ userId: 1, categoryId: 1 }, { unique: true, name: "budgets_user_category_unique" }),
+    db.savingsNotes.createIndex({ userId: 1, pinned: -1, date: -1, createdAt: -1 }, { name: "savings_notes_user_date" }),
+    // One note per savings entry; unlinked notes (transactionId null) are excluded from the constraint.
+    db.savingsNotes.createIndex(
+      { userId: 1, transactionId: 1 },
+      { unique: true, name: "savings_notes_user_tx_unique", partialFilterExpression: { transactionId: { $type: "string" } } },
+    ),
+    db.savingsGoals.createIndex({ userId: 1, archived: 1, createdAt: 1 }, { name: "savings_goals_user" }),
   ]);
 }

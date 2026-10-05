@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
+import { savingsGoalInputSchema } from "./savings";
 import { MAX_PAISE, parseMoney } from "@/lib/money";
 import { isoDateSchema, tagNameSchema, transactionTypeSchema } from "./transaction";
 
@@ -69,6 +70,22 @@ export const importBudgetSchema = z.object({
   amount: importAmountSchema,
 });
 
+export const importSavingsGoalSchema = z.object({
+  name: savingsGoalInputSchema.shape.name,
+  targetAmount: importAmountSchema,
+  targetDate: isoDateSchema.nullish().transform((v) => v ?? null),
+  category: z.string().trim().min(1).max(40).nullish().transform((v) => v ?? null),
+  color: z.string().trim().max(40).optional().transform((v) => (v && (CATEGORY_COLORS as readonly string[]).includes(v) ? (v as (typeof CATEGORY_COLORS)[number]) : "emerald")),
+  archived: z.boolean().default(false),
+});
+
+export const importSavingsNoteSchema = z.object({
+  title: z.string().trim().max(120).default(""),
+  body: z.string().trim().min(1).max(5000),
+  date: isoDateSchema,
+  pinned: z.boolean().default(false),
+});
+
 export const backupFileSchema = z.object({
   format: z.literal(BACKUP_FORMAT, { error: "This file is not an Expenses Tracker backup" }),
   version: z.number().int().min(1).max(BACKUP_VERSION),
@@ -77,6 +94,8 @@ export const backupFileSchema = z.object({
   transactions: z.array(importTransactionSchema).max(100_000),
   recurring: z.array(importRecurringSchema).max(1000).default([]),
   budgets: z.array(importBudgetSchema).max(500).default([]),
+  savingsGoals: z.array(importSavingsGoalSchema).max(200).default([]),
+  savingsJournal: z.array(importSavingsNoteSchema).max(5000).default([]),
 });
 
 export type BackupFile = z.infer<typeof backupFileSchema>;

@@ -19,6 +19,8 @@ export const COLLECTIONS = {
   recurring: "recurring_transactions",
   settings: "app_settings",
   budgets: "budgets",
+  savingsNotes: "savings_notes",
+  savingsGoals: "savings_goals",
 } as const;
 
 export function newId(): string {
@@ -93,6 +95,29 @@ export interface BudgetDoc extends Timestamps {
   categoryId: string;
   /** Integer paise, > 0. A budget of zero is stored as "no budget" (the document is removed). */
   amount: number;
+}
+
+/** Savings journal entry. `transactionId` links it to one SAVINGS transaction (at most one note each). */
+export interface SavingsNoteDoc extends Timestamps {
+  _id: string;
+  userId: string;
+  title: string;
+  body: string;
+  /** YYYY-MM-DD the note is about (the linked entry's date when linked). */
+  date: string;
+  pinned: boolean;
+  transactionId: string | null;
+}
+
+export interface SavingsGoalDoc extends Timestamps {
+  _id: string;
+  userId: string;
+  name: string;
+  targetAmount: number;
+  targetDate: string | null;
+  categoryId: string | null;
+  color: string;
+  archived: boolean;
 }
 
 export interface AppSettingsDoc extends Timestamps {

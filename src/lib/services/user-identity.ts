@@ -17,11 +17,14 @@ function isDuplicateKey(error: unknown): boolean {
 /** Idempotently create default categories and a settings document for a user. */
 export async function ensureUserDefaults(db: Db, userId: string): Promise<void> {
   const now = new Date();
-  const hasCategories = await db.categories.countDocuments({ userId }, { limit: 1 });
-  if (hasCategories === 0) {
+  // Seed the defaults of every type the user has no categories for yet. Existing accounts created
+  // before SAVINGS existed get the savings destinations this way without touching their others.
+  const existingTypes = new Set((await db.categories.distinct("type", { userId })) as string[]);
+  const missing = DEFAULT_CATEGORIES.map((category, index) => ({ category, index })).filter(({ category }) => !existingTypes.has(category.type));
+  if (missing.length > 0) {
     await db.categories
       .insertMany(
-        DEFAULT_CATEGORIES.map((category, index) => ({
+        missing.map(({ category, index }) => ({
           _id: newId(),
           userId,
           name: category.name,

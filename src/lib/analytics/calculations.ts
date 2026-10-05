@@ -38,10 +38,22 @@ export function calculateExpenses(transactions: Iterable<TransactionLike>): numb
   return total;
 }
 
-/** All-time balance: total income minus total expenses. Can be negative. */
+/** Money explicitly set aside with SAVINGS entries. */
+export function calculateSaved(transactions: Iterable<TransactionLike>): number {
+  let total = 0;
+  for (const tx of transactions) if (tx.type === "SAVINGS") total += tx.amount;
+  return total;
+}
+
+/** Signed effect of a transaction on the balance: income adds, expenses subtract, savings are neutral. */
+export function balanceEffect(tx: Pick<TransactionLike, "type" | "amount">): number {
+  return tx.type === "INCOME" ? tx.amount : tx.type === "EXPENSE" ? -tx.amount : 0;
+}
+
+/** All-time balance: total income minus total expenses (savings entries are neutral). Can be negative. */
 export function calculateBalance(transactions: Iterable<TransactionLike>): number {
   let balance = 0;
-  for (const tx of transactions) balance += tx.type === "INCOME" ? tx.amount : -tx.amount;
+  for (const tx of transactions) balance += balanceEffect(tx);
   return balance;
 }
 
@@ -96,6 +108,7 @@ export function calculateMonthTotals(transactions: Iterable<TransactionLike>, mo
     expenses,
     savings: calculateSavings(income, expenses),
     savingsRate: calculateSavingsRate(income, expenses),
+    saved: calculateSaved(monthly),
     transactionCount: monthly.length,
   };
 }
@@ -214,13 +227,14 @@ export function largestExpenses<T extends TransactionLike>(transactions: Iterabl
 
 /** Month-by-month totals for the given month keys (missing months are zero-filled). */
 export function monthlySeries(transactions: Iterable<TransactionLike>, months: MonthKey[]): MonthTotals[] {
-  const buckets = new Map<MonthKey, { income: number; expenses: number; count: number }>();
-  for (const month of months) buckets.set(month, { income: 0, expenses: 0, count: 0 });
+  const buckets = new Map<MonthKey, { income: number; expenses: number; saved: number; count: number }>();
+  for (const month of months) buckets.set(month, { income: 0, expenses: 0, saved: 0, count: 0 });
   for (const tx of transactions) {
     const bucket = buckets.get(monthKeyOf(tx.date));
     if (!bucket) continue;
     if (tx.type === "INCOME") bucket.income += tx.amount;
-    else bucket.expenses += tx.amount;
+    else if (tx.type === "EXPENSE") bucket.expenses += tx.amount;
+    else bucket.saved += tx.amount;
     bucket.count += 1;
   }
   return months.map((month) => {
@@ -231,6 +245,7 @@ export function monthlySeries(transactions: Iterable<TransactionLike>, months: M
       expenses: bucket.expenses,
       savings: calculateSavings(bucket.income, bucket.expenses),
       savingsRate: calculateSavingsRate(bucket.income, bucket.expenses),
+      saved: bucket.saved,
       transactionCount: bucket.count,
     };
   });
@@ -261,6 +276,7 @@ export function dailyBalanceSeries(
   const perDay = new Map<IsoDate, { income: number; expenses: number }>();
   for (const tx of transactions) {
     if (compareIsoDates(tx.date, start) < 0 || compareIsoDates(tx.date, end) > 0) continue;
+    if (tx.type === "SAVINGS") continue; // neutral for the balance
     const bucket = perDay.get(tx.date) ?? { income: 0, expenses: 0 };
     if (tx.type === "INCOME") bucket.income += tx.amount;
     else bucket.expenses += tx.amount;

@@ -34,6 +34,7 @@ export function Sidebar() {
                 render={
                   <Link
                     href={item.href}
+                    prefetch
                     aria-label={item.label}
                     aria-current={active ? "page" : undefined}
                     className={cn(
