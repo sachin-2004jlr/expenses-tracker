@@ -181,12 +181,12 @@ export interface DailyBalancePoint {
 
 export interface DashboardSummary {
   month: MonthKey;
-  totalBalance: number;
-  allTimeIncome: number;
-  allTimeExpenses: number;
-  /** Balance at the start of the selected month. */
-  openingBalance: number;
-  /** Day-by-day running balance through the selected month. */
+  /**
+   * Income minus expenses in the selected month only. Every month starts from ₹0: leftovers
+   * from earlier months are not carried in (they belong in the separate savings module).
+   */
+  monthBalance: number;
+  /** Day-by-day running balance through the selected month, starting from ₹0 on the 1st. */
   dailyBalance: DailyBalancePoint[];
   current: MonthTotals;
   previous: MonthTotals;

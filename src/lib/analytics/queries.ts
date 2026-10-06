@@ -140,9 +140,7 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
   const currentRange = monthRange(month);
   const previousRange = monthRange(previous);
 
-  const [allTime, openingBalance, currentTx, previousTx, categories, series] = await Promise.all([
-    getAllTimeTotals(userId),
-    getBalanceBefore(userId, currentRange.start),
+  const [currentTx, previousTx, categories, series] = await Promise.all([
     listTransactionsInRange(userId, currentRange.start, currentRange.end),
     listTransactionsInRange(userId, previousRange.start, previousRange.end),
     listCategories(userId),
@@ -151,14 +149,13 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
 
   const bothMonths = [...currentTx, ...previousTx];
   const untilDate = today && monthKeyOf(today) === month ? today : null;
+  const current = calculateMonthTotals(currentTx, month);
   return {
     month,
-    totalBalance: allTime.balance,
-    allTimeIncome: allTime.income,
-    allTimeExpenses: allTime.expenses,
-    openingBalance,
-    dailyBalance: dailyBalanceSeries(currentTx, month, openingBalance, untilDate),
-    current: calculateMonthTotals(currentTx, month),
+    monthBalance: current.income - current.expenses,
+    // Month-scoped: the line starts at ₹0 on the 1st; earlier months are not carried in.
+    dailyBalance: dailyBalanceSeries(currentTx, month, 0, untilDate),
+    current,
     previous: calculateMonthTotals(previousTx, previous),
     comparison: monthlyComparison(bothMonths, month, categories, previous),
     expenseCategories: categoryBreakdown(currentTx, "EXPENSE", categories),

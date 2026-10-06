@@ -143,4 +143,6 @@ export interface AppSettingsDoc extends Timestamps {
   dateFormat: string;
   firstDayOfWeek: number;
   timeZone: string;
+  /** Months whose leftover (income − expenses) the user already moved to savings or dismissed. */
+  leftoverHandledMonths?: string[];
 }
