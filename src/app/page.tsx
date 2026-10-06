@@ -29,12 +29,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const SAMPLE_SERIES: MonthTotals[] = [
-  { month: "2026-04", income: 5_200_000, expenses: 2_310_000, savings: 2_890_000, savingsRate: 55.6, saved: 1_500_000, transactionCount: 41 },
-  { month: "2026-05", income: 5_200_000, expenses: 1_980_000, savings: 3_220_000, savingsRate: 61.9, saved: 1_500_000, transactionCount: 38 },
-  { month: "2026-06", income: 5_500_000, expenses: 2_640_000, savings: 2_860_000, savingsRate: 52, saved: 1_500_000, transactionCount: 44 },
-  { month: "2026-07", income: 5_500_000, expenses: 2_120_000, savings: 3_380_000, savingsRate: 61.5, saved: 1_500_000, transactionCount: 39 },
-  { month: "2026-08", income: 4_800_000, expenses: 1_920_000, savings: 2_880_000, savingsRate: 60, saved: 1_500_000, transactionCount: 36 },
-  { month: "2026-09", income: 5_500_000, expenses: 1_655_000, savings: 3_845_000, savingsRate: 69.9, saved: 1_500_000, transactionCount: 42 },
+  { month: "2026-04", income: 5_200_000, expenses: 2_310_000, savings: 2_890_000, savingsRate: 55.6, transactionCount: 41 },
+  { month: "2026-05", income: 5_200_000, expenses: 1_980_000, savings: 3_220_000, savingsRate: 61.9, transactionCount: 38 },
+  { month: "2026-06", income: 5_500_000, expenses: 2_640_000, savings: 2_860_000, savingsRate: 52, transactionCount: 44 },
+  { month: "2026-07", income: 5_500_000, expenses: 2_120_000, savings: 3_380_000, savingsRate: 61.5, transactionCount: 39 },
+  { month: "2026-08", income: 4_800_000, expenses: 1_920_000, savings: 2_880_000, savingsRate: 60, transactionCount: 36 },
+  { month: "2026-09", income: 5_500_000, expenses: 1_655_000, savings: 3_845_000, savingsRate: 69.9, transactionCount: 42 },
 ];
 
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [

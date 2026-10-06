@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
-import { transactionTypeSchema } from "./transaction";
+import { categoryTypeSchema } from "./transaction";
 
 export const categoryInputSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(40, "Keep the name under 40 characters"),
-  type: transactionTypeSchema,
+  type: categoryTypeSchema,
   icon: z.enum(CATEGORY_ICONS).default("tag"),
   color: z.enum(CATEGORY_COLORS).default("slate"),
 });

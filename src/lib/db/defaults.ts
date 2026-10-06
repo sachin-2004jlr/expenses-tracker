@@ -1,8 +1,8 @@
-import type { TransactionType } from "@/types";
+import type { CategoryType } from "@/types";
 
 export interface DefaultCategory {
   name: string;
-  type: TransactionType;
+  type: CategoryType;
   icon: string;
   color: string;
 }

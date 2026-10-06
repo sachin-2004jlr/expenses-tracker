@@ -4,6 +4,7 @@ import type { AppSettings, Category, IsoDate, MonthKey } from "@/types";
 import { getDb } from "@/lib/db";
 import { listCategories } from "./categories";
 import { materialiseRecurringOncePerDay } from "./recurring";
+import { migrateLegacySavings } from "./savings-entries";
 import { getSettings } from "./settings";
 import { listTags } from "./tags";
 import { ensureUserDefaults, getCurrentUserId } from "./user";
@@ -25,7 +26,13 @@ export interface AppContext {
 export const loadAppContext = cache(async (): Promise<AppContext> => {
   const userId = await getCurrentUserId();
   // Settings, categories and tags are independent: one round trip instead of three.
-  const [settings, initialCategories, tags] = await Promise.all([getSettings(userId), listCategories(userId), listTags(userId)]);
+  const [settings, initialCategories, tags] = await Promise.all([
+    getSettings(userId),
+    listCategories(userId),
+    listTags(userId),
+    // Savings live in their own module; move any recorded in the monthly tracker (once).
+    migrateLegacySavings(userId).catch((error: unknown) => console.error("[savings] migration failed", error)),
+  ]);
   let categories = initialCategories;
   if (!categories.some((c) => c.type === "SAVINGS")) {
     // Accounts created before savings existed: add the default savings destinations once.

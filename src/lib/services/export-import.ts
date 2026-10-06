@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { newId, type BudgetDoc, type CategoryDoc, type RecurringDoc, type SavingsGoalDoc, type SavingsNoteDoc, type TransactionDoc } from "@/lib/db/schema";
+import { newId, type BudgetDoc, type CategoryDoc, type RecurringDoc, type SavingsEntryDoc, type SavingsGoalDoc, type SavingsNoteDoc, type TransactionDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { paiseToDecimalString } from "@/lib/money";
 import { BACKUP_FORMAT, BACKUP_VERSION, validateBackup, type BackupFile, type ImportMode } from "@/lib/validation/import";
@@ -8,6 +8,7 @@ import { listBudgets } from "./budgets";
 import { listCategories } from "./categories";
 import { listRecurring } from "./recurring";
 import { listSavingsGoals } from "./savings";
+import { listAllSavingsEntries } from "./savings-entries";
 import { listSavingsNotes } from "./savings-notes";
 import { normaliseTags } from "./tags";
 import { listAllTransactions } from "./transactions";
@@ -49,6 +50,7 @@ export interface ExportedBackup {
     isActive: boolean;
   }>;
   budgets: Array<{ category: string; amount: string }>;
+  savingsEntries: Array<{ kind: "DEPOSIT" | "SPEND"; amount: string; description: string; category: string | null; date: string; journal: string | null }>;
   savingsGoals: Array<{ name: string; targetAmount: string; targetDate: string | null; category: string | null; color: string; archived: boolean }>;
   savingsJournal: Array<{ title: string; body: string; date: string; pinned: boolean }>;
 }
@@ -62,6 +64,7 @@ export async function exportBackup(userId: string): Promise<ExportedBackup> {
     listSavingsGoals(userId, { includeArchived: true }),
     listSavingsNotes(userId, { limit: 500 }),
   ]);
+  const savingsEntries = await listAllSavingsEntries(userId);
   const categoryName = new Map(cats.map((c) => [c.id, c.name]));
   return {
     format: BACKUP_FORMAT,
@@ -105,7 +108,16 @@ export async function exportBackup(userId: string): Promise<ExportedBackup> {
       color: g.color,
       archived: g.archived,
     })),
-    savingsJournal: notes.map((n) => ({ title: n.title, body: n.body, date: n.date, pinned: n.pinned })),
+    savingsEntries: savingsEntries.map((e) => ({
+      kind: e.kind,
+      amount: paiseToDecimalString(e.amount),
+      description: e.description,
+      category: e.category?.name ?? null,
+      date: e.date,
+      journal: e.journal,
+    })),
+    // Notes linked to an entry travel with that entry (journal); only standalone notes are listed here.
+    savingsJournal: notes.filter((n) => !n.entryId).map((n) => ({ title: n.title, body: n.body, date: n.date, pinned: n.pinned })),
   };
 }
 
@@ -182,6 +194,11 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
   for (const r of backup.recurring) {
     const key = catKey(r.type, r.category);
     if (!wanted.has(key)) wanted.set(key, { name: r.category.trim(), type: r.type, icon: "tag", color: "slate" });
+  }
+  for (const e of backup.savingsEntries) {
+    if (!e.category) continue;
+    const key = catKey("SAVINGS", e.category);
+    if (!wanted.has(key)) wanted.set(key, { name: e.category.trim(), type: "SAVINGS", icon: "piggy-bank", color: "pink" });
   }
   for (const g of backup.savingsGoals) {
     if (!g.category) continue;
@@ -297,6 +314,26 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
     }));
     await db.savingsGoals.insertMany(goals);
   }
+  if (backup.savingsEntries.length > 0) {
+    const entries: SavingsEntryDoc[] = backup.savingsEntries.map((e) => ({
+      _id: newId(),
+      userId,
+      kind: e.kind,
+      amount: e.amount,
+      description: e.description,
+      categoryId: e.category ? (catMap.get(catKey("SAVINGS", e.category)) ?? null) : null,
+      date: e.date,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    await db.savingsEntries.insertMany(entries);
+    const linkedNotes: SavingsNoteDoc[] = backup.savingsEntries.flatMap((e, i) =>
+      e.journal
+        ? [{ _id: newId(), userId, title: e.description.slice(0, 120), body: e.journal, date: e.date, pinned: false, entryId: entries[i]!._id, createdAt: now, updatedAt: now }]
+        : [],
+    );
+    if (linkedNotes.length > 0) await db.savingsNotes.insertMany(linkedNotes);
+  }
   if (backup.savingsJournal.length > 0) {
     const notes: SavingsNoteDoc[] = backup.savingsJournal.map((n) => ({
       _id: newId(),
@@ -305,7 +342,7 @@ export async function importBackup(userId: string, raw: unknown, mode: ImportMod
       body: n.body,
       date: n.date,
       pinned: n.pinned,
-      transactionId: null,
+      entryId: null,
       createdAt: now,
       updatedAt: now,
     }));

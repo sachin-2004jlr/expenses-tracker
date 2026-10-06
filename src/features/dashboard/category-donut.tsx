@@ -87,7 +87,7 @@ export function CategoryDonut({
       </CardHeader>
       <CardContent className="@container">
         {slices.length === 0 ? (
-          <EmptyState icon={ChartPie} title={type === "EXPENSE" ? "No expenses this month" : type === "INCOME" ? "No income this month" : "Nothing saved yet"} compact />
+          <EmptyState icon={ChartPie} title={type === "EXPENSE" ? "No expenses this month" : "No income this month"} compact />
         ) : (
           <div className="grid gap-4 @md:grid-cols-[11rem_minmax(0,1fr)] @md:items-center">
             <div className="relative mx-auto h-44 w-44">

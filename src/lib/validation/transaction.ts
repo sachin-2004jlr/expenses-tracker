@@ -2,10 +2,9 @@ import { z } from "zod";
 import { isValidIsoDate, isValidMonthKey } from "@/lib/dates";
 import { MAX_PAISE, parseMoney } from "@/lib/money";
 
-export const transactionTypeSchema = z.enum(["INCOME", "EXPENSE", "SAVINGS"]);
-
-/** Savings journal text written from the transaction form ("what did you do with this money?"). */
-export const journalTextSchema = z.string().trim().max(5000, "Keep the note under 5000 characters");
+export const transactionTypeSchema = z.enum(["INCOME", "EXPENSE"]);
+/** Category types: the monthly tracker's two plus SAVINGS for the separate savings module. */
+export const categoryTypeSchema = z.enum(["INCOME", "EXPENSE", "SAVINGS"]);
 
 export const isoDateSchema = z
   .string()
@@ -44,11 +43,6 @@ export const transactionInputSchema = z.object({
   date: isoDateSchema,
   notes: z.string().trim().max(2000, "Notes must be 2000 characters or fewer").nullish().transform((v) => (v ? v : null)),
   tags: tagListSchema.default([]),
-  /**
-   * SAVINGS only: journal text for the linked notepad entry. `undefined` leaves the note alone,
-   * an empty string removes it.
-   */
-  journal: journalTextSchema.optional(),
 });
 
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
@@ -69,7 +63,6 @@ export const transactionFormSchema = z.object({
   date: isoDateSchema,
   notes: z.string().max(2000, "Notes must be 2000 characters or fewer"),
   tags: z.array(z.string()).max(10, "Up to 10 tags per transaction"),
-  journal: z.string().max(5000, "Keep the note under 5000 characters"),
 });
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;

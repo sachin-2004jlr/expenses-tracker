@@ -13,14 +13,14 @@ import { CATEGORY_COLOR_CLASSES, CategoryIcon, getCategoryIcon } from "@/compone
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
 import { cn } from "@/lib/utils";
-import type { CategoryWithStats, TransactionType } from "@/types";
+import type { CategoryWithStats, CategoryType } from "@/types";
 import { createCategoryAction, deleteCategoryAction, updateCategoryAction } from "./actions";
 
 interface EditorState {
   open: boolean;
   category: CategoryWithStats | null;
   name: string;
-  type: TransactionType;
+  type: CategoryType;
   icon: string;
   color: string;
 }
@@ -34,7 +34,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
   const [deleting, setDeleting] = useState<CategoryWithStats | null>(null);
   const [reassignTo, setReassignTo] = useState<string>("");
 
-  const openCreate = (type: TransactionType) => setEditor({ ...EMPTY, open: true, type });
+  const openCreate = (type: CategoryType) => setEditor({ ...EMPTY, open: true, type });
   const openEdit = (category: CategoryWithStats) =>
     setEditor({ open: true, category, name: category.name, type: category.type, icon: category.icon, color: category.color });
 
@@ -66,10 +66,10 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
     setReassignTo("");
   };
 
-  const groups: { type: TransactionType; title: string }[] = [
+  const groups: { type: CategoryType; title: string }[] = [
     { type: "INCOME", title: "Income categories" },
     { type: "EXPENSE", title: "Expense categories" },
-    { type: "SAVINGS", title: "Savings destinations" },
+    { type: "SAVINGS", title: "Savings categories" },
   ];
   const reassignOptions = deleting ? categories.filter((c) => c.type === deleting.type && c.id !== deleting.id) : [];
 
@@ -126,7 +126,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
       <Dialog open={editor.open} onOpenChange={(open) => !open && setEditor(EMPTY)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editor.category ? "Edit category" : `New ${editor.type === "INCOME" ? "income category" : editor.type === "EXPENSE" ? "expense category" : "savings destination"}`}</DialogTitle>
+            <DialogTitle>{editor.category ? "Edit category" : `New ${editor.type === "INCOME" ? "income category" : editor.type === "EXPENSE" ? "expense category" : "savings category"}`}</DialogTitle>
             <DialogDescription>Pick a name, an icon and a colour.</DialogDescription>
           </DialogHeader>
           <form
@@ -145,11 +145,11 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                 <Label htmlFor="cat-type">Type</Label>
                 <Select
                   value={editor.type}
-                  onValueChange={(value) => setEditor((s) => ({ ...s, type: (value as TransactionType) ?? s.type }))}
+                  onValueChange={(value) => setEditor((s) => ({ ...s, type: (value as CategoryType) ?? s.type }))}
                   items={[
                     { value: "EXPENSE", label: "Expense" },
                     { value: "INCOME", label: "Income" },
-                    { value: "SAVINGS", label: "Savings destination" },
+                    { value: "SAVINGS", label: "Savings" },
                   ]}
                 >
                   <SelectTrigger id="cat-type" className="w-full">
@@ -158,7 +158,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                   <SelectContent>
                     <SelectItem value="EXPENSE">Expense</SelectItem>
                     <SelectItem value="INCOME">Income</SelectItem>
-                    <SelectItem value="SAVINGS">Savings destination</SelectItem>
+                    <SelectItem value="SAVINGS">Savings</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

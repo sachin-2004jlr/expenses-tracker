@@ -22,7 +22,7 @@ import { signOutAction } from "@/features/auth/actions";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import type { CurrentUser } from "@/lib/auth";
 import { isValidMonthKey } from "@/lib/dates";
-import { MONTH_SCOPED_PATHS, NAV_ITEMS, isActivePath } from "@/lib/nav";
+import { MONTH_AGNOSTIC_PATHS, MONTH_SCOPED_PATHS, NAV_ITEMS, isActivePath } from "@/lib/nav";
 import type { MonthKey } from "@/types";
 
 export interface AppHeaderProps {
@@ -58,7 +58,8 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
   }, [openCreate]);
 
   const current = NAV_ITEMS.find((item) => isActivePath(pathname, item.href));
-  const monthScoped = MONTH_SCOPED_PATHS.some((path) => isActivePath(pathname, path));
+  const monthScoped =
+    MONTH_SCOPED_PATHS.some((path) => isActivePath(pathname, path)) && !MONTH_AGNOSTIC_PATHS.some((path) => isActivePath(pathname, path));
   const monthParam = searchParams.get("month");
   const month = monthParam && isValidMonthKey(monthParam) ? monthParam : currentMonth;
 

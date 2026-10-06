@@ -37,11 +37,6 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
               <span>
                 Expenses <Amount paise={result.totals.expenses} className="font-medium text-expense-foreground" />
               </span>
-              {result.totals.saved > 0 && (
-                <span>
-                  Saved <Amount paise={result.totals.saved} className="font-medium text-saved-foreground" />
-                </span>
-              )}
               <span>
                 Net <Amount paise={result.totals.net} colorBySign className="font-medium" />
               </span>

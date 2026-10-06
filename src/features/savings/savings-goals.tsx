@@ -110,13 +110,13 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
     toast.success("Goal deleted");
   };
 
-  const destinationItems = [{ value: NONE, label: "Not linked" }, ...destinations.map((d) => ({ value: d.id, label: d.name }))];
+  const destinationItems = [{ value: NONE, label: "Whole savings balance" }, ...destinations.map((d) => ({ value: d.id, label: `Money added for ${d.name}` }))];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Savings goals</CardTitle>
-        <CardDescription>Link a goal to a destination and every savings entry there counts towards it.</CardDescription>
+        <CardDescription>Unlinked goals track your whole savings balance. Link one to a savings category to count only money you add for it.</CardDescription>
         <CardAction>
           <Button size="sm" variant="outline" onClick={openCreate}>
             <Plus data-icon="inline-start" aria-hidden />
@@ -150,7 +150,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{goal.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {goal.categoryName ?? "Not linked to a destination"}
+                        {goal.categoryName ? `Money added for ${goal.categoryName}` : "Tracks your savings balance"}
                         {goal.targetDate && ` · by ${formatIsoDate(goal.targetDate, dateFormat)}`}
                       </p>
                     </div>
@@ -209,7 +209,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{form.goal ? "Edit goal" : "New savings goal"}</DialogTitle>
-            <DialogDescription>Savings entries made to the linked destination count towards the target.</DialogDescription>
+            <DialogDescription>Leave it unlinked to track your whole savings balance, or link a category to count money added for it.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="grid gap-4" noValidate>
             <div className="grid gap-1.5">
@@ -234,7 +234,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
               </div>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="goal-destination">Counts savings made to</Label>
+              <Label htmlFor="goal-destination">Counts</Label>
               <Select
                 value={form.categoryId}
                 onValueChange={(value) => {
@@ -251,11 +251,11 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE}>Not linked</SelectItem>
+                  <SelectItem value={NONE}>Whole savings balance</SelectItem>
                   {destinations.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       <CategoryIcon icon={d.icon} color={d.color} size="sm" />
-                      {d.name}
+                      Money added for {d.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

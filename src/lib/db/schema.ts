@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { RecurrenceFrequency, TransactionType } from "@/types";
+import type { CategoryType, RecurrenceFrequency, SavingsEntryKind, TransactionType } from "@/types";
 
 /**
  * MongoDB document shapes and collection names.
@@ -19,6 +19,7 @@ export const COLLECTIONS = {
   recurring: "recurring_transactions",
   settings: "app_settings",
   budgets: "budgets",
+  savingsEntries: "savings_entries",
   savingsNotes: "savings_notes",
   savingsGoals: "savings_goals",
 } as const;
@@ -47,7 +48,7 @@ export interface CategoryDoc extends Timestamps {
   name: string;
   /** Lower-cased copy of `name` for the unique index / case-insensitive matching. */
   nameLower: string;
-  type: TransactionType;
+  type: CategoryType;
   icon: string;
   color: string;
   isDefault: boolean;
@@ -97,7 +98,21 @@ export interface BudgetDoc extends Timestamps {
   amount: number;
 }
 
-/** Savings journal entry. `transactionId` links it to one SAVINGS transaction (at most one note each). */
+/** Money added to (DEPOSIT) or used from (SPEND) savings. Kept apart from the monthly tracker. */
+export interface SavingsEntryDoc extends Timestamps {
+  _id: string;
+  userId: string;
+  kind: SavingsEntryKind;
+  /** Integer paise, > 0. */
+  amount: number;
+  description: string;
+  /** SAVINGS category: what it was used for (SPEND) or earmarked for (DEPOSIT, optional). */
+  categoryId: string | null;
+  /** YYYY-MM-DD */
+  date: string;
+}
+
+/** Savings journal entry. `entryId` links it to one savings entry (at most one note each). */
 export interface SavingsNoteDoc extends Timestamps {
   _id: string;
   userId: string;
@@ -106,7 +121,7 @@ export interface SavingsNoteDoc extends Timestamps {
   /** YYYY-MM-DD the note is about (the linked entry's date when linked). */
   date: string;
   pinned: boolean;
-  transactionId: string | null;
+  entryId: string | null;
 }
 
 export interface SavingsGoalDoc extends Timestamps {

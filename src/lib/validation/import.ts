@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
 import { savingsGoalInputSchema } from "./savings";
 import { MAX_PAISE, parseMoney } from "@/lib/money";
-import { isoDateSchema, tagNameSchema, transactionTypeSchema } from "./transaction";
+import { categoryTypeSchema, isoDateSchema, tagNameSchema, transactionTypeSchema } from "./transaction";
 
 /**
  * Backup file format (also what `Export JSON` produces).
@@ -34,7 +34,7 @@ const importAmountSchema = z
 
 export const importCategorySchema = z.object({
   name: z.string().trim().min(1).max(40),
-  type: transactionTypeSchema,
+  type: categoryTypeSchema,
   icon: z.string().trim().max(40).optional().transform((v) => (v && (CATEGORY_ICONS as readonly string[]).includes(v) ? v : "tag")),
   color: z.string().trim().max(40).optional().transform((v) => (v && (CATEGORY_COLORS as readonly string[]).includes(v) ? v : "slate")),
 });
@@ -79,6 +79,15 @@ export const importSavingsGoalSchema = z.object({
   archived: z.boolean().default(false),
 });
 
+export const importSavingsEntrySchema = z.object({
+  kind: z.enum(["DEPOSIT", "SPEND"]),
+  amount: importAmountSchema,
+  description: z.string().trim().min(1).max(200),
+  category: z.string().trim().min(1).max(40).nullish().transform((v) => v ?? null),
+  date: isoDateSchema,
+  journal: z.string().trim().max(5000).nullish().transform((v) => (v ? v : null)),
+});
+
 export const importSavingsNoteSchema = z.object({
   title: z.string().trim().max(120).default(""),
   body: z.string().trim().min(1).max(5000),
@@ -94,6 +103,7 @@ export const backupFileSchema = z.object({
   transactions: z.array(importTransactionSchema).max(100_000),
   recurring: z.array(importRecurringSchema).max(1000).default([]),
   budgets: z.array(importBudgetSchema).max(500).default([]),
+  savingsEntries: z.array(importSavingsEntrySchema).max(50_000).default([]),
   savingsGoals: z.array(importSavingsGoalSchema).max(200).default([]),
   savingsJournal: z.array(importSavingsNoteSchema).max(5000).default([]),
 });

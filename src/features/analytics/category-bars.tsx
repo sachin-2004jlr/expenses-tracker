@@ -28,7 +28,7 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
       </CardHeader>
       <CardContent>
         {visible.length === 0 ? (
-          <EmptyState icon={ChartColumn} title={type === "EXPENSE" ? "No expenses in this range" : type === "INCOME" ? "No income in this range" : "Nothing saved in this range"} compact />
+          <EmptyState icon={ChartColumn} title={type === "EXPENSE" ? "No expenses in this range" : "No income in this range"} compact />
         ) : (
           <ul className="space-y-2.5">
             {visible.map((item) => (

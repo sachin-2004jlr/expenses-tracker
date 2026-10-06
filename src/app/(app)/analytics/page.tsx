@@ -50,11 +50,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           icon={PiggyBank}
           tone="savings"
           value={formatCurrency(overview.totals.savings)}
-          hint={
-            overview.totals.savingsRate === null
-              ? "No income in range"
-              : `Savings rate ${formatPercent(overview.totals.savingsRate)}${overview.totals.saved > 0 ? ` · ${formatCurrency(overview.totals.saved)} set aside` : ""}`
-          }
+          hint={overview.totals.savingsRate === null ? "No income in range" : `Savings rate ${formatPercent(overview.totals.savingsRate)}`}
           className={overview.totals.savings < 0 ? "[&>p]:text-expense-foreground" : undefined}
         />
         <StatCard
@@ -87,16 +83,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <LargestExpenses transactions={overview.largestExpenses} today={context.today} dateFormat={context.settings.dateFormat} />
         <MonthlyComparisonCard comparison={overview.comparison} />
       </div>
-
-      {overview.savingsCategories.length > 0 && (
-        <CategoryBars
-          items={overview.savingsCategories}
-          type="SAVINGS"
-          title="Where your savings went"
-          description={`Set aside by destination, ${RANGE_LABEL[range]}`}
-          linkQuery={linkQuery}
-        />
-      )}
     </div>
   );
 }

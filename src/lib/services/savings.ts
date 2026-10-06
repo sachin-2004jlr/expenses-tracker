@@ -1,62 +1,48 @@
-import { calculateSavingsRate } from "@/lib/analytics/calculations";
-import { getCategoryTotals, getMonthlySeries } from "@/lib/analytics/queries";
-import { goalProgress, savedByCategoryMap, sortGoals } from "@/lib/analytics/savings";
+import { goalProgress, sortGoals } from "@/lib/analytics/savings";
 import { getDb } from "@/lib/db";
 import { newId, type SavingsGoalDoc } from "@/lib/db/schema";
-import { addDays, listMonthKeys, previousMonthKey } from "@/lib/dates";
+import { addDays, listMonthKeys, monthRange, previousMonthKey } from "@/lib/dates";
 import { AppError } from "@/lib/errors";
-import { savingsGoalInputSchema, savingsGoalUpdateSchema, type SavingsGoalInput, type SavingsGoalUpdate } from "@/lib/validation/savings";
-import { transactionFiltersSchema } from "@/lib/validation/transaction";
+import { savingsEntryFiltersSchema, savingsGoalInputSchema, savingsGoalUpdateSchema, type SavingsGoalInput, type SavingsGoalUpdate } from "@/lib/validation/savings";
 import type { IsoDate, MonthKey, SavingsGoal, SavingsGoalProgress, SavingsOverview } from "@/types";
 import { listCategories } from "./categories";
+import { getSavingsByCategory, getSavingsSeries, getSavingsTotals, listSavingsEntries } from "./savings-entries";
 import { countSavingsNotes } from "./savings-notes";
-import { listTransactions } from "./transactions";
-
-const ALL_TIME = { from: "0000-01-01", to: "9999-12-31" } as const;
 
 function toGoal(doc: SavingsGoalDoc): SavingsGoal {
-  return {
-    id: doc._id,
-    name: doc.name,
-    targetAmount: doc.targetAmount,
-    targetDate: doc.targetDate,
-    categoryId: doc.categoryId,
-    color: doc.color,
-    archived: doc.archived,
-  };
+  return { id: doc._id, name: doc.name, targetAmount: doc.targetAmount, targetDate: doc.targetDate, categoryId: doc.categoryId, color: doc.color, archived: doc.archived };
 }
 
-async function assertDestination(userId: string, categoryId: string | null | undefined): Promise<void> {
+async function assertSavingsCategory(userId: string, categoryId: string | null | undefined): Promise<void> {
   if (!categoryId) return;
   const db = await getDb();
   const category = await db.categories.findOne({ _id: categoryId, userId }, { projection: { type: 1 } });
-  if (!category) throw AppError.notFound("Savings destination");
-  if (category.type !== "SAVINGS") throw AppError.badRequest("Goals can only track savings destinations");
+  if (!category) throw AppError.notFound("Savings category");
+  if (category.type !== "SAVINGS") throw AppError.badRequest("Goals can only be linked to savings categories");
 }
 
 export async function listSavingsGoals(userId: string, options: { includeArchived?: boolean } = {}): Promise<SavingsGoal[]> {
   const db = await getDb();
-  const docs = await db.savingsGoals
-    .find(options.includeArchived ? { userId } : { userId, archived: false })
-    .sort({ createdAt: 1 })
-    .toArray();
+  const docs = await db.savingsGoals.find(options.includeArchived ? { userId } : { userId, archived: false }).sort({ createdAt: 1 }).toArray();
   return docs.map(toGoal);
 }
 
-/** Goals with progress computed from the all-time amount saved into each goal's destination. */
+/** Goals with progress: earmarked deposits for linked goals, the savings balance otherwise. */
 export async function listGoalProgress(userId: string, today: IsoDate, options: { includeArchived?: boolean } = {}): Promise<SavingsGoalProgress[]> {
-  const [goals, destinations, categories] = await Promise.all([
+  const [goals, earmarked, totals, categories] = await Promise.all([
     listSavingsGoals(userId, options),
-    getCategoryTotals(userId, "SAVINGS", ALL_TIME.from, ALL_TIME.to),
+    getSavingsByCategory(userId, "DEPOSIT"),
+    getSavingsTotals(userId),
     listCategories(userId),
   ]);
   const names = new Map(categories.map((c) => [c.id, c.name]));
-  return sortGoals(goals.map((g) => goalProgress(g, savedByCategoryMap(destinations), today, names)));
+  const byCategory = new Map(earmarked.map((e) => [e.categoryId, e.amount]));
+  return sortGoals(goals.map((g) => goalProgress(g, byCategory, totals.balance, today, names)));
 }
 
 export async function createSavingsGoal(userId: string, rawInput: SavingsGoalInput): Promise<SavingsGoal> {
   const input = savingsGoalInputSchema.parse(rawInput);
-  await assertDestination(userId, input.categoryId);
+  await assertSavingsCategory(userId, input.categoryId);
   const db = await getDb();
   const now = new Date();
   const doc: SavingsGoalDoc = { _id: newId(), userId, ...input, archived: false, createdAt: now, updatedAt: now };
@@ -66,7 +52,7 @@ export async function createSavingsGoal(userId: string, rawInput: SavingsGoalInp
 
 export async function updateSavingsGoal(userId: string, id: string, rawUpdate: SavingsGoalUpdate): Promise<SavingsGoal> {
   const update = savingsGoalUpdateSchema.parse(rawUpdate);
-  await assertDestination(userId, update.categoryId);
+  await assertSavingsCategory(userId, update.categoryId);
   const db = await getDb();
   const $set: Partial<SavingsGoalDoc> = { updatedAt: new Date() };
   for (const [key, value] of Object.entries(update)) {
@@ -83,32 +69,36 @@ export async function deleteSavingsGoal(userId: string, id: string): Promise<voi
   if (result.deletedCount === 0) throw AppError.notFound("Goal");
 }
 
-/** Everything the Savings page shows, in one parallel round of queries. */
+/** Everything the savings dashboard shows, in one parallel round of queries. */
 export async function getSavingsOverview(userId: string, month: MonthKey, today: IsoDate): Promise<SavingsOverview> {
-  const since = addDays(today, -90);
-  const [series, destinations, goals, recent, noteCount] = await Promise.all([
-    getMonthlySeries(userId, listMonthKeys(month, 12)),
-    getCategoryTotals(userId, "SAVINGS", ALL_TIME.from, ALL_TIME.to),
+  const { start, end } = monthRange(month);
+  const [totals, series, usedByCategory, usedByCategoryThisMonth, goals, recent, noteCount] = await Promise.all([
+    getSavingsTotals(userId),
+    getSavingsSeries(userId, listMonthKeys(month, 12)),
+    getSavingsByCategory(userId, "SPEND"),
+    getSavingsByCategory(userId, "SPEND", { from: start, to: end }),
     listGoalProgress(userId, today),
-    listTransactions(userId, transactionFiltersSchema.parse({ type: "SAVINGS", from: since, pageSize: 50 })),
+    listSavingsEntries(userId, savingsEntryFiltersSchema.parse({ pageSize: 50 })),
     countSavingsNotes(userId),
   ]);
-  const current = series.find((m) => m.month === month) ?? series[series.length - 1]!;
+  const current = series.find((m) => m.month === month);
   const previous = series.find((m) => m.month === previousMonthKey(month));
-  const savedAllTime = destinations.reduce((sum, d) => sum + d.amount, 0);
+  const since = addDays(today, -90);
   return {
     month,
-    savedThisMonth: current.saved,
-    savedLastMonth: previous?.saved ?? 0,
-    savedAllTime,
-    keptThisMonth: current.savings,
-    unallocatedThisMonth: current.savings - current.saved,
-    savingsRate: calculateSavingsRate(current.income, current.expenses),
-    destinations,
+    balance: totals.balance,
+    addedAllTime: totals.added,
+    usedAllTime: totals.used,
+    addedThisMonth: current?.added ?? 0,
+    usedThisMonth: current?.used ?? 0,
+    addedLastMonth: previous?.added ?? 0,
+    usedLastMonth: previous?.used ?? 0,
     series,
+    usedByCategory,
+    usedByCategoryThisMonth,
     goals,
-    recentEntries: recent.items.slice(0, 10),
-    entriesWithoutNotes: recent.items.filter((t) => !t.journal).slice(0, 10),
+    recentEntries: recent.items.slice(0, 8),
+    entriesWithoutNotes: recent.items.filter((e) => !e.journal && e.date >= since).slice(0, 10),
     noteCount,
   };
 }

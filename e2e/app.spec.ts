@@ -261,49 +261,60 @@ test("budgets: set a limit in settings and track it on the dashboard", async ({ 
   expect(body.progress.items[0]?.status).toBe("warning");
 });
 
-test("savings: entry with a journal note, goal progress, notepad, balance untouched", async ({ page }) => {
+test("savings module: add, use with a journal note, goals, notepad, monthly tracker untouched", async ({ page }) => {
   await page.goto("/savings");
-  await page.getByTestId("add-savings").click();
-  const form = page.getByTestId("transaction-form");
+
+  // Money added to savings.
+  await page.getByTestId("savings-add").click();
+  const form = page.getByTestId("savings-form");
   await expect(form).toBeVisible();
-  await expect(page.getByRole("radio", { name: "Savings" })).toHaveAttribute("aria-checked", "true");
-  await page.locator("#tx-amount").fill("5000");
-  await page.locator("#tx-description").fill("Monthly SIP");
-  await pickCategory(page, "Mutual funds / SIP");
-  await page.locator("#tx-journal").fill("Started a SIP in the Nifty 50 index fund");
-  await form.getByRole("button", { name: "Add savings" }).click();
-  await expect(page.getByText("Savings added")).toBeVisible();
+  await page.locator("#sv-amount").fill("10000");
+  await page.locator("#sv-description").fill("October savings");
+  await form.getByRole("button", { name: "Add to savings" }).click();
+  await expect(page.getByText("Added to savings")).toBeVisible();
+  await expect(page.getByTestId("savings-balance")).toContainText("₹10,000");
 
-  // The journal note shows up in the notepad, linked to the entry.
-  await expect(page.getByTestId("journal-note").filter({ hasText: "Nifty 50" })).toContainText("₹5,000");
-  await expect(page.getByLabel("Savings totals")).toContainText("₹5,000");
+  // What was done with part of it, with a journal note.
+  await page.getByTestId("savings-use").click();
+  await expect(page.getByRole("radio", { name: "Used from savings" })).toHaveAttribute("aria-checked", "true");
+  await page.locator("#sv-amount").fill("4000");
+  await page.locator("#sv-description").fill("Gold coin");
+  await page.locator("#sv-category").click();
+  await page.getByRole("option", { name: "Gold" }).click();
+  await page.locator("#sv-journal").fill("Bought a 0.5g gold coin from Tanishq");
+  await page.getByTestId("savings-form").getByRole("button", { name: "Record use" }).click();
+  await expect(page.getByText("Use of savings recorded")).toBeVisible();
+  await expect(page.getByTestId("savings-balance")).toContainText("₹6,000");
+  await expect(page.getByLabel("What you did with your savings")).toContainText("Gold");
 
-  // Goals count savings made to their destination.
-  await page.getByRole("button", { name: "New goal" }).click();
-  await page.locator("#goal-name").fill("Retirement");
-  await page.locator("#goal-target").fill("100000");
-  await page.locator("#goal-destination").click();
-  await page.getByRole("option", { name: "Mutual funds / SIP" }).click();
-  await page.getByRole("button", { name: "Create goal" }).click();
-  await expect(page.getByTestId("savings-goal").filter({ hasText: "Retirement" })).toContainText("₹5,000");
-  await expect(page.getByRole("progressbar", { name: "Retirement progress" })).toHaveAttribute("aria-valuenow", "5");
-
-  // A standalone note in the notepad.
-  await page.locator("#journal-body").fill("Moved the old FD into a liquid fund");
+  // Entries page lists both, journal shows the note linked to the entry.
+  await page.getByRole("navigation", { name: "Savings sections" }).getByRole("link", { name: "Entries", exact: true }).click();
+  await expect(page.getByTestId("savings-entry")).toHaveCount(2);
+  await page.getByRole("navigation", { name: "Savings sections" }).getByRole("link", { name: "Journal", exact: true }).click();
+  await expect(page.getByTestId("journal-note").filter({ hasText: "Tanishq" })).toContainText("₹4,000");
+  await page.locator("#journal-body").fill("Plan: move the rest into an FD next month");
   await page.getByRole("button", { name: "Save note" }).click();
-  await expect(page.getByTestId("journal-note").filter({ hasText: "liquid fund" })).toBeVisible();
+  await expect(page.getByTestId("journal-note").filter({ hasText: "FD next month" })).toBeVisible();
 
-  // Savings are neither spending nor a change in balance.
+  // An unlinked goal tracks the whole savings balance.
+  await page.getByRole("navigation", { name: "Savings sections" }).getByRole("link", { name: "Goals", exact: true }).click();
+  await page.getByRole("button", { name: "New goal" }).first().click();
+  await page.locator("#goal-name").fill("Emergency fund");
+  await page.locator("#goal-target").fill("60000");
+  await page.getByRole("button", { name: "Create goal" }).click();
+  await expect(page.getByRole("progressbar", { name: "Emergency fund progress" })).toHaveAttribute("aria-valuenow", "10");
+
+  // The monthly tracker is completely untouched.
   await page.goto("/dashboard");
   await expect(page.getByTestId("expense-amount")).toContainText("₹900");
   await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
-  await expect(page.getByTestId("saved-this-month")).toContainText("₹5,000");
+  await page.goto("/transactions");
+  await expect(page.getByText("Gold coin")).toHaveCount(0);
+  await expect(page.getByText("October savings")).toHaveCount(0);
 
   const api = await page.request.get("/api/savings");
-  const body = (await api.json()) as { savedThisMonth: number; goals: { name: string; saved: number }[]; noteCount: number };
-  expect(body.savedThisMonth).toBe(500_000);
-  expect(body.goals[0]).toMatchObject({ name: "Retirement", saved: 500_000 });
-  expect(body.noteCount).toBe(2);
+  const body = (await api.json()) as { balance: number; addedThisMonth: number; usedThisMonth: number; noteCount: number };
+  expect(body).toMatchObject({ balance: 600_000, addedThisMonth: 1_000_000, usedThisMonth: 400_000, noteCount: 2 });
 });
 
 test("health endpoint reports status and database round trip", async ({ request }) => {

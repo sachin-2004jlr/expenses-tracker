@@ -59,7 +59,7 @@ export function TransactionDialogProvider({ categories, tagSuggestions, today, c
 
   const handleSaved = useCallback(
     (transaction: Transaction, mode: "create" | "edit", type: TransactionType) => {
-      const label = type === "INCOME" ? "Income" : type === "EXPENSE" ? "Expense" : "Savings";
+      const label = type === "INCOME" ? "Income" : "Expense";
       toast.success(mode === "create" ? `${label} added` : `${label} updated`, {
         description: `${transaction.description} · ${formatCurrency(transaction.amount)}`,
       });

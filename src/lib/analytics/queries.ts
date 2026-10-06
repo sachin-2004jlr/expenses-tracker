@@ -34,12 +34,10 @@ import {
 
 const INCOME_SUM = { $sum: { $cond: [{ $eq: ["$type", "INCOME"] }, "$amount", 0] } };
 const EXPENSE_SUM = { $sum: { $cond: [{ $eq: ["$type", "EXPENSE"] }, "$amount", 0] } };
-const SAVED_SUM = { $sum: { $cond: [{ $eq: ["$type", "SAVINGS"] }, "$amount", 0] } };
 
 export interface AllTimeTotals {
   income: number;
   expenses: number;
-  saved: number;
   balance: number;
   transactionCount: number;
   firstMonth: MonthKey | null;
@@ -49,11 +47,9 @@ export interface AllTimeTotals {
 export async function getAllTimeTotals(userId: string): Promise<AllTimeTotals> {
   const db = await getDb();
   const [row] = await db.transactions
-    .aggregate<{ income: number; expenses: number; saved: number; total: number; first: string | null; last: string | null }>([
+    .aggregate<{ income: number; expenses: number; total: number; first: string | null; last: string | null }>([
       { $match: { userId } },
-      {
-        $group: { _id: null, income: INCOME_SUM, expenses: EXPENSE_SUM, saved: SAVED_SUM, total: { $sum: 1 }, first: { $min: "$date" }, last: { $max: "$date" } },
-      },
+      { $group: { _id: null, income: INCOME_SUM, expenses: EXPENSE_SUM, total: { $sum: 1 }, first: { $min: "$date" }, last: { $max: "$date" } } },
     ])
     .toArray();
   const income = row?.income ?? 0;
@@ -61,7 +57,6 @@ export async function getAllTimeTotals(userId: string): Promise<AllTimeTotals> {
   return {
     income,
     expenses,
-    saved: row?.saved ?? 0,
     balance: income - expenses,
     transactionCount: row?.total ?? 0,
     firstMonth: row?.first ? row.first.slice(0, 7) : null,
@@ -88,9 +83,9 @@ export async function getMonthlySeries(userId: string, months: MonthKey[]): Prom
   const first = months[0]!;
   const last = months[months.length - 1]!;
   const rows = await db.transactions
-    .aggregate<{ _id: string; income: number; expenses: number; saved: number; total: number }>([
+    .aggregate<{ _id: string; income: number; expenses: number; total: number }>([
       { $match: { userId, date: { $gte: monthRange(first).start, $lte: monthRange(last).end } } },
-      { $group: { _id: { $substrBytes: ["$date", 0, 7] }, income: INCOME_SUM, expenses: EXPENSE_SUM, saved: SAVED_SUM, total: { $sum: 1 } } },
+      { $group: { _id: { $substrBytes: ["$date", 0, 7] }, income: INCOME_SUM, expenses: EXPENSE_SUM, total: { $sum: 1 } } },
     ])
     .toArray();
 
@@ -105,7 +100,6 @@ export async function getMonthlySeries(userId: string, months: MonthKey[]): Prom
       expenses,
       savings: calculateSavings(income, expenses),
       savingsRate: calculateSavingsRate(income, expenses),
-      saved: row?.saved ?? 0,
       transactionCount: row?.total ?? 0,
     };
   });
@@ -162,7 +156,6 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
     totalBalance: allTime.balance,
     allTimeIncome: allTime.income,
     allTimeExpenses: allTime.expenses,
-    allTimeSaved: allTime.saved,
     openingBalance,
     dailyBalance: dailyBalanceSeries(currentTx, month, openingBalance, untilDate),
     current: calculateMonthTotals(currentTx, month),
@@ -170,7 +163,6 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
     comparison: monthlyComparison(bothMonths, month, categories, previous),
     expenseCategories: categoryBreakdown(currentTx, "EXPENSE", categories),
     incomeCategories: categoryBreakdown(currentTx, "INCOME", categories),
-    savingsCategories: categoryBreakdown(currentTx, "SAVINGS", categories),
     largestExpenses: largestExpenses(currentTx, 5),
     recentTransactions: currentTx.slice(0, 8),
     series,
@@ -190,11 +182,10 @@ export async function getAnalyticsOverview(userId: string, range: RangePreset, e
   const previous = previousMonthKey(endMonth);
   const comparisonRange = { start: monthRange(previous).start, end: monthRange(endMonth).end };
 
-  const [series, expenseCategories, incomeCategories, savingsCategories, largest, comparisonTx, categories] = await Promise.all([
+  const [series, expenseCategories, incomeCategories, largest, comparisonTx, categories] = await Promise.all([
     getMonthlySeries(userId, months),
     getCategoryTotals(userId, "EXPENSE", from, to),
     getCategoryTotals(userId, "INCOME", from, to),
-    getCategoryTotals(userId, "SAVINGS", from, to),
     listTransactions(userId, transactionFiltersSchema.parse({ from, to, type: "EXPENSE", sort: "amount", dir: "desc", pageSize: 10 })),
     listTransactionsInRange(userId, comparisonRange.start, comparisonRange.end),
     listCategories(userId),
@@ -202,7 +193,6 @@ export async function getAnalyticsOverview(userId: string, range: RangePreset, e
 
   const income = series.reduce((sum, m) => sum + m.income, 0);
   const expenses = series.reduce((sum, m) => sum + m.expenses, 0);
-  const saved = series.reduce((sum, m) => sum + m.saved, 0);
   const withActivity = series.filter((m) => m.transactionCount > 0);
   const bestMonth = withActivity.length ? withActivity.reduce((best, m) => (m.savings > best.savings ? m : best)) : null;
   const worstMonth = withActivity.length ? withActivity.reduce((worst, m) => (m.expenses > worst.expenses ? m : worst)) : null;
@@ -211,11 +201,10 @@ export async function getAnalyticsOverview(userId: string, range: RangePreset, e
     range,
     months,
     series,
-    totals: { income, expenses, savings: calculateSavings(income, expenses), savingsRate: calculateSavingsRate(income, expenses), saved },
+    totals: { income, expenses, savings: calculateSavings(income, expenses), savingsRate: calculateSavingsRate(income, expenses) },
     averages: averageMonthly(withActivity.length ? withActivity : series),
     expenseCategories,
     incomeCategories,
-    savingsCategories,
     largestExpenses: largest.items,
     comparison: monthlyComparison(comparisonTx, endMonth, categories, previous),
     bestMonth,

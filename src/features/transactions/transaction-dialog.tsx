@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { Minus, NotebookPen, PiggyBank, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +20,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { paiseToDecimalString, parseMoney } from "@/lib/money";
-import { typeMeta } from "@/lib/transaction-types";
 import { cn } from "@/lib/utils";
 import { transactionFormSchema, type TransactionFormValues } from "@/lib/validation/transaction";
 import type { Category, IsoDate, Transaction, TransactionType } from "@/types";
@@ -55,7 +54,6 @@ function initialValues(mode: "create" | "edit", transaction: Transaction | null,
       date: transaction.date,
       notes: transaction.notes ?? "",
       tags: transaction.tags.map((t) => t.name),
-      journal: transaction.journal ?? "",
     };
   }
   return {
@@ -66,7 +64,6 @@ function initialValues(mode: "create" | "edit", transaction: Transaction | null,
     date: defaults.date ?? today,
     notes: "",
     tags: [],
-    journal: "",
   };
 }
 
@@ -118,9 +115,6 @@ export function TransactionDialog(props: TransactionDialogProps) {
       date: values.date,
       notes: values.notes.trim() ? values.notes.trim() : null,
       tags: values.tags,
-      // Only send the journal when it is a savings entry and the text actually changed, so an
-      // edit that never loaded the note can not wipe it.
-      journal: values.type === "SAVINGS" && values.journal.trim() !== (transaction?.journal ?? "").trim() ? values.journal : undefined,
     };
     let result: Awaited<ReturnType<typeof createTransactionAction>>;
     try {
@@ -147,9 +141,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
   });
 
   const isIncome = type === "INCOME";
-  const isSavings = type === "SAVINGS";
-  const meta = typeMeta(type);
-  const title = mode === "edit" ? "Edit transaction" : meta.addLabel;
+  const title = mode === "edit" ? "Edit transaction" : isIncome ? "Add income" : "Add expense";
 
   return (
     <Dialog open={open} onOpenChange={(next) => onOpenChange(next)}>
@@ -160,13 +152,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {mode === "edit" ? null : isIncome ? (
-              <Plus className="size-4 text-income-foreground" />
-            ) : isSavings ? (
-              <PiggyBank className="size-4 text-saved-foreground" />
-            ) : (
-              <Minus className="size-4 text-expense-foreground" />
-            )}
+            {mode === "edit" ? null : isIncome ? <Plus className="size-4 text-income-foreground" /> : <Minus className="size-4 text-expense-foreground" />}
             {title}
           </DialogTitle>
           <DialogDescription>
@@ -180,12 +166,11 @@ export function TransactionDialog(props: TransactionDialogProps) {
             control={control}
             name="type"
             render={({ field }) => (
-              <div role="radiogroup" aria-label="Transaction type" className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+              <div role="radiogroup" aria-label="Transaction type" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
                 {(
                   [
-                    { value: "INCOME", label: "Income", icon: Plus, active: typeMeta("INCOME").activeToggleClass },
-                    { value: "EXPENSE", label: "Expense", icon: Minus, active: typeMeta("EXPENSE").activeToggleClass },
-                    { value: "SAVINGS", label: "Savings", icon: PiggyBank, active: typeMeta("SAVINGS").activeToggleClass },
+                    { value: "INCOME", label: "Income", icon: Plus, active: "bg-background text-income-foreground shadow-sm" },
+                    { value: "EXPENSE", label: "Expense", icon: Minus, active: "bg-background text-expense-foreground shadow-sm" },
                   ] as const
                 ).map((option) => {
                   const Icon = option.icon;
@@ -252,7 +237,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
             <Label htmlFor="tx-description">Description</Label>
             <Input
               id="tx-description"
-              placeholder={isIncome ? "Salary, freelance invoice…" : isSavings ? "Monthly SIP, FD top-up, emergency fund…" : "Dinner, Uber, groceries…"}
+              placeholder={isIncome ? "Salary, freelance invoice…" : "Dinner, Uber, groceries…"}
               autoComplete="off"
               aria-invalid={Boolean(formState.errors.description)}
               aria-describedby={formState.errors.description ? "tx-description-error" : undefined}
@@ -264,7 +249,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
           {/* Category + Date */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="tx-category">{isSavings ? "Saved to" : "Category"}</Label>
+              <Label htmlFor="tx-category">Category</Label>
               <Controller
                 control={control}
                 name="categoryId"
@@ -275,7 +260,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
                     items={categoryItems}
                   >
                     <SelectTrigger id="tx-category" className="w-full" aria-invalid={fieldState.invalid} aria-describedby={fieldState.error ? "tx-category-error" : undefined}>
-                      <SelectValue placeholder={isSavings ? "Choose destination" : "Choose category"} />
+                      <SelectValue placeholder="Choose category" />
                     </SelectTrigger>
                     <SelectContent>
                       {visibleCategories.map((category) => (
@@ -285,7 +270,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
                         </SelectItem>
                       ))}
                       {visibleCategories.length === 0 && (
-                        <div className="px-2 py-1.5 text-sm text-muted-foreground">No {meta.categoryLabel}s yet. Add one in Settings → Categories.</div>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">No {isIncome ? "income" : "expense"} categories yet</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -319,27 +304,6 @@ export function TransactionDialog(props: TransactionDialogProps) {
             <FieldError id="tx-tags-error" message={formState.errors.tags?.message} />
           </div>
 
-          {/* Savings journal: what was done with this money (shown in the Savings notepad) */}
-          {isSavings && (
-            <div className="grid gap-1.5 rounded-xl border border-saved/30 bg-saved/5 p-3">
-              <Label htmlFor="tx-journal" className="text-saved-foreground">
-                <NotebookPen className="size-4" aria-hidden />
-                Savings journal <span className="font-normal text-muted-foreground">(optional)</span>
-              </Label>
-              <Textarea
-                id="tx-journal"
-                rows={3}
-                placeholder="What did you do with it? e.g. Put ₹20,000 in the SBI FD at 7.1%, matures March 2027."
-                aria-describedby="tx-journal-hint"
-                {...register("journal")}
-              />
-              <p id="tx-journal-hint" className="text-xs text-muted-foreground">
-                Saved to your Savings notepad, where you can keep adding to it.
-              </p>
-              <FieldError id="tx-journal-error" message={formState.errors.journal?.message} />
-            </div>
-          )}
-
           {/* Notes */}
           <div className="grid gap-1.5">
             <Label htmlFor="tx-notes">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label>
@@ -360,9 +324,9 @@ export function TransactionDialog(props: TransactionDialogProps) {
             <Button
               type="submit"
               disabled={formState.isSubmitting}
-              className={cn(meta.buttonClass)}
+              className={cn(isIncome ? "bg-income text-white hover:bg-income/90" : "bg-expense text-white hover:bg-expense/90")}
             >
-              {formState.isSubmitting ? "Saving…" : mode === "edit" ? "Save changes" : meta.addLabel}
+              {formState.isSubmitting ? "Saving…" : mode === "edit" ? "Save changes" : isIncome ? "Add income" : "Add expense"}
             </Button>
           </DialogFooter>
         </form>

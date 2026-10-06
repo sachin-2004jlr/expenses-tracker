@@ -56,8 +56,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           savings={summary.current.savings}
           savingsRate={summary.current.savingsRate}
           incomeChange={summary.comparison.income.changePercent}
-          savedThisMonth={summary.current.saved}
-          savedAllTime={summary.allTimeSaved}
         />
         <RecentOperations
           className="xl:col-span-3"

@@ -121,10 +121,12 @@ export async function deleteCategory(userId: string, id: string, options: Delete
   const db = await getDb();
   const existing = await getCategory(userId, id);
 
-  const [used, usedRecurring] = await Promise.all([
+  const [usedTransactions, usedRecurring, usedSavings] = await Promise.all([
     db.transactions.countDocuments({ userId, categoryId: id }),
     db.recurring.countDocuments({ userId, categoryId: id }),
+    db.savingsEntries.countDocuments({ userId, categoryId: id }),
   ]);
+  const used = usedTransactions + usedSavings;
   const inUse = used + usedRecurring;
 
   if (inUse > 0 && !options.reassignTo) {
@@ -146,6 +148,8 @@ export async function deleteCategory(userId: string, id: string, options: Delete
     reassigned = moved.modifiedCount;
     await db.recurring.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
     await db.savingsGoals.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+    const movedSavings = await db.savingsEntries.updateMany({ userId, categoryId: id }, { $set: { categoryId: options.reassignTo, updatedAt: new Date() } });
+    reassigned += movedSavings.modifiedCount;
   } else {
     await db.savingsGoals.updateMany({ userId, categoryId: id }, { $set: { categoryId: null, updatedAt: new Date() } });
   }

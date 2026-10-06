@@ -3,11 +3,10 @@
  * Money values are integer paise unless a name ends in `Rupees`.
  */
 
-/**
- * INCOME and EXPENSE move the balance. SAVINGS records money you set aside (SIP, FD, emergency
- * fund...): it is neither spending nor income, so it never changes the balance or the expenses.
- */
-export type TransactionType = "INCOME" | "EXPENSE" | "SAVINGS";
+/** Monthly tracker transactions. Savings live in their own module (see SavingsEntry). */
+export type TransactionType = "INCOME" | "EXPENSE";
+/** Categories serve the monthly tracker (INCOME / EXPENSE) and the savings module (SAVINGS). */
+export type CategoryType = TransactionType | "SAVINGS";
 export type RecurrenceFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
 /** ISO calendar date, YYYY-MM-DD. */
@@ -18,7 +17,7 @@ export type MonthKey = string;
 export interface Category {
   id: string;
   name: string;
-  type: TransactionType;
+  type: CategoryType;
   icon: string;
   color: string;
   isDefault: boolean;
@@ -49,8 +48,6 @@ export interface Transaction {
   recurringId: string | null;
   createdAt: string;
   updatedAt: string;
-  /** Savings journal note linked to this entry (SAVINGS only), if any. */
-  journal?: string | null;
 }
 
 /** Minimal shape needed by the pure financial calculations. */
@@ -96,11 +93,8 @@ export interface MonthTotals {
   month: MonthKey;
   income: number;
   expenses: number;
-  /** Net kept: income − expenses (may be negative). */
   savings: number;
   savingsRate: number | null;
-  /** Explicitly set aside with SAVINGS entries. */
-  saved: number;
   transactionCount: number;
 }
 
@@ -190,8 +184,6 @@ export interface DashboardSummary {
   totalBalance: number;
   allTimeIncome: number;
   allTimeExpenses: number;
-  /** All-time total of SAVINGS entries. */
-  allTimeSaved: number;
   /** Balance at the start of the selected month. */
   openingBalance: number;
   /** Day-by-day running balance through the selected month. */
@@ -201,7 +193,6 @@ export interface DashboardSummary {
   comparison: MonthlyComparison;
   expenseCategories: CategoryBreakdownItem[];
   incomeCategories: CategoryBreakdownItem[];
-  savingsCategories: CategoryBreakdownItem[];
   largestExpenses: Transaction[];
   recentTransactions: Transaction[];
   series: MonthTotals[];
@@ -211,11 +202,10 @@ export interface AnalyticsOverview {
   range: RangePreset;
   months: MonthKey[];
   series: MonthTotals[];
-  totals: { income: number; expenses: number; savings: number; savingsRate: number | null; saved: number };
+  totals: { income: number; expenses: number; savings: number; savingsRate: number | null };
   averages: { income: number; expenses: number; savings: number };
   expenseCategories: CategoryBreakdownItem[];
   incomeCategories: CategoryBreakdownItem[];
-  savingsCategories: CategoryBreakdownItem[];
   largestExpenses: Transaction[];
   comparison: MonthlyComparison;
   bestMonth: MonthTotals | null;
@@ -223,19 +213,52 @@ export interface AnalyticsOverview {
 }
 
 // ---------------------------------------------------------------------------
-// Savings journal and goals
+// Savings module (separate from the monthly tracker)
 // ---------------------------------------------------------------------------
 
-/** A notepad entry about what was done with saved money. Optionally linked to a SAVINGS entry. */
+/**
+ * DEPOSIT adds money to your savings; SPEND records what you did with savings money
+ * (bought gold, put it in an FD, paid for a trip). Neither touches the monthly tracker.
+ */
+export type SavingsEntryKind = "DEPOSIT" | "SPEND";
+
+export interface SavingsEntry {
+  id: string;
+  kind: SavingsEntryKind;
+  /** Integer paise, always positive; `kind` carries the direction. */
+  amount: number;
+  description: string;
+  /** What it was for (SPEND) or what it is earmarked for (DEPOSIT, optional). */
+  categoryId: string | null;
+  category: Category | null;
+  date: IsoDate;
+  /** Journal note linked to this entry, if any. */
+  journal: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavingsMonth {
+  month: MonthKey;
+  added: number;
+  used: number;
+  /** added − used */
+  net: number;
+  /** Savings balance at the end of the month (all time). */
+  balance: number;
+  entryCount: number;
+}
+
+/** A notepad entry about what was done with savings. Optionally linked to one savings entry. */
 export interface SavingsNote {
   id: string;
   title: string;
   body: string;
   date: IsoDate;
   pinned: boolean;
-  transactionId: string | null;
+  entryId: string | null;
   /** Snapshot of the linked entry for display (null when unlinked or the entry was deleted). */
-  transaction: Pick<Transaction, "id" | "amount" | "description" | "date" | "category"> | null;
+  entry: Pick<SavingsEntry, "id" | "kind" | "amount" | "description" | "date" | "category"> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -246,20 +269,18 @@ export interface SavingsGoal {
   /** Integer paise, > 0. */
   targetAmount: number;
   targetDate: IsoDate | null;
-  /** Savings destination whose entries count towards the goal. */
+  /** Optional savings category: money added to savings earmarked for it counts towards the goal. */
   categoryId: string | null;
   color: string;
   archived: boolean;
 }
 
 export interface SavingsGoalProgress extends SavingsGoal {
+  /** Earmarked deposits for a linked goal, otherwise the whole savings balance. */
   saved: number;
   remaining: number;
-  /** saved / target, one decimal, capped at 100 for display by the UI. */
   percentage: number;
-  /** Months left until targetDate (including the current one); null without a date. */
   monthsLeft: number | null;
-  /** Even monthly amount needed to hit the target on time; null without a date. */
   monthlyNeeded: number | null;
   complete: boolean;
   categoryName: string | null;
@@ -267,19 +288,21 @@ export interface SavingsGoalProgress extends SavingsGoal {
 
 export interface SavingsOverview {
   month: MonthKey;
-  savedThisMonth: number;
-  savedLastMonth: number;
-  savedAllTime: number;
-  /** Net kept this month (income − expenses). */
-  keptThisMonth: number;
-  /** Kept but not yet assigned with a SAVINGS entry (may be negative). */
-  unallocatedThisMonth: number;
-  savingsRate: number | null;
-  destinations: CategoryBreakdownItem[];
-  series: MonthTotals[];
+  /** All-time money added minus money used. */
+  balance: number;
+  addedAllTime: number;
+  usedAllTime: number;
+  addedThisMonth: number;
+  usedThisMonth: number;
+  addedLastMonth: number;
+  usedLastMonth: number;
+  series: SavingsMonth[];
+  /** What savings were used for, all time and in the selected month. */
+  usedByCategory: CategoryBreakdownItem[];
+  usedByCategoryThisMonth: CategoryBreakdownItem[];
   goals: SavingsGoalProgress[];
-  recentEntries: Transaction[];
-  /** SAVINGS entries in the last 90 days without a journal note. */
-  entriesWithoutNotes: Transaction[];
+  recentEntries: SavingsEntry[];
+  /** Recent entries (90 days) without a journal note. */
+  entriesWithoutNotes: SavingsEntry[];
   noteCount: number;
 }

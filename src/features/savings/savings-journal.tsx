@@ -15,13 +15,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { formatIsoDate } from "@/lib/dates";
 import { formatCurrency } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import type { IsoDate, SavingsNote, Transaction } from "@/types";
+import type { IsoDate, SavingsEntry, SavingsNote } from "@/types";
 import { createSavingsNoteAction, deleteSavingsNoteAction, updateSavingsNoteAction } from "./actions";
 
 export interface SavingsJournalProps {
   notes: SavingsNote[];
   /** Recent savings entries that have no note yet. */
-  pendingEntries: Transaction[];
+  pendingEntries: SavingsEntry[];
   today: IsoDate;
   dateFormat: string;
 }
@@ -30,7 +30,7 @@ interface Draft {
   title: string;
   body: string;
   date: IsoDate;
-  transactionId: string | null;
+  entryId: string | null;
 }
 
 /**
@@ -38,7 +38,7 @@ interface Draft {
  * pin the important ones, search, edit in place.
  */
 export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: SavingsJournalProps) {
-  const empty: Draft = { title: "", body: "", date: today, transactionId: null };
+  const empty: Draft = { title: "", body: "", date: today, entryId: null };
   const [draft, setDraft] = useState<Draft>(empty);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,16 +48,16 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
   const [deleting, setDeleting] = useState<SavingsNote | null>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
-  const linked = pendingEntries.find((e) => e.id === draft.transactionId) ?? null;
+  const linked = pendingEntries.find((e) => e.id === draft.entryId) ?? null;
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return notes;
-    return notes.filter((n) => `${n.title} ${n.body} ${n.transaction?.description ?? ""} ${n.transaction?.category.name ?? ""}`.toLowerCase().includes(q));
+    return notes.filter((n) => `${n.title} ${n.body} ${n.entry?.description ?? ""} ${n.entry?.category?.name ?? ""}`.toLowerCase().includes(q));
   }, [notes, query]);
 
-  const startFor = (entry: Transaction) => {
-    setDraft({ title: entry.description, body: "", date: entry.date, transactionId: entry.id });
+  const startFor = (entry: SavingsEntry) => {
+    setDraft({ title: entry.description, body: "", date: entry.date, entryId: entry.id });
     setError(null);
     bodyRef.current?.focus();
     bodyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -121,26 +121,26 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
   };
 
   return (
-    <Card id="journal" className="scroll-mt-24">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <NotebookPen className="size-4 text-saved-foreground" aria-hidden />
           Savings journal
         </CardTitle>
-        <CardDescription>Your notepad for what you did with the money you saved: where it went, rates, maturity dates, plans.</CardDescription>
+        <CardDescription>Your notepad for what you did with your savings: where the money went, rates, maturity dates, plans.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-5">
         <form onSubmit={submit} className="grid gap-3 rounded-xl border border-border bg-card-elevated p-3" data-testid="journal-composer">
           {linked && (
             <div className="flex items-center gap-2 rounded-lg bg-saved/10 px-2.5 py-1.5 text-xs">
-              <CategoryIcon icon={linked.category.icon} color={linked.category.color} size="sm" />
+              <CategoryIcon icon={linked.category?.icon ?? (linked.kind === "DEPOSIT" ? "piggy-bank" : "tag")} color={linked.category?.color ?? "sky"} size="sm" />
               <span className="min-w-0 flex-1 truncate">
-                Note for <span className="font-semibold text-saved-foreground">{formatCurrency(linked.amount)}</span> → {linked.category.name} ·{" "}
+                Note for <EntryAmount kind={linked.kind} amount={linked.amount} /> {entryLabel(linked)} ·{" "}
                 {formatIsoDate(linked.date, dateFormat)}
               </span>
               <button
                 type="button"
-                onClick={() => setDraft((d) => ({ ...d, transactionId: null }))}
+                onClick={() => setDraft((d) => ({ ...d, entryId: null }))}
                 aria-label="Do not link this note to the entry"
                 className="rounded-sm text-muted-foreground hover:text-foreground"
               >
@@ -184,7 +184,7 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground tabular-nums">{draft.body.length}/5000</span>
             <div className="flex gap-2">
-              {(draft.body || draft.title || draft.transactionId) && (
+              {(draft.body || draft.title || draft.entryId) && (
                 <Button type="button" variant="ghost" size="sm" onClick={() => setDraft(empty)} disabled={saving}>
                   Clear
                 </Button>
@@ -207,11 +207,11 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
                     onClick={() => startFor(entry)}
                     className={cn(
                       "flex max-w-full items-center gap-2 rounded-full border border-dashed px-3 py-1.5 text-xs transition-colors hover:border-saved hover:bg-saved/10",
-                      draft.transactionId === entry.id ? "border-saved bg-saved/10" : "border-border",
+                      draft.entryId === entry.id ? "border-saved bg-saved/10" : "border-border",
                     )}
                   >
-                    <span className="font-semibold text-saved-foreground tabular-nums">{formatCurrency(entry.amount)}</span>
-                    <span className="truncate">→ {entry.category.name}</span>
+                    <EntryAmount kind={entry.kind} amount={entry.amount} />
+                    <span className="truncate">{entryLabel(entry)}</span>
                     <span className="text-muted-foreground">{formatIsoDate(entry.date, "d MMM")}</span>
                     <Pencil className="size-3 text-muted-foreground" aria-hidden />
                   </button>
@@ -262,9 +262,9 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
                           <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                             {note.pinned && <Pin className="size-3 text-saved-foreground" aria-label="Pinned" />}
                             <time dateTime={note.date}>{formatIsoDate(note.date, dateFormat)}</time>
-                            {note.transaction && (
+                            {note.entry && (
                               <span className="inline-flex items-center gap-1">
-                                · <span className="font-semibold text-saved-foreground tabular-nums">{formatCurrency(note.transaction.amount)}</span> → {note.transaction.category.name}
+                                · <EntryAmount kind={note.entry.kind} amount={note.entry.amount} /> {entryLabel(note.entry)}
                               </span>
                             )}
                           </p>
@@ -303,4 +303,18 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
       />
     </Card>
   );
+}
+
+/** "+ ₹10,000" for money added to savings, "− ₹5,000" for money used from savings. */
+function EntryAmount({ kind, amount }: { kind: SavingsEntry["kind"]; amount: number }) {
+  return (
+    <span className={cn("font-semibold tabular-nums", kind === "DEPOSIT" ? "text-income-foreground" : "text-saved-foreground")}>
+      {kind === "DEPOSIT" ? "+" : "−"} {formatCurrency(amount)}
+    </span>
+  );
+}
+
+function entryLabel(entry: Pick<SavingsEntry, "kind" | "category" | "description">): string {
+  if (entry.kind === "DEPOSIT") return entry.category ? `added · ${entry.category.name}` : "added to savings";
+  return `on ${entry.category?.name ?? entry.description}`;
 }

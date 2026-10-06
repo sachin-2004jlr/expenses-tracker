@@ -25,3 +25,5 @@ export function isActivePath(pathname: string, href: string): boolean {
 
 /** Pages that are scoped to a month and therefore show the month selector in the top bar. */
 export const MONTH_SCOPED_PATHS = [DASHBOARD_PATH, "/calendar", "/analytics", "/savings"];
+/** Sub-pages of month-scoped sections where a month makes no sense. */
+export const MONTH_AGNOSTIC_PATHS = ["/savings/journal", "/savings/goals"];

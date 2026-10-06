@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownToLine, ArrowUpFromLine, NotebookPen, PiggyBank, type LucideIcon } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, CalendarDays, ChartColumn, type LucideIcon } from "lucide-react";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { cn } from "@/lib/utils";
 import type { MonthKey } from "@/types";
@@ -43,8 +43,8 @@ export function QuickActions({ month, className }: QuickActionsProps) {
     <section className={cn("grid min-w-0 grid-cols-2 gap-2", className)} aria-label="Quick actions">
       <Tile icon={ArrowDownToLine} label="Add income" onClick={() => openCreate({ type: "INCOME" })} />
       <Tile icon={ArrowUpFromLine} label="Add expense" highlight onClick={() => openCreate({ type: "EXPENSE" })} />
-      <Tile icon={PiggyBank} label="Add savings" onClick={() => openCreate({ type: "SAVINGS" })} />
-      <Tile icon={NotebookPen} label="Savings notes" href={`/savings?month=${month}#journal`} />
+      <Tile icon={CalendarDays} label="Calendar" href={`/calendar?month=${month}`} />
+      <Tile icon={ChartColumn} label="Analytics" href={`/analytics?month=${month}`} />
     </section>
   );
 }

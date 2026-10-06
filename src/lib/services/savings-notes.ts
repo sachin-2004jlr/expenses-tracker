@@ -1,99 +1,82 @@
 import { getDb } from "@/lib/db";
 import { newId, type SavingsNoteDoc } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
-import {
-  savingsNoteInputSchema,
-  savingsNoteUpdateSchema,
-  type SavingsNoteInput,
-  type SavingsNoteUpdate,
-} from "@/lib/validation/savings";
+import { savingsNoteInputSchema, savingsNoteUpdateSchema, type SavingsNoteInput, type SavingsNoteUpdate } from "@/lib/validation/savings";
 import type { IsoDate, SavingsNote } from "@/types";
 import { toCategory } from "./categories";
 
 /**
- * Savings journal: a notepad of what was done with saved money. A note can stand alone or be
- * linked to one SAVINGS transaction (the note written in the transaction form). This module
- * only touches the notes collection plus read-only lookups, so the transaction service can use
- * it without an import cycle.
+ * Savings journal: a notepad of what was done with savings. A note can stand alone or be linked
+ * to one savings entry (the note written in the savings entry form). Only touches the notes
+ * collection plus read-only lookups, so the entries service can use it without an import cycle.
  */
 
 function isDuplicateKey(error: unknown): boolean {
   return (error as { code?: number }).code === 11000;
 }
 
-/** Journal text for the given transactions, keyed by transaction id. */
-export async function journalsFor(userId: string, transactionIds: string[]): Promise<Map<string, string>> {
-  if (transactionIds.length === 0) return new Map();
+/** Journal text for the given savings entries, keyed by entry id. */
+export async function journalsFor(userId: string, entryIds: string[]): Promise<Map<string, string>> {
+  if (entryIds.length === 0) return new Map();
   const db = await getDb();
-  const docs = await db.savingsNotes
-    .find({ userId, transactionId: { $in: transactionIds } }, { projection: { transactionId: 1, body: 1 } })
-    .toArray();
-  return new Map(docs.map((d) => [d.transactionId!, d.body]));
+  const docs = await db.savingsNotes.find({ userId, entryId: { $in: entryIds } }, { projection: { entryId: 1, body: 1 } }).toArray();
+  return new Map(docs.map((d) => [d.entryId!, d.body]));
 }
 
-/**
- * Create, update or (with empty text) delete the note linked to a savings transaction.
- * The note follows the transaction's date and uses its description as the title.
- */
-export async function syncTransactionJournal(userId: string, tx: { id: string; description: string; date: IsoDate }, text: string): Promise<void> {
+/** Create, update or (with empty text) delete the note linked to a savings entry. */
+export async function syncEntryJournal(userId: string, entry: { id: string; description: string; date: IsoDate }, text: string): Promise<void> {
   const db = await getDb();
   const body = text.trim();
   if (!body) {
-    await db.savingsNotes.deleteOne({ userId, transactionId: tx.id });
+    await db.savingsNotes.deleteOne({ userId, entryId: entry.id });
     return;
   }
   const now = new Date();
   await db.savingsNotes.updateOne(
-    { userId, transactionId: tx.id },
+    { userId, entryId: entry.id },
     {
-      $set: { body, date: tx.date, title: tx.description.slice(0, 120), updatedAt: now },
+      $set: { body, date: entry.date, title: entry.description.slice(0, 120), updatedAt: now },
       $setOnInsert: { _id: newId(), pinned: false, createdAt: now },
     },
     { upsert: true },
   );
 }
 
-/** Keep the note but detach it (the entry was deleted or is no longer a savings entry). */
-export async function unlinkTransactionJournal(userId: string, transactionId: string): Promise<void> {
+/** Keep the note but detach it (its entry was deleted). */
+export async function unlinkEntryJournal(userId: string, entryId: string): Promise<void> {
   const db = await getDb();
-  await db.savingsNotes.updateMany({ userId, transactionId }, { $set: { transactionId: null, updatedAt: new Date() } });
+  await db.savingsNotes.updateMany({ userId, entryId }, { $set: { entryId: null, updatedAt: new Date() } });
 }
 
 async function toNotes(userId: string, docs: SavingsNoteDoc[]): Promise<SavingsNote[]> {
   const db = await getDb();
-  const ids = docs.flatMap((d) => (d.transactionId ? [d.transactionId] : []));
-  const txs = ids.length ? await db.transactions.find({ userId, _id: { $in: ids } }).toArray() : [];
-  const categoryIds = Array.from(new Set(txs.map((t) => t.categoryId)));
+  const ids = docs.flatMap((d) => (d.entryId ? [d.entryId] : []));
+  const entries = ids.length ? await db.savingsEntries.find({ userId, _id: { $in: ids } }).toArray() : [];
+  const categoryIds = Array.from(new Set(entries.flatMap((e) => (e.categoryId ? [e.categoryId] : []))));
   const categories = categoryIds.length ? await db.categories.find({ userId, _id: { $in: categoryIds } }).toArray() : [];
   const categoryById = new Map(categories.map((c) => [c._id, c]));
-  const txById = new Map(txs.map((t) => [t._id, t]));
+  const entryById = new Map(entries.map((e) => [e._id, e]));
   return docs.map((doc) => {
-    const linked = doc.transactionId ? txById.get(doc.transactionId) : undefined;
-    const category = linked ? categoryById.get(linked.categoryId) : undefined;
+    const linked = doc.entryId ? entryById.get(doc.entryId) : undefined;
+    const category = linked?.categoryId ? categoryById.get(linked.categoryId) : undefined;
     return {
       id: doc._id,
       title: doc.title,
       body: doc.body,
       date: doc.date,
       pinned: doc.pinned,
-      transactionId: doc.transactionId,
-      transaction:
-        linked && category
-          ? { id: linked._id, amount: linked.amount, description: linked.description, date: linked.date, category: toCategory(category) }
-          : null,
+      entryId: doc.entryId ?? null,
+      entry: linked
+        ? { id: linked._id, kind: linked.kind, amount: linked.amount, description: linked.description, date: linked.date, category: category ? toCategory(category) : null }
+        : null,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };
   });
 }
 
-export interface ListNotesOptions {
-  q?: string;
-  limit?: number;
-}
-
 /** Pinned first, then newest. Optional case-insensitive search over title and body. */
-export async function listSavingsNotes(userId: string, options: ListNotesOptions = {}): Promise<SavingsNote[]> {
+export async function listSavingsNotes(userId: string, options: { q?: string; limit?: number } = {}): Promise<SavingsNote[]> {
   const db = await getDb();
   const filter: Record<string, unknown> = { userId };
   const q = options.q?.trim();
@@ -114,18 +97,13 @@ export async function countSavingsNotes(userId: string): Promise<number> {
   return db.savingsNotes.countDocuments({ userId });
 }
 
-async function assertSavingsTransaction(userId: string, transactionId: string): Promise<{ date: string; description: string }> {
-  const db = await getDb();
-  const tx = await db.transactions.findOne({ _id: transactionId, userId }, { projection: { type: 1, date: 1, description: 1 } });
-  if (!tx) throw AppError.notFound("Savings entry");
-  if (tx.type !== "SAVINGS") throw AppError.badRequest("Notes can only be linked to savings entries");
-  return tx;
-}
-
 export async function createSavingsNote(userId: string, rawInput: SavingsNoteInput): Promise<SavingsNote> {
   const input = savingsNoteInputSchema.parse(rawInput);
-  if (input.transactionId) await assertSavingsTransaction(userId, input.transactionId);
   const db = await getDb();
+  if (input.entryId) {
+    const entry = await db.savingsEntries.findOne({ _id: input.entryId, userId }, { projection: { _id: 1 } });
+    if (!entry) throw AppError.notFound("Savings entry");
+  }
   const now = new Date();
   const doc: SavingsNoteDoc = {
     _id: newId(),
@@ -134,7 +112,7 @@ export async function createSavingsNote(userId: string, rawInput: SavingsNoteInp
     body: input.body,
     date: input.date,
     pinned: input.pinned,
-    transactionId: input.transactionId,
+    entryId: input.entryId,
     createdAt: now,
     updatedAt: now,
   };

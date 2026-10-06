@@ -6,7 +6,6 @@ import { AppError } from "@/lib/errors";
 import { transactionInputSchema, type TransactionFilters, type TransactionInput } from "@/lib/validation/transaction";
 import type { IsoDate, Transaction } from "@/types";
 import { toCategory } from "./categories";
-import { journalsFor, syncTransactionJournal, unlinkTransactionJournal } from "./savings-notes";
 import { normaliseTags } from "./tags";
 
 export interface TransactionListResult {
@@ -15,7 +14,7 @@ export interface TransactionListResult {
   page: number;
   pageSize: number;
   pageCount: number;
-  totals: { income: number; expenses: number; saved: number; net: number };
+  totals: { income: number; expenses: number; net: number };
 }
 
 function toTransaction(doc: TransactionDoc, category: CategoryDoc): Transaction {
@@ -36,27 +35,16 @@ function toTransaction(doc: TransactionDoc, category: CategoryDoc): Transaction 
   };
 }
 
-/** Attach savings journal text to SAVINGS entries (one query, skipped when there are none). */
-async function withJournals(userId: string, items: Transaction[]): Promise<Transaction[]> {
-  const savingIds = items.filter((t) => t.type === "SAVINGS").map((t) => t.id);
-  if (savingIds.length === 0) return items;
-  const journals = await journalsFor(userId, savingIds);
-  return items.map((t) => (t.type === "SAVINGS" ? { ...t, journal: journals.get(t.id) ?? null } : t));
-}
-
 /** Attach category documents (one query) and drop rows whose category vanished. */
 async function hydrate(userId: string, docs: TransactionDoc[]): Promise<Transaction[]> {
   if (docs.length === 0) return [];
   const db = await getDb();
   const ids = Array.from(new Set(docs.map((d) => d.categoryId)));
-  const savingIds = docs.filter((d) => d.type === "SAVINGS").map((d) => d._id);
-  const [categories, journals] = await Promise.all([db.categories.find({ userId, _id: { $in: ids } }).toArray(), journalsFor(userId, savingIds)]);
+  const categories = await db.categories.find({ userId, _id: { $in: ids } }).toArray();
   const byId = new Map(categories.map((c) => [c._id, c]));
   return docs.flatMap((doc) => {
     const category = byId.get(doc.categoryId);
-    if (!category) return [];
-    const tx = toTransaction(doc, category);
-    return [doc.type === "SAVINGS" ? { ...tx, journal: journals.get(doc._id) ?? null } : tx];
+    return category ? [toTransaction(doc, category)] : [];
   });
 }
 
@@ -136,7 +124,7 @@ export async function listTransactions(userId: string, filters: TransactionFilte
     .aggregate<{
       items: (TransactionDoc & { category: CategoryDoc })[];
       total: { count: number }[];
-      totals: { income: number; expenses: number; saved: number }[];
+      totals: { income: number; expenses: number }[];
     }>([
       { $match: match },
       {
@@ -149,7 +137,6 @@ export async function listTransactions(userId: string, filters: TransactionFilte
                 _id: null,
                 income: { $sum: { $cond: [{ $eq: ["$type", "INCOME"] }, "$amount", 0] } },
                 expenses: { $sum: { $cond: [{ $eq: ["$type", "EXPENSE"] }, "$amount", 0] } },
-                saved: { $sum: { $cond: [{ $eq: ["$type", "SAVINGS"] }, "$amount", 0] } },
               },
             },
           ],
@@ -158,21 +145,17 @@ export async function listTransactions(userId: string, filters: TransactionFilte
     ])
     .toArray();
 
-  const items = await withJournals(
-    userId,
-    (result?.items ?? []).map((doc) => toTransaction(doc, doc.category)),
-  );
+  const items = (result?.items ?? []).map((doc) => toTransaction(doc, doc.category));
   const total = result?.total[0]?.count ?? 0;
   const income = result?.totals[0]?.income ?? 0;
   const expenses = result?.totals[0]?.expenses ?? 0;
-  const saved = result?.totals[0]?.saved ?? 0;
   return {
     items,
     total,
     page: filters.page,
     pageSize: filters.pageSize,
     pageCount: Math.max(1, Math.ceil(total / filters.pageSize)),
-    totals: { income, expenses, saved, net: income - expenses },
+    totals: { income, expenses, net: income - expenses },
   };
 }
 
@@ -206,8 +189,7 @@ async function assertCategory(userId: string, categoryId: string, type: Transact
   const category = await db.categories.findOne({ _id: categoryId, userId }, { projection: { type: 1 } });
   if (!category) throw AppError.badRequest("Choose a valid category");
   if (category.type !== type) {
-    const label = type === "INCOME" ? "an income category" : type === "EXPENSE" ? "an expense category" : "a savings destination";
-    throw AppError.badRequest(`Choose ${label} for this transaction`);
+    throw AppError.badRequest(`Choose a${type === "INCOME" ? "n income" : "n expense"} category for this transaction`);
   }
 }
 
@@ -232,9 +214,6 @@ export async function createTransaction(userId: string, rawInput: TransactionInp
     updatedAt: now,
   };
   await db.transactions.insertOne(doc);
-  if (input.type === "SAVINGS" && input.journal) {
-    await syncTransactionJournal(userId, { id: doc._id, description: doc.description, date: doc.date }, input.journal);
-  }
   return getTransaction(userId, doc._id);
 }
 
@@ -258,12 +237,6 @@ export async function updateTransaction(userId: string, id: string, rawInput: Tr
       },
     },
   );
-  if (input.type === "SAVINGS") {
-    // undefined = the form did not touch the note; "" removes it.
-    if (input.journal !== undefined) await syncTransactionJournal(userId, { id, description: input.description, date: input.date }, input.journal);
-  } else {
-    await unlinkTransactionJournal(userId, id);
-  }
   return getTransaction(userId, id);
 }
 
@@ -271,8 +244,6 @@ export async function deleteTransaction(userId: string, id: string): Promise<{ i
   const existing = await getTransaction(userId, id);
   const db = await getDb();
   await db.transactions.deleteOne({ _id: id, userId });
-  // The journal is history worth keeping: detach the note instead of deleting it.
-  if (existing.type === "SAVINGS") await unlinkTransactionJournal(userId, id);
   return { id, month: monthKeyOf(existing.date) };
 }
 
@@ -303,9 +274,7 @@ export interface ClearDataOptions {
 export async function clearUserData(userId: string, options: ClearDataOptions = {}): Promise<{ transactions: number }> {
   const db = await getDb();
   const deleted = await db.transactions.deleteMany({ userId });
-  await Promise.all([db.recurring.deleteMany({ userId }), db.savingsNotes.deleteMany({ userId })]);
-  if (options.resetCategories) {
-    await Promise.all([db.categories.deleteMany({ userId }), db.budgets.deleteMany({ userId }), db.savingsGoals.deleteMany({ userId })]);
-  }
+  await db.recurring.deleteMany({ userId });
+  if (options.resetCategories) await Promise.all([db.categories.deleteMany({ userId }), db.budgets.deleteMany({ userId })]);
   return { transactions: deleted.deletedCount };
 }
