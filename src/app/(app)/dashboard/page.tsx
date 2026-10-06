@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { BudgetCard } from "@/features/budgets/budget-card";
 import { BalanceHero } from "@/features/dashboard/balance-hero";
-import { LeftoverCard } from "@/features/dashboard/leftover-card";
 import { CategoryDonut } from "@/features/dashboard/category-donut";
 import { ExpenseCard } from "@/features/dashboard/expense-card";
 import { IncomeCard } from "@/features/dashboard/income-card";
@@ -15,7 +14,6 @@ import { getDashboardSummary } from "@/lib/analytics/queries";
 import { currentHour, daysInMonth, formatMonthLabel, greetingForHour, parseIsoDate, parseMonthKey, previousMonthKey } from "@/lib/dates";
 import { loadAppContext, resolveMonthParam } from "@/lib/services/bootstrap";
 import { listBudgets } from "@/lib/services/budgets";
-import { isLeftoverHandled } from "@/lib/services/leftover";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -23,13 +21,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const context = await loadAppContext();
   const month = resolveMonthParam(params.month, context.currentMonth);
-  const isCurrentMonth = month === context.currentMonth;
-  const [summary, budgets, leftoverHandled] = await Promise.all([
-    getDashboardSummary(context.userId, month, context.today),
-    listBudgets(context.userId),
-    isCurrentMonth ? isLeftoverHandled(context.userId, previousMonthKey(month)) : Promise.resolve(true),
-  ]);
-  const leftover = summary.previous.income - summary.previous.expenses;
+  const [summary, budgets] = await Promise.all([getDashboardSummary(context.userId, month, context.today), listBudgets(context.userId)]);
 
   const { year, month: monthNumber } = parseMonthKey(month);
   const daysElapsed = month === context.currentMonth ? parseIsoDate(context.today).day : daysInMonth(year, monthNumber);
@@ -53,12 +45,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </p>
       </div>
 
-      {!leftoverHandled && leftover > 0 && <LeftoverCard month={summary.previous.month} amount={leftover} />}
-
       <div className="grid gap-4 xl:grid-cols-12">
         <BalanceHero
           className="xl:col-span-7"
-          monthBalance={summary.monthBalance}
+          balance={summary.balance}
+          carriedIn={summary.carriedIn}
+          movedToSavings={summary.movedToSavings}
+          previousMonthLabel={formatMonthLabel(previousMonthKey(month), { style: "month-only" })}
           monthLabel={monthLabel}
           points={summary.dailyBalance}
           monthIncome={summary.current.income}

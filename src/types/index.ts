@@ -182,11 +182,15 @@ export interface DailyBalancePoint {
 export interface DashboardSummary {
   month: MonthKey;
   /**
-   * Income minus expenses in the selected month only. Every month starts from ₹0: leftovers
-   * from earlier months are not carried in (they belong in the separate savings module).
+   * Money in hand at the end of the selected month (or today): everything carried in from
+   * earlier months plus this month's income minus expenses, minus money moved into Savings.
    */
-  monthBalance: number;
-  /** Day-by-day running balance through the selected month, starting from ₹0 on the 1st. */
+  balance: number;
+  /** Left over from earlier months (income − expenses − money moved to Savings before the month). */
+  carriedIn: number;
+  /** Money moved into Savings ("Add to savings") during the selected month. */
+  movedToSavings: number;
+  /** Day-by-day money in hand through the selected month, starting from what was carried in. */
   dailyBalance: DailyBalancePoint[];
   current: MonthTotals;
   previous: MonthTotals;

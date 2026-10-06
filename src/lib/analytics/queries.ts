@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
-import { listMonthKeys, monthKeyOf, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
+import { addDays, listMonthKeys, monthKeyOf, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
 import { listCategories } from "@/lib/services/categories";
+import { getSavingsTotals, listSavingsDepositsInRange } from "@/lib/services/savings-entries";
 import { listTransactions, listTransactionsInRange } from "@/lib/services/transactions";
 import { transactionFiltersSchema } from "@/lib/validation/transaction";
 import type {
@@ -140,21 +141,31 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
   const currentRange = monthRange(month);
   const previousRange = monthRange(previous);
 
-  const [currentTx, previousTx, categories, series] = await Promise.all([
+  const [currentTx, previousTx, categories, series, netBefore, savedBefore, depositsThisMonth] = await Promise.all([
     listTransactionsInRange(userId, currentRange.start, currentRange.end),
     listTransactionsInRange(userId, previousRange.start, previousRange.end),
     listCategories(userId),
     getMonthlySeries(userId, listMonthKeys(month, 6)),
+    getBalanceBefore(userId, currentRange.start),
+    getSavingsTotals(userId, { to: addDays(currentRange.start, -1) }),
+    listSavingsDepositsInRange(userId, currentRange.start, currentRange.end),
   ]);
 
   const bothMonths = [...currentTx, ...previousTx];
   const untilDate = today && monthKeyOf(today) === month ? today : null;
   const current = calculateMonthTotals(currentTx, month);
+  // Money in hand: whatever was left from earlier months carries into this one; only money the
+  // user explicitly moved into Savings leaves the balance (it is never added there automatically).
+  const carriedIn = netBefore - savedBefore.added;
+  const movedToSavings = depositsThisMonth.reduce((sum, d) => sum + d.amount, 0);
+  const outflows = depositsThisMonth.map((d) => ({ type: "EXPENSE" as const, amount: d.amount, date: d.date }));
+  const dailyBalance = dailyBalanceSeries([...currentTx, ...outflows], month, carriedIn, untilDate);
   return {
     month,
-    monthBalance: current.income - current.expenses,
-    // Month-scoped: the line starts at ₹0 on the 1st; earlier months are not carried in.
-    dailyBalance: dailyBalanceSeries(currentTx, month, 0, untilDate),
+    balance: carriedIn + current.income - current.expenses - movedToSavings,
+    carriedIn,
+    movedToSavings,
+    dailyBalance,
     current,
     previous: calculateMonthTotals(previousTx, previous),
     comparison: monthlyComparison(bothMonths, month, categories, previous),

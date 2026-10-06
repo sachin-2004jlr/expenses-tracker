@@ -308,7 +308,9 @@ test("savings module: add, use with a journal note, goals, notepad, monthly trac
   // The monthly tracker is completely untouched.
   await page.goto("/dashboard");
   await expect(page.getByTestId("expense-amount")).toContainText("₹900");
-  await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
+  // Money moved into savings leaves the balance; what is done with savings later does not touch it.
+  await expect(page.getByTestId("total-balance")).toContainText("₹44,100");
+  await expect(page.getByTestId("balance-breakdown")).toContainText("₹10,000 moved to Savings");
   await page.goto("/transactions");
   await expect(page.getByText("Gold coin")).toHaveCount(0);
   await expect(page.getByText("October savings")).toHaveCount(0);
@@ -318,7 +320,7 @@ test("savings module: add, use with a journal note, goals, notepad, monthly trac
   expect(body).toMatchObject({ balance: 600_000, addedThisMonth: 1_000_000, usedThisMonth: 400_000, noteCount: 2 });
 });
 
-test("leftover from last month: not in this month's balance, one tap moves it to savings", async ({ page }) => {
+test("leftover from last month carries into this month, never into savings", async ({ page }) => {
   const [y, m] = todayInKolkata().split("-").map(Number);
   const lastMonth = new Date(Date.UTC(y!, m! - 2, 10)).toISOString().slice(0, 10);
   const categories = (await (await page.request.get("/api/categories")).json()) as { id: string; name: string }[];
@@ -329,20 +331,10 @@ test("leftover from last month: not in this month's balance, one tap moves it to
   expect(created.ok()).toBeTruthy();
 
   await page.goto("/dashboard");
-  // This month's balance ignores last month's leftover.
-  await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
-  const card = page.getByTestId("leftover-card");
-  await expect(card).toContainText("₹5,000");
-  await card.getByRole("button", { name: "Move to Savings" }).click();
-  await expect(page.getByText("Moved to Savings")).toBeVisible();
-  await expect(page.getByTestId("leftover-card")).toHaveCount(0);
-  await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
-
+  await expect(page.getByTestId("balance-breakdown")).toContainText("₹5,000 carried from");
+  await expect(page.getByTestId("total-balance")).toContainText("₹49,100");
   const savings = (await (await page.request.get("/api/savings")).json()) as { balance: number };
-  expect(savings.balance).toBe(1_100_000);
-  // Asked once: after a reload the prompt stays away.
-  await page.reload();
-  await expect(page.getByTestId("leftover-card")).toHaveCount(0);
+  expect(savings.balance).toBe(600_000);
 });
 
 test("health endpoint reports status and database round trip", async ({ request }) => {

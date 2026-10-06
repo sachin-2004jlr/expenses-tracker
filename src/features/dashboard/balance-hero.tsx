@@ -11,8 +11,11 @@ import { ChartTooltipContent } from "@/features/charts/chart-tooltip";
 import { formatAxisRupees } from "@/features/charts/chart-utils";
 
 export interface BalanceHeroProps {
-  /** Income minus expenses in the selected month (starts at ₹0 each month). */
-  monthBalance: number;
+  /** Money in hand: carried in + this month's income − expenses − money moved to Savings. */
+  balance: number;
+  carriedIn: number;
+  movedToSavings: number;
+  previousMonthLabel: string;
   monthLabel: string;
   points: DailyBalancePoint[];
   /** This month's income and expenses (paise). */
@@ -42,9 +45,22 @@ function Badge({ value, label, good, down }: { value: string; label?: string; go
   );
 }
 
-/** Month balance hero: this month's income minus expenses, delta badges and a running line from ₹0. */
-export function BalanceHero({ monthBalance, monthLabel, points, monthIncome, monthExpenses, incomeChange, expensesChange, className }: BalanceHeroProps) {
-  const parts = formatCurrencyParts(monthBalance);
+/** Money-in-hand hero: carried-in leftover plus this month, delta badges and a running line. */
+export function BalanceHero({
+  balance,
+  carriedIn,
+  movedToSavings,
+  previousMonthLabel,
+  monthLabel,
+  points,
+  monthIncome,
+  monthExpenses,
+  incomeChange,
+  expensesChange,
+  className,
+}: BalanceHeroProps) {
+  const parts = formatCurrencyParts(balance);
+  const monthNet = monthIncome - monthExpenses;
   const data = useMemo(
     () => points.map((p) => ({ date: p.date, label: formatIsoDate(p.date, "d MMM"), Balance: p.balance })),
     [points],
@@ -53,18 +69,32 @@ export function BalanceHero({ monthBalance, monthLabel, points, monthIncome, mon
   const last = data[data.length - 1];
 
   return (
-    <section className={cn("min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6", className)} aria-label="Balance this month">
+    <section className={cn("min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6", className)} aria-label="Balance">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Balance · {monthLabel}</h2>
-          <p className="text-xs text-muted-foreground">Income minus expenses this month. Every month starts from ₹0.</p>
+          <h2 className="text-lg font-semibold">Balance</h2>
+          <p className="text-xs text-muted-foreground">Money in hand: what was left from last month plus this month. Savings are kept separately.</p>
           <p className="mt-3 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="total-balance">
-            <span className={cn("text-3xl [overflow-wrap:anywhere] sm:text-4xl", monthBalance < 0 && "text-expense-foreground")}>
+            <span className={cn("text-3xl [overflow-wrap:anywhere] sm:text-4xl", balance < 0 && "text-expense-foreground")}>
               {parts.sign}
               {parts.symbol}
               {parts.integer}
             </span>
             <span className="text-lg text-muted-foreground">.{parts.fraction}</span>
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground tabular-nums" data-testid="balance-breakdown">
+            <span className="font-medium text-foreground">{formatCurrency(carriedIn)}</span> carried from {previousMonthLabel} ·{" "}
+            <span className={cn("font-medium", monthNet < 0 ? "text-expense-foreground" : "text-income-foreground")}>
+              {monthNet < 0 ? "−" : "+"}
+              {formatCurrency(Math.abs(monthNet))}
+            </span>{" "}
+            in {monthLabel}
+            {movedToSavings > 0 && (
+              <>
+                {" "}
+                · <span className="font-medium text-saved-foreground">−{formatCurrency(movedToSavings)}</span> moved to Savings
+              </>
+            )}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Badge value={formatPercent(incomeChange === null ? null : Math.abs(incomeChange))} label="income vs last month" good={incomeChange === null ? null : incomeChange >= 0} down={(incomeChange ?? 0) < 0} />

@@ -157,6 +157,12 @@ export async function deleteSavingsEntry(userId: string, id: string): Promise<Sa
   return existing;
 }
 
+/** "Add to savings" entries in a date range (amount and date only); they leave the monthly balance. */
+export async function listSavingsDepositsInRange(userId: string, from: string, to: string): Promise<{ amount: number; date: string }[]> {
+  const db = await getDb();
+  return db.savingsEntries.find({ userId, kind: "DEPOSIT", date: { $gte: from, $lte: to } }, { projection: { _id: 0, amount: 1, date: 1 } }).toArray();
+}
+
 /** All-time (or ranged) money added, used and the resulting balance. */
 export async function getSavingsTotals(userId: string, range: { from?: string; to?: string } = {}): Promise<{ added: number; used: number; balance: number }> {
   const db = await getDb();
