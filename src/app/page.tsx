@@ -18,7 +18,6 @@ import { BrandLogo } from "@/components/shared/brand-logo";
 import { ExpenseCard } from "@/features/dashboard/expense-card";
 import { IncomeCard } from "@/features/dashboard/income-card";
 import { MonthlyBars } from "@/features/dashboard/monthly-bars";
-import { SavingsGauge } from "@/features/dashboard/savings-gauge";
 import { TopCategoryCard } from "@/features/dashboard/top-category-card";
 import { getCurrentUser } from "@/lib/auth";
 import type { MonthTotals } from "@/types";
@@ -138,10 +137,9 @@ export default async function LandingPage() {
             <p className="mt-4 max-w-xl text-sm text-muted-foreground">
               Sample data below. Your own dashboard shows the same cards driven by your transactions, with month navigation, a calendar and a full analytics page.
             </p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <IncomeCard amount={5_500_000} changePercent={14.6} series={SAMPLE_SERIES} />
               <ExpenseCard amount={1_655_000} changePercent={-13.8} series={SAMPLE_SERIES} perDay={110_333} />
-              <SavingsGauge rate={69.9} savings={3_845_000} />
               <TopCategoryCard item={{ categoryId: "sample", name: "Food", icon: "utensils", color: "orange", amount: 450_000, count: 14, percentage: 27.2 }} month="2026-09" />
             </div>
             <div className="mt-4 grid gap-4 xl:grid-cols-3">

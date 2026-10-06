@@ -21,7 +21,7 @@ export interface IncomeExpenseChartProps {
 }
 
 /**
- * Income vs expenses bars with savings overlaid, all in rupees on one axis.
+ * Income vs expenses bars with the net overlaid, all in rupees on one axis.
  * Mount with `key={month}` so a month change resets to the server-provided series.
  */
 export function IncomeExpenseChart({
@@ -29,7 +29,7 @@ export function IncomeExpenseChart({
   initialSeries,
   initialRange = "6m",
   title = "Income vs expenses",
-  description = "Monthly totals with savings overlaid",
+  description = "Monthly totals with the net overlaid",
   className,
 }: IncomeExpenseChartProps) {
   const [range, setRange] = useState<RangePreset>(initialRange);
@@ -73,7 +73,7 @@ export function IncomeExpenseChart({
         label: formatMonthTick(m.month, series.length),
         Income: m.income,
         Expenses: m.expenses,
-        Savings: m.savings,
+        Net: m.savings,
       })),
     [series],
   );
@@ -119,7 +119,7 @@ export function IncomeExpenseChart({
                 <Bar dataKey="Expenses" fill={SERIES_COLORS.expense} radius={[4, 4, 0, 0]} maxBarSize={28} />
                 <Line
                   type="monotone"
-                  dataKey="Savings"
+                  dataKey="Net"
                   stroke={SERIES_COLORS.savings}
                   strokeWidth={2}
                   dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }}
@@ -138,7 +138,7 @@ export function IncomeExpenseChart({
                   <th className="py-1 pr-3 font-medium">Month</th>
                   <th className="py-1 pr-3 text-right font-medium">Income</th>
                   <th className="py-1 pr-3 text-right font-medium">Expenses</th>
-                  <th className="py-1 text-right font-medium">Savings</th>
+                  <th className="py-1 text-right font-medium">Net</th>
                 </tr>
               </thead>
               <tbody>

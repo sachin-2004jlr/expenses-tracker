@@ -16,8 +16,8 @@ export interface TrendChartProps {
   className?: string;
 }
 
-/** Income, expense and savings trend lines on a single rupee axis. */
-export function TrendChart({ series, title = "Monthly trend", description = "Income, expenses and savings over time", className }: TrendChartProps) {
+/** Income, expense and net (income − expenses) trend lines on a single rupee axis. */
+export function TrendChart({ series, title = "Monthly trend", description = "Income, expenses and net over time", className }: TrendChartProps) {
   const data = useMemo(
     () =>
       series.map((m) => ({
@@ -25,7 +25,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
         label: formatMonthTick(m.month, series.length),
         Income: m.income,
         Expenses: m.expenses,
-        Savings: m.savings,
+        Net: m.savings,
       })),
     [series],
   );
@@ -61,7 +61,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                 <Legend iconType="plainline" iconSize={12} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                 <Line type="monotone" dataKey="Income" stroke={SERIES_COLORS.income} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
                 <Line type="monotone" dataKey="Expenses" stroke={SERIES_COLORS.expense} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="Savings" stroke={SERIES_COLORS.savings} strokeWidth={2} strokeDasharray="0" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="Net" stroke={SERIES_COLORS.savings} strokeWidth={2} strokeDasharray="0" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -75,7 +75,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                   <th className="py-1 pr-3 font-medium">Month</th>
                   <th className="py-1 pr-3 text-right font-medium">Income</th>
                   <th className="py-1 pr-3 text-right font-medium">Expenses</th>
-                  <th className="py-1 pr-3 text-right font-medium">Savings</th>
+                  <th className="py-1 pr-3 text-right font-medium">Net</th>
                   <th className="py-1 text-right font-medium">Rate</th>
                 </tr>
               </thead>

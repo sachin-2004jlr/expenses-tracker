@@ -99,7 +99,7 @@ test("add income", async ({ page }) => {
   await expect(page.getByTestId("total-balance")).toContainText("₹55,000");
 });
 
-test("add expense and see savings", async ({ page }) => {
+test("add expense and see it on the dashboard", async ({ page }) => {
   await page.goto("/dashboard");
   await openAddDialog(page);
   await page.getByRole("radio", { name: "Expense" }).click();
@@ -111,7 +111,8 @@ test("add expense and see savings", async ({ page }) => {
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect(page.getByTestId("expense-amount")).toContainText("₹850");
-  await expect(page.getByTestId("savings-rate")).toContainText("98.5%");
+  await expect(page.getByTestId("month-out")).toContainText("₹850");
+  await expect(page.getByLabel("Savings rate")).toHaveCount(0);
   await expect(page.getByTestId("top-category-amount")).toContainText("₹850");
 });
 

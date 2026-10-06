@@ -8,7 +8,6 @@ import { MonthlyBars } from "@/features/dashboard/monthly-bars";
 import { MonthlyComparisonCard } from "@/features/dashboard/monthly-comparison-card";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { RecentOperations } from "@/features/dashboard/recent-operations";
-import { SavingsGauge } from "@/features/dashboard/savings-gauge";
 import { TopCategoryCard } from "@/features/dashboard/top-category-card";
 import { calculateBudgetProgress } from "@/lib/analytics/budgets";
 import { getDashboardSummary } from "@/lib/analytics/queries";
@@ -53,8 +52,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           openingBalance={summary.openingBalance}
           monthLabel={monthLabel}
           points={summary.dailyBalance}
-          savings={summary.current.savings}
-          savingsRate={summary.current.savingsRate}
+          monthIncome={summary.current.income}
+          monthExpenses={summary.current.expenses}
           incomeChange={summary.comparison.income.changePercent}
         />
         <RecentOperations
@@ -69,11 +68,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <QuickActions month={month} className="content-start xl:col-span-2" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <IncomeCard amount={summary.current.income} changePercent={summary.comparison.income.changePercent} series={summary.series} />
         <ExpenseCard amount={summary.current.expenses} changePercent={summary.comparison.expenses.changePercent} series={summary.series} perDay={perDay} />
-        <SavingsGauge rate={summary.current.savingsRate} savings={summary.current.savings} />
-        <TopCategoryCard item={summary.expenseCategories[0] ?? null} month={month} />
+        <TopCategoryCard item={summary.expenseCategories[0] ?? null} month={month} className="sm:col-span-2 xl:col-span-1" />
       </div>
 
       <BudgetCard summary={budgetSummary} monthLabel={monthLabel} daysLeft={daysLeft} />

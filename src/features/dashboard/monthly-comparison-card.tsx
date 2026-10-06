@@ -30,7 +30,7 @@ export function MonthlyComparisonCard({ comparison, className }: { comparison: M
   const rows: { label: string; data: MetricComparison; increaseIsGood: boolean }[] = [
     { label: "Income", data: comparison.income, increaseIsGood: true },
     { label: "Expenses", data: comparison.expenses, increaseIsGood: false },
-    { label: "Savings", data: comparison.savings, increaseIsGood: true },
+    { label: "Net", data: comparison.savings, increaseIsGood: true },
   ];
   const topChanges = comparison.categories.filter((c) => c.delta !== 0).slice(0, 3);
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowDownRight, ArrowUpRight, PiggyBank, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Scale, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { AnalyticsRange } from "@/features/analytics/analytics-range";
@@ -46,11 +46,11 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <StatCard label="Total income" icon={ArrowUpRight} tone="income" value={formatCurrency(overview.totals.income)} hint={`Avg ${formatCurrency(overview.averages.income)} / month`} />
         <StatCard label="Total expenses" icon={ArrowDownRight} tone="expense" value={formatCurrency(overview.totals.expenses)} hint={`Avg ${formatCurrency(overview.averages.expenses)} / month`} />
         <StatCard
-          label="Total savings"
-          icon={PiggyBank}
-          tone="savings"
+          label="Net"
+          icon={Scale}
+          tone="neutral"
           value={formatCurrency(overview.totals.savings)}
-          hint={overview.totals.savingsRate === null ? "No income in range" : `Savings rate ${formatPercent(overview.totals.savingsRate)}`}
+          hint={overview.totals.savingsRate === null ? "Income minus expenses" : `Income minus expenses · ${formatPercent(overview.totals.savingsRate)} of income`}
           className={overview.totals.savings < 0 ? "[&>p]:text-expense-foreground" : undefined}
         />
         <StatCard
@@ -60,7 +60,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           value={overview.bestMonth ? formatMonthLabel(overview.bestMonth.month, { style: "short" }) : "—"}
           hint={
             overview.bestMonth
-              ? `Saved ${formatCurrency(overview.bestMonth.savings)}${overview.worstMonth ? ` · Highest spend ${formatMonthLabel(overview.worstMonth.month, { style: "short-month-only" })} ${formatCurrency(overview.worstMonth.expenses)}` : ""}`
+              ? `Net ${formatCurrency(overview.bestMonth.savings)}${overview.worstMonth ? ` · Highest spend ${formatMonthLabel(overview.worstMonth.month, { style: "short-month-only" })} ${formatCurrency(overview.worstMonth.expenses)}` : ""}`
               : "Add transactions to see trends"
           }
         />

@@ -15,8 +15,9 @@ export interface BalanceHeroProps {
   openingBalance: number;
   monthLabel: string;
   points: DailyBalancePoint[];
-  savings: number;
-  savingsRate: number | null;
+  /** This month's income and expenses (paise). */
+  monthIncome: number;
+  monthExpenses: number;
   incomeChange: number | null;
   className?: string;
 }
@@ -40,7 +41,7 @@ function Badge({ value, label, good }: { value: string; label?: string; good: bo
 }
 
 /** "Evaluation" style hero: big balance, delta badges and a white running-balance line. */
-export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, savings, savingsRate, incomeChange, className }: BalanceHeroProps) {
+export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, monthIncome, monthExpenses, incomeChange, className }: BalanceHeroProps) {
   const parts = formatCurrencyParts(totalBalance);
   const monthDelta = points.length ? points[points.length - 1]!.balance - openingBalance : 0;
   const data = useMemo(
@@ -69,10 +70,16 @@ export function BalanceHero({ totalBalance, openingBalance, monthLabel, points, 
             <Badge value={`${monthDelta >= 0 ? "+" : "−"}${formatCurrency(Math.abs(monthDelta))}`} label={`in ${monthLabel}`} good={monthDelta === 0 ? null : monthDelta > 0} />
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card-elevated px-3 py-2 text-right">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Saved this month</p>
-          <p className={cn("text-lg font-semibold tabular-nums", savings < 0 ? "text-expense-foreground" : "text-income-foreground")}>{formatCurrency(savings)}</p>
-          <p className="text-[11px] text-muted-foreground">{savingsRate === null ? "no income yet" : `${formatPercent(savingsRate)} savings rate`}</p>
+        <div className="grid min-w-0 gap-1 rounded-xl border border-border bg-card-elevated px-3 py-2 text-right">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">This month</p>
+          <p className="flex items-baseline justify-end gap-2 text-sm">
+            <span className="text-[11px] text-muted-foreground">In</span>
+            <span className="font-semibold text-income-foreground tabular-nums" data-testid="month-in">{formatCurrency(monthIncome)}</span>
+          </p>
+          <p className="flex items-baseline justify-end gap-2 text-sm">
+            <span className="text-[11px] text-muted-foreground">Out</span>
+            <span className="font-semibold text-expense-foreground tabular-nums" data-testid="month-out">{formatCurrency(monthExpenses)}</span>
+          </p>
         </div>
       </div>
 
