@@ -4,7 +4,6 @@ import type { AppSettings, Category, IsoDate, MonthKey } from "@/types";
 import { getDb } from "@/lib/db";
 import { listCategories } from "./categories";
 import { materialiseRecurringOncePerDay } from "./recurring";
-import { migrateLegacySavings } from "./savings-entries";
 import { getSettings } from "./settings";
 import { listTags } from "./tags";
 import { ensureUserDefaults, getCurrentUserId } from "./user";
@@ -30,8 +29,6 @@ export const loadAppContext = cache(async (): Promise<AppContext> => {
     getSettings(userId),
     listCategories(userId),
     listTags(userId),
-    // Savings live in their own module; move any recorded in the monthly tracker (once).
-    migrateLegacySavings(userId).catch((error: unknown) => console.error("[savings] migration failed", error)),
   ]);
   let categories = initialCategories;
   if (!categories.some((c) => c.type === "SAVINGS")) {
