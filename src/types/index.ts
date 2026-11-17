@@ -93,8 +93,8 @@ export interface MonthTotals {
   month: MonthKey;
   income: number;
   expenses: number;
-  savings: number;
-  savingsRate: number | null;
+  net: number;
+  netRate: number | null;
   transactionCount: number;
 }
 
@@ -132,7 +132,7 @@ export interface MonthlyComparison {
   previousMonth: MonthKey;
   income: MetricComparison;
   expenses: MetricComparison;
-  savings: MetricComparison;
+  net: MetricComparison;
   categories: CategoryChange[];
 }
 
@@ -182,14 +182,12 @@ export interface DailyBalancePoint {
 export interface DashboardSummary {
   month: MonthKey;
   /**
-   * Money in hand at the end of the selected month (or today): everything carried in from
-   * earlier months plus this month's income minus expenses, minus money moved into Savings.
+   * Money in hand at the end of the selected month (or today): what was left from earlier months
+   * plus this month's income minus expenses. Savings are a separate ledger and never count here.
    */
   balance: number;
-  /** Left over from earlier months (income − expenses − money moved to Savings before the month). */
+  /** Left over from earlier months (all income − expenses dated before the month). */
   carriedIn: number;
-  /** Money moved into Savings ("Add to savings") during the selected month. */
-  movedToSavings: number;
   /** Day-by-day money in hand through the selected month, starting from what was carried in. */
   dailyBalance: DailyBalancePoint[];
   current: MonthTotals;
@@ -206,8 +204,8 @@ export interface AnalyticsOverview {
   range: RangePreset;
   months: MonthKey[];
   series: MonthTotals[];
-  totals: { income: number; expenses: number; savings: number; savingsRate: number | null };
-  averages: { income: number; expenses: number; savings: number };
+  totals: { income: number; expenses: number; net: number; netRate: number | null };
+  averages: { income: number; expenses: number; net: number };
   expenseCategories: CategoryBreakdownItem[];
   incomeCategories: CategoryBreakdownItem[];
   largestExpenses: Transaction[];

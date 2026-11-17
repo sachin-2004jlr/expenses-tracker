@@ -38,8 +38,8 @@ export interface SavingsEntryDialogProps {
 }
 
 const KINDS = [
-  { value: "DEPOSIT", label: "Add to savings", short: "Add", icon: ArrowDownToLine, active: "bg-background text-income-foreground shadow-sm" },
-  { value: "SPEND", label: "Used from savings", short: "Use", icon: ArrowUpFromLine, active: "bg-background text-saved-foreground shadow-sm" },
+  { value: "DEPOSIT", label: "Add to savings", short: "Add", icon: ArrowDownToLine, active: "bg-background text-saved-foreground shadow-sm" },
+  { value: "SPEND", label: "Used from savings", short: "Use", icon: ArrowUpFromLine, active: "bg-background text-foreground shadow-sm" },
 ] as const;
 
 function initialValues(mode: "create" | "edit", entry: SavingsEntry | null, defaults: SavingsEntryDefaults, today: IsoDate): SavingsEntryFormValues {
@@ -112,7 +112,7 @@ export function SavingsEntryDialog({ open, onOpenChange, mode, entry, defaults, 
       <DialogContent className="sm:max-w-md" initialFocus={amountRef} aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Savings are tracked on their own and never change your monthly income, expenses or balance.</DialogDescription>
+          <DialogDescription>Savings are a separate ledger. They never change your income, expenses or money left.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="grid gap-4" noValidate data-testid="savings-form">
@@ -253,7 +253,7 @@ export function SavingsEntryDialog({ open, onOpenChange, mode, entry, defaults, 
             <Button
               type="submit"
               disabled={formState.isSubmitting}
-              className={isSpend ? "bg-saved text-white hover:bg-saved/90" : "bg-income text-white hover:bg-income/90"}
+              className="bg-saved text-white hover:bg-saved/90"
             >
               {formState.isSubmitting ? "Saving…" : mode === "edit" ? "Save changes" : isSpend ? "Record use" : "Add to savings"}
             </Button>

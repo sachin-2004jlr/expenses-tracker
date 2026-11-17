@@ -1,0 +1,414 @@
+/* Landing page motion graphics: falling rupee notes in the brand orange. */
+
+.page {
+  background: #040404;
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- hero frame */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-height: max(100svh, 46rem);
+  background:
+    radial-gradient(90% 55% at 70% 100%, color-mix(in oklch, var(--brand) 9%, transparent), transparent 70%),
+    #040404;
+}
+
+.heroCopy {
+  transform: translate3d(0, calc(var(--sy, 0) * -70px), 0);
+  opacity: calc(1 - var(--sy, 0) * 1.3);
+}
+
+.heroFade {
+  position: absolute;
+  inset: auto 0 0;
+  height: 7rem;
+  background: linear-gradient(to bottom, transparent, #040404);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---------------------------------------------------------------- note field */
+
+.zone {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  pointer-events: none;
+  --k: 0.72; /* note size multiplier: smaller on phones */
+}
+
+.heroZone {
+  inset: 54% 0 0 0;
+}
+
+@media (min-width: 640px) {
+  .zone {
+    --k: 0.9;
+  }
+  .heroZone {
+    inset: 46% 0 0 22%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .zone {
+    --k: 1;
+  }
+  .heroZone {
+    inset: 4% 0 0 38%;
+  }
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  bottom: -30%;
+  width: 130%;
+  height: 80%;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, color-mix(in oklch, var(--brand) 42%, transparent), transparent);
+  opacity: 0.5;
+  animation: breathe 7s ease-in-out infinite alternate;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(
+    calc(var(--px, 0) * var(--depth) * 1px),
+    calc(var(--py, 0) * var(--depth) * 1px + var(--sy, 0) * var(--scroll-depth) * 1px),
+    0
+  );
+}
+
+.far {
+  --depth: 6;
+  --scroll-depth: 40;
+}
+.mid {
+  --depth: 14;
+  --scroll-depth: 90;
+}
+.near {
+  --depth: 28;
+  --scroll-depth: 170;
+}
+
+.note {
+  --sc: calc(var(--s) * var(--k));
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  width: 150px;
+  height: 72px;
+  margin: -36px 0 0 -75px;
+  will-change: transform, opacity;
+  /* Eases out so notes linger lower down: dense at the bottom, thin at the top, like the photo. */
+  animation: fall var(--dur) cubic-bezier(0.3, 0.55, 0.6, 0.98) var(--delay) infinite;
+}
+
+.far .note {
+  filter: blur(1.6px);
+}
+.mid .note {
+  filter: blur(0.5px);
+}
+
+@media (max-width: 639px) {
+  .note[data-mobile="false"] {
+    display: none;
+  }
+}
+
+.sway {
+  width: 100%;
+  height: 100%;
+  perspective: 520px;
+  will-change: transform;
+  animation: sway var(--sdur) ease-in-out var(--sdelay) infinite alternate;
+}
+
+.flutter {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.tumble {
+  animation: tumble var(--fdur) linear var(--fdelay) infinite;
+}
+
+.wobble {
+  animation: wobble var(--fdur) ease-in-out var(--fdelay) infinite alternate;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #2a0c00, #000);
+  opacity: 0.1;
+  will-change: opacity;
+}
+
+.tumble .shade {
+  animation: shadeTumble var(--fdur) linear var(--fdelay) infinite;
+}
+
+.wobble .shade {
+  animation: shadeWobble var(--fdur) ease-in-out var(--fdelay) infinite alternate;
+}
+
+.zone[data-paused="true"] .note,
+.zone[data-paused="true"] .sway,
+.zone[data-paused="true"] .flutter,
+.zone[data-paused="true"] .shade,
+.zone[data-paused="true"] .glow {
+  animation-play-state: paused;
+}
+
+@keyframes fall {
+  0% {
+    transform: translate3d(0, calc(var(--y0) * 1cqh), 0) scale(var(--sc));
+    opacity: 0;
+  }
+  14% {
+    opacity: var(--o);
+  }
+  100% {
+    transform: translate3d(calc(var(--drift) * 1cqw), calc(var(--y1) * 1cqh), 0) scale(var(--sc));
+    opacity: var(--o);
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: translate3d(calc(var(--sway) * -1), 0, 0);
+  }
+  to {
+    transform: translate3d(var(--sway), 0, 0);
+  }
+}
+
+@keyframes tumble {
+  0% {
+    transform: rotateX(var(--rx)) rotateY(-12deg) rotateZ(var(--rz));
+  }
+  25% {
+    transform: rotateX(calc(var(--rx) + 90deg)) rotateY(18deg) rotateZ(calc(var(--rz) + 25deg));
+  }
+  50% {
+    transform: rotateX(calc(var(--rx) + 180deg)) rotateY(-8deg) rotateZ(calc(var(--rz) + 40deg));
+  }
+  75% {
+    transform: rotateX(calc(var(--rx) + 270deg)) rotateY(22deg) rotateZ(calc(var(--rz) + 20deg));
+  }
+  100% {
+    transform: rotateX(calc(var(--rx) + 360deg)) rotateY(-12deg) rotateZ(var(--rz));
+  }
+}
+
+@keyframes wobble {
+  from {
+    transform: rotateX(calc(var(--rx) - 35deg)) rotateY(-25deg) rotateZ(calc(var(--rz) - 12deg));
+  }
+  to {
+    transform: rotateX(calc(var(--rx) + 40deg)) rotateY(28deg) rotateZ(calc(var(--rz) + 14deg));
+  }
+}
+
+@keyframes shadeTumble {
+  0%,
+  100% {
+    opacity: 0.05;
+  }
+  25%,
+  75% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
+@keyframes shadeWobble {
+  from {
+    opacity: 0.38;
+  }
+  50% {
+    opacity: 0.04;
+  }
+  to {
+    opacity: 0.42;
+  }
+}
+
+@keyframes breathe {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+/* ---------------------------------------------------------------- entrance */
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.lineInner {
+  display: block;
+  animation: rise 1s cubic-bezier(0.2, 0.75, 0.1, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.fadeUp {
+  animation: fadeUp 0.9s cubic-bezier(0.2, 0.75, 0.1, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.accent {
+  background: linear-gradient(100deg, #ffc184 0%, var(--brand) 45%, #ff8a3d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes rise {
+  from {
+    transform: translate3d(0, 108%, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scroll cue: a short orange tick sliding down a hairline. */
+.cue {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 2.5rem;
+  overflow: hidden;
+  background: color-mix(in oklch, white 14%, transparent);
+}
+
+.cue::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 40%;
+  background: var(--brand);
+  animation: cue 1.8s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+}
+
+@keyframes cue {
+  from {
+    transform: translate3d(0, -100%, 0);
+  }
+  to {
+    transform: translate3d(0, 260%, 0);
+  }
+}
+
+/* ---------------------------------------------------------------- scroll reveals */
+
+.reveal {
+  opacity: 1;
+}
+
+.rule {
+  display: block;
+  height: 2px;
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--brand), transparent);
+}
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: fadeUp linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+  .rule {
+    animation: grow linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 35%;
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .note {
+    animation: none;
+    opacity: var(--o);
+    transform: translate3d(calc(var(--still-x) * 1cqw), calc(var(--still-y) * 1cqh), 0) scale(var(--sc));
+  }
+  .sway,
+  .glow,
+  .cue::after {
+    animation: none;
+  }
+  .flutter,
+  .tumble,
+  .wobble {
+    animation: none;
+    transform: rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz));
+  }
+  .shade,
+  .tumble .shade,
+  .wobble .shade {
+    animation: none;
+    opacity: 0.18;
+  }
+  .lineInner,
+  .fadeUp,
+  .reveal,
+  .rule {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .heroCopy,
+  .layer {
+    transform: none;
+    opacity: 1;
+  }
+}

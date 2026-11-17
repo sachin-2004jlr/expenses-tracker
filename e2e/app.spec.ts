@@ -111,9 +111,11 @@ test("add expense and see it on the dashboard", async ({ page }) => {
   await page.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByText("Expense added")).toBeVisible();
   await expect(page.getByTestId("expense-amount")).toContainText("₹850");
-  await expect(page.getByTestId("month-out")).toContainText("₹850");
+  await expect(page.getByTestId("total-balance")).toContainText("₹54,150");
   await expect(page.getByLabel("Savings rate")).toHaveCount(0);
-  await expect(page.getByTestId("top-category-amount")).toContainText("₹850");
+  const byCategory = page.getByLabel("Spending by category");
+  await expect(byCategory).toContainText("Food");
+  await expect(byCategory).toContainText("₹850");
 });
 
 test("validation blocks an empty form", async ({ page }) => {
@@ -305,12 +307,14 @@ test("savings module: add, use with a journal note, goals, notepad, monthly trac
   await page.getByRole("button", { name: "Create goal" }).click();
   await expect(page.getByRole("progressbar", { name: "Emergency fund progress" })).toHaveAttribute("aria-valuenow", "10");
 
-  // The monthly tracker is completely untouched.
+  // The monthly tracker is completely untouched: savings never add to or take from its balance.
   await page.goto("/dashboard");
   await expect(page.getByTestId("expense-amount")).toContainText("₹900");
-  // Money moved into savings leaves the balance; what is done with savings later does not touch it.
-  await expect(page.getByTestId("total-balance")).toContainText("₹44,100");
-  await expect(page.getByTestId("balance-breakdown")).toContainText("₹10,000 moved to Savings");
+  await expect(page.getByTestId("income-amount")).toContainText("₹55,000");
+  await expect(page.getByTestId("total-balance")).toContainText("₹54,100");
+  await expect(page.getByTestId("balance-breakdown")).not.toContainText(/saving/i);
+  await expect(page.getByText("₹10,000")).toHaveCount(0);
+  await expect(page.getByText("₹6,000")).toHaveCount(0);
   await page.goto("/transactions");
   await expect(page.getByText("Gold coin")).toHaveCount(0);
   await expect(page.getByText("October savings")).toHaveCount(0);
@@ -332,7 +336,7 @@ test("leftover from last month carries into this month, never into savings", asy
 
   await page.goto("/dashboard");
   await expect(page.getByTestId("balance-breakdown")).toContainText("₹5,000 carried from");
-  await expect(page.getByTestId("total-balance")).toContainText("₹49,100");
+  await expect(page.getByTestId("total-balance")).toContainText("₹59,100");
   const savings = (await (await page.request.get("/api/savings")).json()) as { balance: number };
   expect(savings.balance).toBe(600_000);
 });

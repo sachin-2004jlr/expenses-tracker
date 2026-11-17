@@ -67,7 +67,7 @@ export function SavingsEntryList({ entries, dateFormat, showJournal = true }: Sa
                 {entry.category ? (
                   <CategoryIcon icon={entry.category.icon} color={entry.category.color} />
                 ) : (
-                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", added ? "bg-income/12 text-income-foreground" : "bg-saved/12 text-saved-foreground")}>
+                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", added ? "bg-saved/12 text-saved-foreground" : "bg-muted text-foreground")}>
                     <KindIcon className="size-4" aria-hidden />
                   </span>
                 )}
@@ -84,7 +84,7 @@ export function SavingsEntryList({ entries, dateFormat, showJournal = true }: Sa
                     </span>
                   )}
                 </span>
-                <span className={cn("shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums", added ? "text-income-foreground" : "text-saved-foreground")}>
+                <span className={cn("shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums", added ? "text-saved-foreground" : "text-foreground")}>
                   {added ? "+" : "−"} {formatCurrency(entry.amount)}
                 </span>
               </button>

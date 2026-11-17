@@ -87,8 +87,8 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
 
   return (
     <div className={cn("flex flex-col gap-3", pending && "opacity-80", className)} data-testid="transaction-filters">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <InputGroup className="sm:max-w-xs">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-2">
+        <InputGroup className="h-9 w-full border-transparent bg-muted/50 lg:w-auto lg:min-w-0 lg:flex-1">
           <InputGroupAddon>
             <Search aria-hidden />
           </InputGroupAddon>
@@ -96,12 +96,12 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
             type="search"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Search description, notes, category, tags"
+            placeholder="Search transactions"
             aria-label="Search transactions"
           />
         </InputGroup>
 
-        <div role="radiogroup" aria-label="Transaction type" className="inline-flex items-center rounded-lg bg-muted p-0.5">
+        <div role="radiogroup" aria-label="Transaction type" className="inline-flex h-9 items-center rounded-full bg-muted p-0.5">
           {[
             { value: ALL, label: "All" },
             { value: "INCOME", label: "Income" },
@@ -116,7 +116,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
                 aria-checked={active}
                 onClick={() => update({ type: option.value })}
                 className={cn(
-                  "h-7 rounded-md px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                  "h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -127,7 +127,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
         </div>
 
         <Select value={filters.category ?? ALL} onValueChange={(value) => update({ category: value })} items={categoryItems}>
-          <SelectTrigger className="w-full sm:w-48" aria-label="Filter by category">
+          <SelectTrigger className="min-w-0 flex-1 rounded-full sm:w-48 sm:flex-none" aria-label="Filter by category">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -158,9 +158,9 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
         </Select>
 
         <Popover>
-          <PopoverTrigger render={<Button variant="outline" className="sm:ml-auto" />}>
+          <PopoverTrigger render={<Button variant="outline" className="rounded-full" aria-label="More filters" />}>
             <Funnel data-icon="inline-start" aria-hidden />
-            More filters
+            <span className="hidden sm:inline">More filters</span>
             {activeCount > 0 && (
               <span className="ml-1 rounded-full bg-foreground px-1.5 text-[10px] font-semibold text-background">{activeCount}</span>
             )}
@@ -263,7 +263,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
 
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1">
       {label}
       <button
         type="button"

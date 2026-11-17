@@ -25,7 +25,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
         label: formatMonthTick(m.month, series.length),
         Income: m.income,
         Expenses: m.expenses,
-        Net: m.savings,
+        Net: m.net,
       })),
     [series],
   );
@@ -61,7 +61,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                 <Legend iconType="plainline" iconSize={12} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                 <Line type="monotone" dataKey="Income" stroke={SERIES_COLORS.income} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
                 <Line type="monotone" dataKey="Expenses" stroke={SERIES_COLORS.expense} strokeWidth={2} dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="Net" stroke={SERIES_COLORS.savings} strokeWidth={2} strokeDasharray="0" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="Net" stroke={SERIES_COLORS.net} strokeWidth={2} strokeDasharray="0" dot={{ r: 3, strokeWidth: 2, fill: "var(--card)" }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -85,8 +85,8 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
                     <td className="py-1 pr-3">{formatMonthLabel(m.month, { style: "short" })}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.income)}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.expenses)}</td>
-                    <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.savings)}</td>
-                    <td className="py-1 text-right tabular-nums">{m.savingsRate === null ? "—" : `${m.savingsRate.toFixed(1)}%`}</td>
+                    <td className="py-1 pr-3 text-right tabular-nums">{formatCurrency(m.net)}</td>
+                    <td className="py-1 text-right tabular-nums">{m.netRate === null ? "—" : `${m.netRate.toFixed(1)}%`}</td>
                   </tr>
                 ))}
               </tbody>

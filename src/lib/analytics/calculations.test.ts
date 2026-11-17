@@ -8,8 +8,8 @@ import {
   calculateMonthTotals,
   calculateMonthlyExpenses,
   calculateMonthlyIncome,
-  calculateSavings,
-  calculateSavingsRate,
+  calculateNet,
+  calculateNetRate,
   categoryBreakdown,
   compareMetrics,
   filterByDateRange,
@@ -79,24 +79,24 @@ describe("basic totals", () => {
   });
 });
 
-describe("savings", () => {
-  it("savings = income − expenses", () => {
-    expect(calculateSavings(5_500_000, 1_655_000)).toBe(3_845_000);
-    expect(calculateSavings(0, 1_000)).toBe(-1_000);
+describe("net", () => {
+  it("net = income − expenses", () => {
+    expect(calculateNet(5_500_000, 1_655_000)).toBe(3_845_000);
+    expect(calculateNet(0, 1_000)).toBe(-1_000);
   });
 
-  it("savings rate is a percentage with one decimal", () => {
-    expect(calculateSavingsRate(5_500_000, 1_655_000)).toBe(69.9);
-    expect(calculateSavingsRate(100_000, 0)).toBe(100);
+  it("net rate is a percentage with one decimal", () => {
+    expect(calculateNetRate(5_500_000, 1_655_000)).toBe(69.9);
+    expect(calculateNetRate(100_000, 0)).toBe(100);
   });
 
   it("never divides by zero income", () => {
-    expect(calculateSavingsRate(0, 0)).toBeNull();
-    expect(calculateSavingsRate(0, 50_000)).toBeNull();
+    expect(calculateNetRate(0, 0)).toBeNull();
+    expect(calculateNetRate(0, 50_000)).toBeNull();
   });
 
   it("can be negative when overspending", () => {
-    expect(calculateSavingsRate(100_000, 150_000)).toBe(-50);
+    expect(calculateNetRate(100_000, 150_000)).toBe(-50);
   });
 });
 
@@ -147,8 +147,8 @@ describe("month filtering and monthly totals", () => {
       month: "2026-09",
       income: 5_500_000,
       expenses: 1_655_000,
-      savings: 3_845_000,
-      savingsRate: 69.9,
+      net: 3_845_000,
+      netRate: 69.9,
       transactionCount: 6,
     });
   });
@@ -158,8 +158,8 @@ describe("month filtering and monthly totals", () => {
       month: "2026-05",
       income: 0,
       expenses: 0,
-      savings: 0,
-      savingsRate: null,
+      net: 0,
+      netRate: null,
       transactionCount: 0,
     });
   });
@@ -202,7 +202,7 @@ describe("comparison", () => {
     expect(result.previousMonth).toBe("2026-08");
     expect(result.income.changePercent).toBe(14.6);
     expect(result.expenses.changePercent).toBe(-13.8);
-    expect(result.savings.changePercent).toBe(33.5);
+    expect(result.net.changePercent).toBe(33.5);
     const bills = result.categories.find((c) => c.categoryId === "bills");
     expect(bills).toMatchObject({ current: 400_000, previous: 1_920_000, delta: -1_520_000 });
     const food = result.categories.find((c) => c.categoryId === "food");
@@ -227,14 +227,14 @@ describe("largest expenses and series", () => {
   it("monthlySeries zero-fills missing months in order", () => {
     const series = monthlySeries([...SEPTEMBER, ...AUGUST], ["2026-07", "2026-08", "2026-09"]);
     expect(series.map((m) => m.month)).toEqual(["2026-07", "2026-08", "2026-09"]);
-    expect(series[0]).toMatchObject({ income: 0, expenses: 0, savings: 0, savingsRate: null });
+    expect(series[0]).toMatchObject({ income: 0, expenses: 0, net: 0, netRate: null });
     expect(series[2]).toMatchObject({ income: 5_500_000, expenses: 1_655_000 });
   });
 
   it("averageMonthly returns integers", () => {
     const series = monthlySeries([...SEPTEMBER, ...AUGUST], ["2026-08", "2026-09"]);
-    expect(averageMonthly(series)).toEqual({ income: 5_150_000, expenses: 1_787_500, savings: 3_362_500 });
-    expect(averageMonthly([])).toEqual({ income: 0, expenses: 0, savings: 0 });
+    expect(averageMonthly(series)).toEqual({ income: 5_150_000, expenses: 1_787_500, net: 3_362_500 });
+    expect(averageMonthly([])).toEqual({ income: 0, expenses: 0, net: 0 });
   });
 
   it("monthsForRange builds trailing windows", () => {

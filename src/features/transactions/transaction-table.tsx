@@ -61,10 +61,10 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
   return (
     <>
       {/* Desktop table */}
-      <div className="hidden rounded-xl bg-card ring-1 ring-foreground/10 md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
               {COLUMNS.map((column) => {
                 const active = sort === column.field;
                 const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
@@ -94,7 +94,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
           <TableBody>
             {transactions.map((tx) => (
               <TableRow key={tx.id} className="cursor-pointer" onClick={() => openEdit(tx)} data-testid="transaction-row">
-                <TableCell className="px-3 text-muted-foreground tabular-nums">{formatIsoDate(tx.date, dateFormat)}</TableCell>
+                <TableCell className="px-3 py-3 text-muted-foreground tabular-nums">{formatIsoDate(tx.date, dateFormat)}</TableCell>
                 <TableCell className="max-w-0 px-3">
                   <div className="truncate font-medium">{tx.description}</div>
                   {(tx.notes || tx.tags.length > 0) && (
@@ -129,11 +129,11 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
       </div>
 
       {/* Mobile cards */}
-      <ul className="space-y-2 md:hidden" aria-label="Transactions">
+      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card md:hidden" aria-label="Transactions">
         {transactions.map((tx) => (
-          <li key={tx.id} className="flex items-center gap-2 rounded-xl bg-card p-3 pr-1.5 ring-1 ring-foreground/10">
+          <li key={tx.id} className="flex items-center gap-2 py-3 pl-3 pr-1.5">
             <button type="button" onClick={() => openEdit(tx)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`Edit ${tx.description}`}>
-              <CategoryIcon icon={tx.category.icon} color={tx.category.color} />
+              <CategoryIcon icon={tx.category.icon} color={tx.category.color} className="rounded-full" />
               <span className="min-w-0 flex-1">
                 <span className="line-clamp-2 hyphens-auto break-words text-sm font-medium">{tx.description}</span>
                 <span className="block truncate text-xs text-muted-foreground">

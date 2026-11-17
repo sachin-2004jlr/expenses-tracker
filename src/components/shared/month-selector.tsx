@@ -38,20 +38,20 @@ export function MonthSelector({ month, currentMonth, className, size = "md" }: M
   const iconSize = size === "sm" ? "icon-sm" : "icon";
 
   return (
-    <div className={cn("inline-flex min-w-0 items-center gap-1 rounded-lg border border-border bg-card p-1", className)}>
+    <div className={cn("inline-flex h-10 min-w-0 items-center gap-0.5 rounded-full border border-border bg-card p-1", className)}>
       <Button
         variant="ghost"
         size={iconSize}
-        className="relative shrink-0"
+        className="relative shrink-0 rounded-full"
         nativeButton={false}
         render={<Link href={hrefFor(previous)} prefetch scroll={false} />}
         aria-label={`Previous month, ${formatMonthLabel(previous)}`}
       >
         <ChevronLeft aria-hidden />
-        <NavPending className="inset-0 rounded-md ring-2 ring-brand/50" />
+        <NavPending className="inset-0 rounded-full ring-2 ring-brand/50" />
       </Button>
       <span
-        className={cn("min-w-0 flex-1 truncate text-center font-medium tabular-nums sm:min-w-[9.5rem] sm:flex-none", size === "sm" ? "text-sm" : "text-sm sm:text-base")}
+        className={cn("min-w-[6.5rem] flex-1 truncate px-1 text-center font-semibold tabular-nums sm:min-w-[9rem] sm:flex-none", size === "sm" ? "text-sm" : "text-sm sm:text-base")}
         aria-live="polite"
       >
         <span className="sm:hidden">{formatMonthLabel(month, { style: "short" })}</span>
@@ -60,16 +60,16 @@ export function MonthSelector({ month, currentMonth, className, size = "md" }: M
       <Button
         variant="ghost"
         size={iconSize}
-        className="relative shrink-0"
+        className="relative shrink-0 rounded-full"
         nativeButton={false}
         render={<Link href={hrefFor(next)} prefetch scroll={false} />}
         aria-label={`Next month, ${formatMonthLabel(next)}`}
       >
         <ChevronRight aria-hidden />
-        <NavPending className="inset-0 rounded-md ring-2 ring-brand/50" />
+        <NavPending className="inset-0 rounded-full ring-2 ring-brand/50" />
       </Button>
       {month !== currentMonth && (
-        <Button variant="secondary" size="sm" nativeButton={false} render={<Link href={hrefFor(currentMonth)} prefetch scroll={false} />} className="ml-1 hidden sm:inline-flex">
+        <Button variant="secondary" size="sm" nativeButton={false} render={<Link href={hrefFor(currentMonth)} prefetch scroll={false} />} className="ml-0.5 hidden rounded-full sm:inline-flex">
           Today
         </Button>
       )}

@@ -23,28 +23,35 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         title="Transactions"
-        description={
-          result.total === 0 ? (
-            "Every income and expense in one place."
-          ) : (
-            <span className="flex flex-wrap gap-x-4 gap-y-1">
-              <span>
-                Income <Amount paise={result.totals.income} className="font-medium text-income-foreground" />
-              </span>
-              <span>
-                Expenses <Amount paise={result.totals.expenses} className="font-medium text-expense-foreground" />
-              </span>
-              <span>
-                Net <Amount paise={result.totals.net} colorBySign className="font-medium" />
-              </span>
-            </span>
-          )
-        }
-        actions={<AddTransactionButton />}
+        description="Every income and expense you have recorded. Tap a row to edit it."
+        actions={<AddTransactionButton className="rounded-full" />}
       />
+
+      {result.total > 0 && (
+        <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Totals for these transactions">
+          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+            <dt className="text-xs text-muted-foreground">Income</dt>
+            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+              <Amount paise={result.totals.income} className="text-income-foreground" />
+            </dd>
+          </div>
+          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+            <dt className="text-xs text-muted-foreground">Expenses</dt>
+            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+              <Amount paise={result.totals.expenses} className="text-expense-foreground" />
+            </dd>
+          </div>
+          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+            <dt className="text-xs text-muted-foreground">Net</dt>
+            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+              <Amount paise={result.totals.net} colorBySign />
+            </dd>
+          </div>
+        </dl>
+      )}
 
       <TransactionFiltersBar filters={filters} categories={context.categories} tags={tags} month={filters.month} />
 

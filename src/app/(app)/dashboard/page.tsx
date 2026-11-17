@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
 import { BudgetCard } from "@/features/budgets/budget-card";
-import { BalanceHero } from "@/features/dashboard/balance-hero";
-import { CategoryDonut } from "@/features/dashboard/category-donut";
-import { ExpenseCard } from "@/features/dashboard/expense-card";
-import { IncomeCard } from "@/features/dashboard/income-card";
-import { MonthlyBars } from "@/features/dashboard/monthly-bars";
-import { MonthlyComparisonCard } from "@/features/dashboard/monthly-comparison-card";
-import { QuickActions } from "@/features/dashboard/quick-actions";
-import { RecentOperations } from "@/features/dashboard/recent-operations";
-import { TopCategoryCard } from "@/features/dashboard/top-category-card";
+import { BalanceChart } from "@/features/dashboard/balance-chart";
+import { CategoryBreakdown } from "@/features/dashboard/category-breakdown";
+import { MoneySummary } from "@/features/dashboard/money-summary";
+import { RecentTransactions } from "@/features/dashboard/recent-transactions";
 import { calculateBudgetProgress } from "@/lib/analytics/budgets";
 import { getDashboardSummary } from "@/lib/analytics/queries";
 import { currentHour, daysInMonth, formatMonthLabel, greetingForHour, parseIsoDate, parseMonthKey, previousMonthKey } from "@/lib/dates";
@@ -17,6 +12,10 @@ import { listBudgets } from "@/lib/services/budgets";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+/**
+ * The monthly money tracker at a glance: money left, recent transactions, where the money went
+ * and budgets. Income and expenses only: savings live in their own section and never appear here.
+ */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const context = await loadAppContext();
@@ -24,65 +23,54 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const [summary, budgets] = await Promise.all([getDashboardSummary(context.userId, month, context.today), listBudgets(context.userId)]);
 
   const { year, month: monthNumber } = parseMonthKey(month);
-  const daysElapsed = month === context.currentMonth ? parseIsoDate(context.today).day : daysInMonth(year, monthNumber);
+  const isCurrent = month === context.currentMonth;
+  const daysElapsed = isCurrent ? parseIsoDate(context.today).day : daysInMonth(year, monthNumber);
+  const daysLeft = isCurrent ? daysInMonth(year, monthNumber) - parseIsoDate(context.today).day + 1 : null;
   const perDay = Math.round(summary.current.expenses / Math.max(1, daysElapsed));
   const monthLabel = formatMonthLabel(month);
+  const shortMonth = formatMonthLabel(month, { style: "month-only" });
   const greeting = greetingForHour(currentHour(context.settings.timeZone));
   const budgetSummary = calculateBudgetProgress(budgets, summary.expenseCategories, context.categories);
-  const daysLeft = month === context.currentMonth ? daysInMonth(year, monthNumber) - parseIsoDate(context.today).day + 1 : null;
+  const count = summary.current.transactionCount;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-2 px-1">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">{month === context.currentMonth ? "This month" : "Viewing"}</p>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {greeting} <span aria-hidden>👋</span>
-          </h2>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{greeting}</h2>
         <p className="text-sm text-muted-foreground">
-          {summary.current.transactionCount} transaction{summary.current.transactionCount === 1 ? "" : "s"} in {monthLabel}
+          {isCurrent ? "Here's this month so far" : `Looking back at ${monthLabel}`} · {count} transaction{count === 1 ? "" : "s"}
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-12">
-        <BalanceHero
-          className="xl:col-span-7"
-          balance={summary.balance}
-          carriedIn={summary.carriedIn}
-          movedToSavings={summary.movedToSavings}
-          previousMonthLabel={formatMonthLabel(previousMonthKey(month), { style: "month-only" })}
-          monthLabel={monthLabel}
-          points={summary.dailyBalance}
-          monthIncome={summary.current.income}
-          monthExpenses={summary.current.expenses}
-          incomeChange={summary.comparison.income.changePercent}
-          expensesChange={summary.comparison.expenses.changePercent}
-        />
-        <RecentOperations
-          className="xl:col-span-3"
-          transactions={summary.recentTransactions.slice(0, 6)}
-          expenses={summary.current.expenses}
-          perDay={perDay}
-          month={month}
-          today={context.today}
-          dateFormat={context.settings.dateFormat}
-        />
-        <QuickActions month={month} className="content-start xl:col-span-2" />
-      </div>
+      <MoneySummary
+        balance={summary.balance}
+        carriedIn={summary.carriedIn}
+        previousMonthLabel={formatMonthLabel(previousMonthKey(month), { style: "month-only" })}
+        monthLabel={shortMonth}
+        income={summary.current.income}
+        expenses={summary.current.expenses}
+        incomeChange={summary.comparison.income.changePercent}
+        expensesChange={summary.comparison.expenses.changePercent}
+        perDay={perDay}
+        daysLeft={daysLeft}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <IncomeCard amount={summary.current.income} changePercent={summary.comparison.income.changePercent} series={summary.series} />
-        <ExpenseCard amount={summary.current.expenses} changePercent={summary.comparison.expenses.changePercent} series={summary.series} perDay={perDay} />
-        <TopCategoryCard item={summary.expenseCategories[0] ?? null} month={month} className="sm:col-span-2 xl:col-span-1" />
-      </div>
-
-      <BudgetCard summary={budgetSummary} monthLabel={monthLabel} daysLeft={daysLeft} />
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <MonthlyBars series={summary.series} currentMonth={month} />
-        <CategoryDonut items={summary.expenseCategories} month={month} />
-        <MonthlyComparisonCard comparison={summary.comparison} />
+      {/* Phones: recent → categories → budgets → chart. Desktop: two columns. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-6">
+        <div className="contents lg:flex lg:flex-col lg:gap-6">
+          <CategoryBreakdown items={summary.expenseCategories} month={month} monthLabel={shortMonth} className="order-2 lg:order-none" />
+          <BalanceChart points={summary.dailyBalance} monthLabel={shortMonth} className="order-4 lg:order-none" />
+        </div>
+        <div className="contents lg:flex lg:flex-col lg:gap-6">
+          <RecentTransactions
+            transactions={summary.recentTransactions.slice(0, 6)}
+            month={month}
+            today={context.today}
+            dateFormat={context.settings.dateFormat}
+            className="order-1 lg:order-none"
+          />
+          <BudgetCard summary={budgetSummary} monthLabel={monthLabel} daysLeft={daysLeft} className="order-3 lg:order-none" />
+        </div>
       </div>
     </div>
   );

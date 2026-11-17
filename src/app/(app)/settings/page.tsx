@@ -95,11 +95,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Settings" description="Preferences, account, categories, budgets, recurring rules and your data." />
-      <div className="grid gap-5 lg:grid-cols-[13rem_1fr]">
-        <nav aria-label="Settings sections" className="-mx-1 overflow-x-auto lg:mx-0">
-          <ul className="flex gap-1 px-1 lg:flex-col">
+    <div className="space-y-6">
+      <PageHeader title="Settings" description="Your preferences, account, categories, budgets, repeating transactions and data." />
+      <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <nav aria-label="Settings sections" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+          <ul className="flex w-max gap-1 rounded-2xl border border-border bg-card p-1 lg:w-auto lg:flex-col">
             {TABS.map((item) => {
               const Icon = item.icon;
               const active = item.id === tab;
@@ -110,13 +110,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     prefetch
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                      "relative flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                       active ? "bg-brand/12 text-brand" : "text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
                     {item.label}
-                    <NavPending className="inset-0 rounded-lg bg-brand/10 ring-1 ring-brand/40" />
+                    <NavPending className="inset-0 rounded-xl bg-brand/10 ring-1 ring-brand/40" />
                   </Link>
                 </li>
               );

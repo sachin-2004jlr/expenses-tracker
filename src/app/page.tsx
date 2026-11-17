@@ -1,55 +1,54 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  CalendarDays,
-  ChartColumn,
-  Download,
-  Lock,
-  Repeat,
-  Search,
-  ShieldCheck,
-  Tags,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import type { CSSProperties } from "react";
+import { ArrowDown, ArrowRight, Equal, Minus, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
-import { ExpenseCard } from "@/features/dashboard/expense-card";
-import { IncomeCard } from "@/features/dashboard/income-card";
-import { MonthlyBars } from "@/features/dashboard/monthly-bars";
-import { TopCategoryCard } from "@/features/dashboard/top-category-card";
+import { FallingNotes } from "@/features/landing/falling-notes";
+import styles from "@/features/landing/landing.module.css";
+import { NoteSymbols } from "@/features/landing/note-art";
+import { ParallaxHero } from "@/features/landing/parallax-hero";
 import { getCurrentUser } from "@/lib/auth";
-import type { MonthTotals } from "@/types";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Expenses Tracker · Know where your money goes",
 };
 export const dynamic = "force-dynamic";
 
-const SAMPLE_SERIES: MonthTotals[] = [
-  { month: "2026-04", income: 5_200_000, expenses: 2_310_000, savings: 2_890_000, savingsRate: 55.6, transactionCount: 41 },
-  { month: "2026-05", income: 5_200_000, expenses: 1_980_000, savings: 3_220_000, savingsRate: 61.9, transactionCount: 38 },
-  { month: "2026-06", income: 5_500_000, expenses: 2_640_000, savings: 2_860_000, savingsRate: 52, transactionCount: 44 },
-  { month: "2026-07", income: 5_500_000, expenses: 2_120_000, savings: 3_380_000, savingsRate: 61.5, transactionCount: 39 },
-  { month: "2026-08", income: 4_800_000, expenses: 1_920_000, savings: 2_880_000, savingsRate: 60, transactionCount: 36 },
-  { month: "2026-09", income: 5_500_000, expenses: 1_655_000, savings: 3_845_000, savingsRate: 69.9, transactionCount: 42 },
-];
-
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
-  { icon: Wallet, title: "Five-second entries", text: "One button, amount auto-focused, category and tags. Income or expense, done before the chai cools." },
-  { icon: ChartColumn, title: "Analytics that add up", text: "Balance, savings rate, category breakdowns and month-over-month deltas, computed in code, never guessed." },
-  { icon: CalendarDays, title: "Calendar view", text: "See every rupee on the day it moved. Month and week views with per-day totals." },
-  { icon: Search, title: "Find anything", text: "Search descriptions, notes, categories and tags; filter by type, date range, amount and tag." },
-  { icon: Repeat, title: "Recurring rules", text: "Salary, rent, EMIs and subscriptions post themselves on their due dates." },
-  { icon: Download, title: "Your data, exportable", text: "JSON backups and CSV exports any time. Import them back with full validation." },
+  {
+    icon: Wallet,
+    title: "Every rupee, month by month",
+    text: "Log income and expenses in a few seconds. Each month gets its own clear picture of what came in and what went out.",
+  },
+  {
+    icon: Repeat,
+    title: "Leftover rolls forward",
+    text: "Whatever you don't spend this month carries into the next one on its own. No manual carrying, no surprises.",
+  },
+  {
+    icon: PiggyBank,
+    title: "Savings stay separate",
+    text: "Savings live in a space of their own, with their own balance, journal and goals. They never mix with your monthly money.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Private and yours",
+    text: "An e-mail and password account on your own database. Export everything as JSON or CSV whenever you like.",
+  },
 ];
 
-const STEPS = [
-  { title: "Create your account", text: "Just an e-mail and a password. No third parties involved." },
-  { title: "Add your first transaction", text: "Salary in, dinner out. Categories and tags included." },
-  { title: "See where it all goes", text: "Dashboard, calendar and analytics, updated the moment you save." },
+const EQUATION: { label: string; hint: string; op?: LucideIcon; highlight?: boolean }[] = [
+  { label: "Left from last month", hint: "carried in automatically" },
+  { label: "Income", hint: "salary, freelance, refunds", op: Plus },
+  { label: "Expenses", hint: "everything you spent", op: Minus },
+  { label: "Money in hand", hint: "what you can still use", op: Equal, highlight: true },
 ];
+
+const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
+
+const primaryCta =
+  "inline-flex h-12 items-center gap-2 rounded-full bg-brand px-7 text-xs font-extrabold uppercase tracking-[0.15em] text-brand-foreground shadow-glow-brand transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.98]";
 
 export default async function LandingPage() {
   const user = await getCurrentUser();
@@ -57,176 +56,183 @@ export default async function LandingPage() {
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
-    <div className="min-h-svh overflow-x-clip bg-background text-foreground">
-      <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-        <BrandLogo />
-        <nav aria-label="Landing" className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-          <a href="#features" className="hover:text-foreground">
-            Features
+    <div className={cn("dark min-h-svh overflow-x-clip text-foreground", styles.page)}>
+      <NoteSymbols />
+
+      <ParallaxHero className={styles.hero}>
+        <FallingNotes scene="hero" className={styles.heroZone} />
+
+        <div className="relative z-10 mx-auto flex min-h-[inherit] max-w-7xl flex-col px-5 sm:px-8">
+          <header className={cn("flex h-20 items-center justify-between", styles.fadeUp)}>
+            <BrandLogo />
+            <nav aria-label="Landing" className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+              <a href="#how" className="hidden transition-colors hover:text-foreground sm:inline">
+                How it works
+              </a>
+              <a href="#month" className="hidden transition-colors hover:text-foreground sm:inline">
+                Your month
+              </a>
+              <Link
+                href={user ? "/dashboard" : "/login"}
+                className="rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-brand/60 hover:text-brand"
+                data-testid="nav-signin"
+              >
+                {user ? "Dashboard" : "Sign in"}
+              </Link>
+            </nav>
+          </header>
+
+          <div className={cn("max-w-xl pt-[7vh] sm:pt-[9vh] lg:max-w-3xl lg:pt-[11vh]", styles.heroCopy)}>
+            <p className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.28em] text-brand", styles.fadeUp)} style={delay(0.1)}>
+              <span className="h-px w-8 bg-brand" aria-hidden />
+              Personal finance · ₹
+            </p>
+            <h1 className="display-heading mt-5 text-[clamp(2.6rem,12.5vw,4rem)] text-foreground sm:text-7xl lg:text-[4.5rem] xl:text-[5.25rem]" data-testid="hero-title">
+              <span className={styles.line}>
+                <span className={styles.lineInner} style={delay(0.15)}>
+                  Know where{" "}
+                </span>
+              </span>
+              <span className={styles.line}>
+                <span className={cn(styles.lineInner, styles.accent)} style={delay(0.27)}>
+                  every rupee{" "}
+                </span>
+              </span>
+              <span className={styles.line}>
+                <span className={styles.lineInner} style={delay(0.39)}>
+                  goes.
+                </span>
+              </span>
+            </h1>
+            <p className={cn("mt-6 max-w-md text-sm leading-relaxed text-white/65 sm:text-base", styles.fadeUp)} style={delay(0.55)}>
+              A calm, private money tracker. Log what comes in and goes out, watch your leftover roll into next month, and keep savings in a space of their own.
+            </p>
+            <div className={cn("mt-8 flex flex-wrap items-center gap-3", styles.fadeUp)} style={delay(0.7)}>
+              <Link href={ctaHref} className={primaryCta} data-testid="cta-primary">
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+              <a
+                href="#how"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-black/40 px-6 text-xs font-bold uppercase tracking-[0.15em] text-white/80 backdrop-blur transition-colors hover:border-white/30 hover:text-white"
+              >
+                How it works
+              </a>
+            </div>
+          </div>
+
+          <a
+            href="#how"
+            className={cn("relative z-10 mb-8 mt-auto hidden w-fit items-center gap-3 pt-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/50 hover:text-white lg:flex", styles.fadeUp)}
+            style={delay(1)}
+          >
+            <span className={styles.cue} aria-hidden />
+            Scroll
           </a>
-          <a href="#preview" className="hover:text-foreground">
-            Dashboard
-          </a>
-          <a href="#privacy" className="hover:text-foreground">
-            Privacy
-          </a>
-        </nav>
-        <Link href={user ? "/dashboard" : "/login"} className="rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent" data-testid="nav-signin">
-          {user ? "Dashboard" : "Sign in"}
-        </Link>
-      </header>
+        </div>
+
+        <div className={styles.heroFade} aria-hidden />
+      </ParallaxHero>
 
       <main>
-        {/* Hero */}
-        <section className="mx-auto grid max-w-7xl gap-12 px-6 pb-24 pt-10 lg:grid-cols-[1.5fr_1fr] lg:pt-16">
-          <div>
-            <h1 className="display-heading text-[clamp(2.25rem,11.5vw,3.5rem)] text-foreground sm:text-6xl lg:text-[4.5rem] xl:text-[5.25rem]" data-testid="hero-title">
-              Know where
-              <br />
-              your money
-              <br />
-              goes
-            </h1>
-            <p className="mt-8 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Income, expenses and savings in ₹, tracked in seconds and explained by clear charts, in a database that is yours.
-            </p>
-            <div className="mt-10 flex items-center gap-3">
-              <Link
-                href={ctaHref}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-brand px-7 text-xs font-extrabold uppercase tracking-[0.15em] text-brand-foreground shadow-glow-brand transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.98]"
-                data-testid="cta-primary"
-              >
-                {ctaLabel}
-              </Link>
-              <Link
-                href="#preview"
-                aria-label="See the dashboard"
-                className="flex size-12 items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-              >
-                <ArrowUpRight className="size-5" aria-hidden />
-              </Link>
-            </div>
-            <div className="mt-20 hidden lg:block">
-              <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span className="size-2 rounded-full bg-expense" aria-hidden />
-                Private by design
-              </p>
-              <p className="mt-1 text-5xl font-black tracking-tight text-foreground/15">100% yours</p>
-            </div>
-          </div>
-
-          <ol className="self-center divide-y divide-border border-y border-border lg:mt-24">
-            {STEPS.map((step, index) => (
-              <li key={step.title} className="flex items-start justify-between gap-6 py-6">
-                <div>
-                  <p className="text-xs font-semibold text-brand">0{index + 1}</p>
-                  <p className="mt-1 text-base font-bold leading-tight">{step.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{step.text}</p>
-                </div>
-                <ArrowUpRight className="mt-1 size-5 shrink-0 text-muted-foreground" aria-hidden />
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* Preview */}
-        <section id="preview" className="border-t border-border bg-panel py-20">
-          <div className="mx-auto max-w-7xl px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">The dashboard</p>
-            <h2 className="display-heading mt-3 text-4xl sm:text-5xl">Every number, computed.</h2>
-            <p className="mt-4 max-w-xl text-sm text-muted-foreground">
-              Sample data below. Your own dashboard shows the same cards driven by your transactions, with month navigation, a calendar and a full analytics page.
-            </p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <IncomeCard amount={5_500_000} changePercent={14.6} series={SAMPLE_SERIES} />
-              <ExpenseCard amount={1_655_000} changePercent={-13.8} series={SAMPLE_SERIES} perDay={110_333} />
-              <TopCategoryCard item={{ categoryId: "sample", name: "Food", icon: "utensils", color: "orange", amount: 450_000, count: 14, percentage: 27.2 }} month="2026-09" />
-            </div>
-            <div className="mt-4 grid gap-4 xl:grid-cols-3">
-              <MonthlyBars series={SAMPLE_SERIES} currentMonth="2026-09" className="xl:col-span-2" />
-              <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-brand/15 text-brand">
-                    <Tags className="size-4" aria-hidden />
-                  </span>
-                  <span className="text-sm font-semibold">Categories and tags</span>
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  Twenty-one ready-made categories with icons and colours, editable to your liking, plus free-form tags like #work, #family or #travel that you can filter by in one click.
-                </p>
-                <p className="mt-4 text-[11px] text-muted-foreground">Delete a category safely: its transactions move to the one you choose.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" className="mx-auto max-w-7xl px-6 py-20">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Features</p>
-          <h2 className="display-heading mt-3 text-4xl sm:text-5xl">Built for daily use</h2>
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => {
+        {/* How it works */}
+        <section id="how" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-20 sm:px-8 lg:py-28">
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand">How it works</p>
+          <h2 className="display-heading mt-4 max-w-3xl text-4xl sm:text-5xl lg:text-6xl">Simple enough to use every day</h2>
+          <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <li key={feature.title} className="rounded-2xl border border-border bg-card p-6">
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-brand/15 text-brand">
-                    <Icon className="size-5" aria-hidden />
-                  </span>
-                  <h3 className="mt-4 text-base font-bold">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+                <li key={feature.title} className={styles.reveal}>
+                  <span className={styles.rule} aria-hidden />
+                  <div className="mt-6 flex items-center justify-between">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-brand/12 text-brand">
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <span className="font-mono text-xs text-white/35">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-bold leading-snug">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">{feature.text}</p>
                 </li>
               );
             })}
           </ul>
         </section>
 
-        {/* Privacy */}
-        <section id="privacy" className="border-t border-border bg-panel py-20">
-          <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1fr_1.2fr]">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Privacy</p>
-              <h2 className="display-heading mt-3 text-4xl sm:text-5xl">
-                Your data.
-                <br />
-                Your database.
-              </h2>
-            </div>
-            <ul className="grid gap-4 sm:grid-cols-3">
-              {[
-                { icon: Lock, title: "Your database", text: "Transactions live in the MongoDB you configure: the server on your own laptop, or your own Atlas cluster." },
-                { icon: ShieldCheck, title: "Your account", text: "E-mail and password only. Passwords are hashed, sessions are encrypted cookies, and you can restrict sign-up to your own address." },
-                { icon: Download, title: "Always exportable", text: "Full JSON backups and CSV exports in one click, importable again any time. No lock-in." },
-              ].map((item) => {
-                const Icon = item.icon;
+        {/* The month, explained */}
+        <section id="month" className="scroll-mt-6 border-y border-white/8 bg-[#080808]">
+          <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand">Your month</p>
+            <h2 className="display-heading mt-4 max-w-3xl text-4xl sm:text-5xl lg:text-6xl">One line of math. No guesswork.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
+              The dashboard shows how much money you have in hand, worked out the same way every time.
+            </p>
+
+            <ol className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="How money in hand is worked out">
+              {EQUATION.map((term) => {
+                const Op = term.op ?? ArrowDown;
                 return (
-                  <li key={item.title} className="rounded-2xl border border-border bg-card p-5">
-                    <Icon className="size-5 text-income" aria-hidden />
-                    <h3 className="mt-3 text-sm font-bold">{item.title}</h3>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.text}</p>
+                  <li
+                    key={term.label}
+                    className={cn(
+                      "relative rounded-2xl border p-5",
+                      term.highlight ? "border-brand/50 bg-brand/10 shadow-glow-brand" : "border-white/10 bg-white/[0.03]",
+                      styles.reveal,
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mb-4 flex size-8 items-center justify-center rounded-full",
+                        term.highlight ? "bg-brand text-brand-foreground" : "bg-white/8 text-white/70",
+                      )}
+                      aria-hidden
+                    >
+                      <Op className="size-4" />
+                    </span>
+                    <p className={cn("text-lg font-bold", term.highlight && "text-brand")}>{term.label}</p>
+                    <p className="mt-1 text-xs text-white/50">{term.hint}</p>
                   </li>
                 );
               })}
-            </ul>
+            </ol>
+
+            <div className={cn("mt-6 flex items-start gap-4 rounded-2xl border border-dashed border-white/12 p-5", styles.reveal)}>
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-400/12 text-sky-300">
+                <PiggyBank className="size-5" aria-hidden />
+              </span>
+              <div>
+                <p className="font-semibold">And savings?</p>
+                <p className="mt-1 text-sm leading-relaxed text-white/60">
+                  They are not part of this math at all. Savings have their own page, their own balance, a journal and goals, so your monthly numbers only ever show your monthly money.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Final CTA */}
-        <section className="mx-auto max-w-7xl px-6 py-24 text-center">
-          <h2 className="display-heading text-5xl sm:text-6xl">Start tracking today</h2>
-          <Link
-            href={ctaHref}
-            className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-brand px-7 text-xs font-extrabold uppercase tracking-[0.15em] text-brand-foreground shadow-glow-brand transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-          >
-            {ctaLabel}
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
+        <section className="relative isolate overflow-clip">
+          <FallingNotes scene="cta" className="opacity-60" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_50%,#040404_30%,transparent)]" aria-hidden />
+          <div className="relative mx-auto max-w-7xl px-5 py-28 text-center sm:px-8 lg:py-36">
+            <h2 className={cn("display-heading text-5xl sm:text-6xl lg:text-7xl", styles.reveal)}>
+              Start tracking <span className={styles.accent}>today</span>
+            </h2>
+            <p className={cn("mx-auto mt-5 max-w-md text-sm text-white/60 sm:text-base", styles.reveal)}>Free, private and quick to set up. Your first entry takes less than a minute.</p>
+            <div className={cn("mt-9", styles.reveal)}>
+              <Link href={ctaHref} className={primaryCta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
+      <footer className="border-t border-white/8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-xs text-white/45 sm:flex-row sm:px-8">
           <BrandLogo size="sm" />
-          <p>Personal finance tracker · INR · Your own MongoDB</p>
+          <p>Personal finance tracker · Indian Rupee · Your own data</p>
         </div>
       </footer>
     </div>

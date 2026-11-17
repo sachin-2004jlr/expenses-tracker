@@ -10,7 +10,7 @@ import type { MonthKey } from "@/types";
 export const SERIES_COLORS = {
   income: "var(--income)",
   expense: "var(--expense)",
-  savings: "var(--savings)",
+  net: "var(--net)",
 } as const;
 
 export const CATEGORICAL_COLORS = Array.from({ length: 8 }, (_, i) => `var(--chart-${i + 1})`);

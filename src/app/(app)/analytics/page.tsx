@@ -34,24 +34,24 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const linkQuery = `&from=${monthRange(first).start}&to=${monthRange(last).end}`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         title="Analytics"
         eyebrow={`${formatMonthLabel(first, { style: "short" })} – ${formatMonthLabel(last, { style: "short" })}`}
-        description={`Trends and breakdowns for the ${RANGE_LABEL[range]} ending ${formatMonthLabel(month)}. Change the end month in the top bar.`}
+        description={`Your income and expenses over the ${RANGE_LABEL[range]}, up to ${formatMonthLabel(month)}. Savings are not included.`}
         actions={<AnalyticsRange value={range} />}
       />
 
-      <section aria-label="Range totals" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Range totals" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard label="Total income" icon={ArrowUpRight} tone="income" value={formatCurrency(overview.totals.income)} hint={`Avg ${formatCurrency(overview.averages.income)} / month`} />
         <StatCard label="Total expenses" icon={ArrowDownRight} tone="expense" value={formatCurrency(overview.totals.expenses)} hint={`Avg ${formatCurrency(overview.averages.expenses)} / month`} />
         <StatCard
           label="Net"
           icon={Scale}
           tone="neutral"
-          value={formatCurrency(overview.totals.savings)}
-          hint={overview.totals.savingsRate === null ? "Income minus expenses" : `Income minus expenses · ${formatPercent(overview.totals.savingsRate)} of income`}
-          className={overview.totals.savings < 0 ? "[&>p]:text-expense-foreground" : undefined}
+          value={formatCurrency(overview.totals.net)}
+          hint={overview.totals.netRate === null ? "Income minus expenses" : `${formatPercent(overview.totals.netRate)} of income left over`}
+          className={overview.totals.net < 0 ? "[&>p:nth-child(2)]:text-expense-foreground" : undefined}
         />
         <StatCard
           label="Best month"
@@ -60,7 +60,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           value={overview.bestMonth ? formatMonthLabel(overview.bestMonth.month, { style: "short" }) : "—"}
           hint={
             overview.bestMonth
-              ? `Net ${formatCurrency(overview.bestMonth.savings)}${overview.worstMonth ? ` · Highest spend ${formatMonthLabel(overview.worstMonth.month, { style: "short-month-only" })} ${formatCurrency(overview.worstMonth.expenses)}` : ""}`
+              ? `Most left over: ${formatCurrency(overview.bestMonth.net)}`
               : "Add transactions to see trends"
           }
         />
@@ -68,7 +68,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
       <TrendChart series={overview.series} />
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 lg:gap-6 xl:grid-cols-2">
         <CategoryDonut
           items={overview.expenseCategories}
           month={month}
@@ -79,7 +79,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <CategoryBars items={overview.incomeCategories} type="INCOME" title="Income sources" description={`Where income came from, ${RANGE_LABEL[range]}`} linkQuery={linkQuery} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 lg:gap-6 xl:grid-cols-2">
         <LargestExpenses transactions={overview.largestExpenses} today={context.today} dateFormat={context.settings.dateFormat} />
         <MonthlyComparisonCard comparison={overview.comparison} />
       </div>

@@ -308,7 +308,7 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
 /** "+ ₹10,000" for money added to savings, "− ₹5,000" for money used from savings. */
 function EntryAmount({ kind, amount }: { kind: SavingsEntry["kind"]; amount: number }) {
   return (
-    <span className={cn("font-semibold tabular-nums", kind === "DEPOSIT" ? "text-income-foreground" : "text-saved-foreground")}>
+    <span className={cn("font-semibold tabular-nums", kind === "DEPOSIT" ? "text-saved-foreground" : "text-foreground")}>
       {kind === "DEPOSIT" ? "+" : "−"} {formatCurrency(amount)}
     </span>
   );

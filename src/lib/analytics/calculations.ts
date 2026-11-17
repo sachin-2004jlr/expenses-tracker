@@ -73,18 +73,18 @@ export function calculateMonthlyExpenses(transactions: Iterable<TransactionLike>
   return calculateExpenses(filterByMonth(transactions, month));
 }
 
-/** Savings = income − expenses (may be negative when overspending). */
-export function calculateSavings(income: number, expenses: number): number {
+/** Net = income − expenses (may be negative when overspending). */
+export function calculateNet(income: number, expenses: number): number {
   return income - expenses;
 }
 
 /**
- * Savings rate as a percentage with one decimal (69.9). Returns `null` when income is zero,
+ * Net rate (share of income left after expenses) as a percentage with one decimal (69.9). Returns `null` when income is zero,
  * because a rate is undefined without income; callers render it as "—".
  */
-export function calculateSavingsRate(income: number, expenses: number): number | null {
+export function calculateNetRate(income: number, expenses: number): number | null {
   if (income <= 0) return null;
-  return roundTo((calculateSavings(income, expenses) / income) * 100, 1);
+  return roundTo((calculateNet(income, expenses) / income) * 100, 1);
 }
 
 export function calculateMonthTotals(transactions: Iterable<TransactionLike>, month: MonthKey): MonthTotals {
@@ -95,8 +95,8 @@ export function calculateMonthTotals(transactions: Iterable<TransactionLike>, mo
     month,
     income,
     expenses,
-    savings: calculateSavings(income, expenses),
-    savingsRate: calculateSavingsRate(income, expenses),
+    net: calculateNet(income, expenses),
+    netRate: calculateNetRate(income, expenses),
     transactionCount: monthly.length,
   };
 }
@@ -200,7 +200,7 @@ export function monthlyComparison(
     previousMonth,
     income: compareMetrics(current.income, previous.income),
     expenses: compareMetrics(current.expenses, previous.expenses),
-    savings: compareMetrics(current.savings, previous.savings),
+    net: compareMetrics(current.net, previous.net),
     categories: categoryChanges,
   };
 }
@@ -230,19 +230,19 @@ export function monthlySeries(transactions: Iterable<TransactionLike>, months: M
       month,
       income: bucket.income,
       expenses: bucket.expenses,
-      savings: calculateSavings(bucket.income, bucket.expenses),
-      savingsRate: calculateSavingsRate(bucket.income, bucket.expenses),
+      net: calculateNet(bucket.income, bucket.expenses),
+      netRate: calculateNetRate(bucket.income, bucket.expenses),
       transactionCount: bucket.count,
     };
   });
 }
 
 /** Integer averages over a series (0 when the series is empty). */
-export function averageMonthly(series: MonthTotals[]): { income: number; expenses: number; savings: number } {
-  if (series.length === 0) return { income: 0, expenses: 0, savings: 0 };
+export function averageMonthly(series: MonthTotals[]): { income: number; expenses: number; net: number } {
+  if (series.length === 0) return { income: 0, expenses: 0, net: 0 };
   const income = Math.round(series.reduce((sum, m) => sum + m.income, 0) / series.length);
   const expenses = Math.round(series.reduce((sum, m) => sum + m.expenses, 0) / series.length);
-  return { income, expenses, savings: income - expenses };
+  return { income, expenses, net: income - expenses };
 }
 
 /**

@@ -36,17 +36,17 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         eyebrow={allTime ? "All time" : formatMonthLabel(month)}
         title="Savings entries"
         description={
           <span className="flex flex-wrap gap-x-4 gap-y-1">
             <span>
-              Added <span className="font-medium text-income-foreground tabular-nums">{formatCurrency(result.totals.added)}</span>
+              Added <span className="font-medium text-saved-foreground tabular-nums">{formatCurrency(result.totals.added)}</span>
             </span>
             <span>
-              Used <span className="font-medium text-saved-foreground tabular-nums">{formatCurrency(result.totals.used)}</span>
+              Used <span className="font-medium text-foreground tabular-nums">{formatCurrency(result.totals.used)}</span>
             </span>
             <span>
               Net <span className="font-medium tabular-nums">{formatCurrency(result.totals.net)}</span>
@@ -57,7 +57,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Entry type" className="inline-flex items-center rounded-lg bg-muted p-0.5">
+        <div role="tablist" aria-label="Entry type" className="inline-flex h-9 items-center rounded-full bg-muted p-0.5">
           {KIND_TABS.map((tab) => {
             const active = filters.kind === tab.value;
             return (
@@ -69,7 +69,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
                 prefetch
                 scroll={false}
                 className={cn(
-                  "flex h-7 items-center rounded-md px-3 text-xs font-medium transition-colors",
+                  "flex h-8 items-center rounded-full px-3 text-xs font-semibold transition-colors",
                   active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -78,7 +78,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
             );
           })}
         </div>
-        <div role="tablist" aria-label="Period" className="inline-flex items-center rounded-lg bg-muted p-0.5">
+        <div role="tablist" aria-label="Period" className="inline-flex h-9 items-center rounded-full bg-muted p-0.5">
           {[
             { label: formatMonthLabel(month, { style: "short" }), range: undefined },
             { label: "All time", range: "all" },
@@ -93,7 +93,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
                 prefetch
                 scroll={false}
                 className={cn(
-                  "flex h-7 items-center rounded-md px-3 text-xs font-medium transition-colors",
+                  "flex h-8 items-center rounded-full px-3 text-xs font-semibold transition-colors",
                   active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >

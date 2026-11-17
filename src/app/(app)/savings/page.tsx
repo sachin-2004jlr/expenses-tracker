@@ -29,24 +29,24 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
   const query = params.month ? `?month=${month}` : "";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         eyebrow={monthLabel}
         title="Savings"
-        description="Your savings, tracked on their own: what you put aside and what you did with it. None of this touches your monthly tracker."
+        description="Money you put aside and what you did with it. This is a separate ledger: nothing here changes your income, expenses or money left."
         actions={<SavingsAddButtons />}
       />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
-        <section className="flex min-w-0 flex-col justify-between rounded-2xl border border-saved/30 bg-card p-5 sm:p-6" aria-label="Savings balance">
+      <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
+        <section className="flex min-w-0 flex-col justify-between rounded-3xl border border-saved/30 bg-card bg-[radial-gradient(120%_120%_at_100%_0%,color-mix(in_oklch,var(--saved)_16%,transparent),transparent_55%)] p-5 sm:p-7" aria-label="Savings balance">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-saved/15 text-saved-foreground">
               <PiggyBank className="size-4" aria-hidden />
             </span>
-            <h2 className="text-lg font-semibold">Savings balance</h2>
+            <h3 className="text-sm font-medium text-muted-foreground">Savings balance</h3>
           </div>
           <p className="mt-4 flex items-baseline gap-1 font-bold tracking-tight" data-testid="savings-balance">
-            <span className={cn("text-4xl [overflow-wrap:anywhere]", overview.balance < 0 && "text-expense-foreground")}>
+            <span className={cn("text-4xl [overflow-wrap:anywhere] sm:text-5xl", overview.balance < 0 && "text-expense-foreground")}>
               {balance.sign}
               {balance.symbol}
               {balance.integer}
@@ -54,16 +54,16 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             <span className="text-lg text-muted-foreground">.{balance.fraction}</span>
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            <span className="font-semibold text-income-foreground tabular-nums">{formatCurrency(overview.addedAllTime)}</span> added ·{" "}
-            <span className="font-semibold text-saved-foreground tabular-nums">{formatCurrency(overview.usedAllTime)}</span> used, all time
+            <span className="font-semibold text-foreground tabular-nums">{formatCurrency(overview.addedAllTime)}</span> added ·{" "}
+            <span className="font-semibold text-foreground tabular-nums">{formatCurrency(overview.usedAllTime)}</span> used, all time
           </p>
         </section>
 
-        <section aria-label="This month" className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-3">
+        <section aria-label="This month" className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           <StatCard
             label="Added this month"
             icon={ArrowDownToLine}
-            tone="income"
+            tone="saved"
             value={formatCurrency(overview.addedThisMonth)}
             changePercent={percentChange(overview.addedThisMonth, overview.addedLastMonth)}
             increaseIsGood
@@ -72,7 +72,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             label="Used this month"
             icon={ArrowUpFromLine}
             tone="neutral"
-            value={<span className="text-saved-foreground">{formatCurrency(overview.usedThisMonth)}</span>}
+            value={formatCurrency(overview.usedThisMonth)}
             changePercent={percentChange(overview.usedThisMonth, overview.usedLastMonth)}
             increaseIsGood={false}
           />
@@ -86,10 +86,10 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
         </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <section className="min-w-0 rounded-2xl border border-border bg-card p-5" aria-label="Recent savings activity">
+      <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section className="min-w-0 self-start rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Recent savings activity">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold">Recent savings activity</h2>
+            <h3 className="text-[15px] font-semibold">Recent savings activity</h3>
             <Link href={`/savings/entries${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
               All entries <ArrowUpRight className="size-3" aria-hidden />
             </Link>
@@ -119,9 +119,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
           )}
         </section>
 
-        <div className="grid min-w-0 grid-cols-1 content-start gap-4">
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-5" aria-label="What you did with your savings">
-            <h2 className="text-sm font-semibold">What you did with your savings</h2>
+        <div className="grid min-w-0 grid-cols-1 content-start gap-4 lg:gap-6">
+          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="What you did with your savings">
+            <h3 className="text-[15px] font-semibold">What you did with your savings</h3>
             <p className="text-xs text-muted-foreground">All time, by category</p>
             {overview.usedByCategory.length === 0 ? (
               <p className="mt-4 text-sm text-muted-foreground">Nothing used from savings yet.</p>
@@ -148,9 +148,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             )}
           </section>
 
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-5" aria-label="Savings per month">
+          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Savings per month">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Added vs used</h2>
+              <h3 className="text-[15px] font-semibold">Added vs used</h3>
               <span className="text-xs text-muted-foreground">last 12 months</span>
             </div>
             <ul className="mt-4 grid h-32 grid-cols-12 items-end gap-1" aria-label="Monthly savings in and out">
@@ -160,8 +160,8 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                   className="flex h-full items-end justify-center gap-px"
                   title={`${formatMonthLabel(m.month, { style: "short" })}: +${formatCurrency(m.added)} / −${formatCurrency(m.used)}`}
                 >
-                  <span className={cn("w-1/2 rounded-t-sm", m.month === month ? "bg-income" : "bg-income/40")} style={{ height: `${m.added === 0 ? 2 : Math.max(5, (m.added / maxBar) * 100)}%` }} aria-hidden />
-                  <span className={cn("w-1/2 rounded-t-sm", m.month === month ? "bg-saved" : "bg-saved/40")} style={{ height: `${m.used === 0 ? 2 : Math.max(5, (m.used / maxBar) * 100)}%` }} aria-hidden />
+                  <span className={cn("w-1/2 rounded-t-sm", m.month === month ? "bg-saved" : "bg-saved/40")} style={{ height: `${m.added === 0 ? 2 : Math.max(5, (m.added / maxBar) * 100)}%` }} aria-hidden />
+                  <span className={cn("w-1/2 rounded-t-sm", m.month === month ? "bg-foreground/70" : "bg-foreground/25")} style={{ height: `${m.used === 0 ? 2 : Math.max(5, (m.used / maxBar) * 100)}%` }} aria-hidden />
                   <span className="sr-only">
                     {formatMonthLabel(m.month)}: added {formatCurrency(m.added)}, used {formatCurrency(m.used)}
                   </span>
@@ -171,10 +171,10 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <span className="size-2 rounded-sm bg-income" aria-hidden /> Added
+                  <span className="size-2 rounded-sm bg-saved" aria-hidden /> Added
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="size-2 rounded-sm bg-saved" aria-hidden /> Used
+                  <span className="size-2 rounded-sm bg-foreground/70" aria-hidden /> Used
                 </span>
               </span>
               <span>Balance {formatCompactCurrency(overview.series[overview.series.length - 1]?.balance ?? 0)} at end of {formatMonthLabel(month, { style: "short" })}</span>
@@ -182,9 +182,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
           </section>
 
           {overview.goals.length > 0 && (
-            <section className="min-w-0 rounded-2xl border border-border bg-card p-5" aria-label="Goals">
+            <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Goals">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Goals</h2>
+                <h3 className="text-[15px] font-semibold">Goals</h3>
                 <Link href={`/savings/goals${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
                   All goals <ArrowUpRight className="size-3" aria-hidden />
                 </Link>

@@ -1,7 +1,6 @@
 import { getDb } from "@/lib/db";
-import { addDays, listMonthKeys, monthKeyOf, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
+import { listMonthKeys, monthKeyOf, monthRange, monthsBetween, previousMonthKey } from "@/lib/dates";
 import { listCategories } from "@/lib/services/categories";
-import { getSavingsTotals, listSavingsDepositsInRange } from "@/lib/services/savings-entries";
 import { listTransactions, listTransactionsInRange } from "@/lib/services/transactions";
 import { transactionFiltersSchema } from "@/lib/validation/transaction";
 import type {
@@ -17,8 +16,8 @@ import type {
 import {
   averageMonthly,
   calculateMonthTotals,
-  calculateSavings,
-  calculateSavingsRate,
+  calculateNet,
+  calculateNetRate,
   categoryBreakdown,
   dailyBalanceSeries,
   largestExpenses,
@@ -99,8 +98,8 @@ export async function getMonthlySeries(userId: string, months: MonthKey[]): Prom
       month,
       income,
       expenses,
-      savings: calculateSavings(income, expenses),
-      savingsRate: calculateSavingsRate(income, expenses),
+      net: calculateNet(income, expenses),
+      netRate: calculateNetRate(income, expenses),
       transactionCount: row?.total ?? 0,
     };
   });
@@ -141,30 +140,24 @@ export async function getDashboardSummary(userId: string, month: MonthKey, today
   const currentRange = monthRange(month);
   const previousRange = monthRange(previous);
 
-  const [currentTx, previousTx, categories, series, netBefore, savedBefore, depositsThisMonth] = await Promise.all([
+  const [currentTx, previousTx, categories, series, carriedIn] = await Promise.all([
     listTransactionsInRange(userId, currentRange.start, currentRange.end),
     listTransactionsInRange(userId, previousRange.start, previousRange.end),
     listCategories(userId),
     getMonthlySeries(userId, listMonthKeys(month, 6)),
+    // Whatever was left from earlier months carries into this one. Savings are a separate ledger
+    // and never enter (or leave) this balance.
     getBalanceBefore(userId, currentRange.start),
-    getSavingsTotals(userId, { to: addDays(currentRange.start, -1) }),
-    listSavingsDepositsInRange(userId, currentRange.start, currentRange.end),
   ]);
 
   const bothMonths = [...currentTx, ...previousTx];
   const untilDate = today && monthKeyOf(today) === month ? today : null;
   const current = calculateMonthTotals(currentTx, month);
-  // Money in hand: whatever was left from earlier months carries into this one; only money the
-  // user explicitly moved into Savings leaves the balance (it is never added there automatically).
-  const carriedIn = netBefore - savedBefore.added;
-  const movedToSavings = depositsThisMonth.reduce((sum, d) => sum + d.amount, 0);
-  const outflows = depositsThisMonth.map((d) => ({ type: "EXPENSE" as const, amount: d.amount, date: d.date }));
-  const dailyBalance = dailyBalanceSeries([...currentTx, ...outflows], month, carriedIn, untilDate);
+  const dailyBalance = dailyBalanceSeries(currentTx, month, carriedIn, untilDate);
   return {
     month,
-    balance: carriedIn + current.income - current.expenses - movedToSavings,
+    balance: carriedIn + current.income - current.expenses,
     carriedIn,
-    movedToSavings,
     dailyBalance,
     current,
     previous: calculateMonthTotals(previousTx, previous),
@@ -202,14 +195,14 @@ export async function getAnalyticsOverview(userId: string, range: RangePreset, e
   const income = series.reduce((sum, m) => sum + m.income, 0);
   const expenses = series.reduce((sum, m) => sum + m.expenses, 0);
   const withActivity = series.filter((m) => m.transactionCount > 0);
-  const bestMonth = withActivity.length ? withActivity.reduce((best, m) => (m.savings > best.savings ? m : best)) : null;
+  const bestMonth = withActivity.length ? withActivity.reduce((best, m) => (m.net > best.net ? m : best)) : null;
   const worstMonth = withActivity.length ? withActivity.reduce((worst, m) => (m.expenses > worst.expenses ? m : worst)) : null;
 
   return {
     range,
     months,
     series,
-    totals: { income, expenses, savings: calculateSavings(income, expenses), savingsRate: calculateSavingsRate(income, expenses) },
+    totals: { income, expenses, net: calculateNet(income, expenses), netRate: calculateNetRate(income, expenses) },
     averages: averageMonthly(withActivity.length ? withActivity : series),
     expenseCategories,
     incomeCategories,

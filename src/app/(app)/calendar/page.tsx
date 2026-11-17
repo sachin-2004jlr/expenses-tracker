@@ -19,14 +19,14 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const expenses = transactions.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         title={formatMonthLabel(month)}
         eyebrow="Calendar"
         description={
           transactions.length === 0
-            ? "No transactions this month yet. Use the month selector in the top bar to move around."
-            : `${transactions.length} transactions · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out`
+            ? "No transactions this month yet. Pick a day to add one, or change the month at the top."
+            : `${transactions.length} transaction${transactions.length === 1 ? "" : "s"} · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out. Pick a day to see what happened.`
         }
       />
       <MonthCalendar
