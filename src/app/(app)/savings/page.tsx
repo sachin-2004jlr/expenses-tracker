@@ -33,7 +33,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
       <PageHeader
         eyebrow={monthLabel}
         title="Savings"
-        description="Money you set aside. Kept completely on its own."
+        description="Money you put aside and what you did with it. This is a separate ledger: nothing here changes your income, expenses or money left."
         actions={<SavingsAddButtons />}
       />
 

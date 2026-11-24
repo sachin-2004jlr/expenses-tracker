@@ -25,7 +25,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     <div className="space-y-6">
       <PageHeader
         title="Transactions"
-        description="Everything that came in. And everything that went out."
+        description="Every income and expense you have recorded. Tap a row to edit it."
       />
 
       {result.total > 0 && (

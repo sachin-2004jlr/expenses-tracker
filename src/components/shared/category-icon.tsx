@@ -107,15 +107,72 @@ export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
 };
 
 /**
- * Apple-style neutral category chips. The stored colour name is kept (backups, imports) but the UI
- * no longer tints by category: icons carry the meaning, the one accent stays blue.
+ * Category colours map onto six tones of the design-system palette, so every stored colour name
+ * still means something while the UI never leaves the palette.
  */
-const NEUTRAL_CHIP = "bg-mist text-ink dark:bg-muted dark:text-foreground";
+export type PaletteTone = "flame" | "ember" | "link" | "ice" | "graphite" | "ink";
 
-/** Solid colour for a category's bar or swatch: the accent blue. */
+const TONE_OF: Record<string, PaletteTone> = {
+  orange: "flame",
+  amber: "flame",
+  yellow: "flame",
+  red: "ember",
+  rose: "ember",
+  pink: "ember",
+  fuchsia: "ember",
+  blue: "link",
+  indigo: "link",
+  emerald: "link",
+  green: "link",
+  sky: "ice",
+  cyan: "ice",
+  teal: "ice",
+  lime: "ice",
+  slate: "graphite",
+  violet: "ink",
+  purple: "ink",
+};
+
+const TONE_CHIP: Record<PaletteTone, string> = {
+  flame: "bg-flame/15 text-ember dark:text-flame",
+  ember: "bg-ember/10 text-ember dark:bg-ember/25 dark:text-flame",
+  link: "bg-link/10 text-link dark:bg-link/25 dark:text-income-foreground",
+  ice: "bg-ice/45 text-link dark:bg-ice/15 dark:text-ice",
+  graphite: "bg-mist text-graphite dark:bg-muted dark:text-muted-foreground",
+  ink: "bg-mist text-ink dark:bg-muted dark:text-foreground",
+};
+
+const TONE_SOLID: Record<PaletteTone, string> = {
+  flame: "var(--palette-flame)",
+  ember: "var(--palette-ember)",
+  link: "var(--income)",
+  ice: "var(--palette-ice)",
+  graphite: "var(--palette-graphite)",
+  ink: "var(--net)",
+};
+
+/** The six swatches offered in colour pickers (one stored colour name per tone). */
+export const COLOR_SWATCHES = [
+  { value: "orange", label: "Orange" },
+  { value: "red", label: "Burnt orange" },
+  { value: "blue", label: "Blue" },
+  { value: "sky", label: "Light blue" },
+  { value: "slate", label: "Grey" },
+  { value: "violet", label: "Ink" },
+] as const;
+
+export function categoryTone(color: string): PaletteTone {
+  return TONE_OF[color] ?? "graphite";
+}
+
+/** Soft background + readable foreground for each stored colour name. */
+export const CATEGORY_COLOR_CLASSES: Record<string, string> = Object.fromEntries(
+  Object.keys(TONE_OF).map((name) => [name, TONE_CHIP[TONE_OF[name]!]]),
+);
+
+/** Solid palette colour for bars and swatches. */
 export function categoryColorValue(color: string): string {
-  void color;
-  return "var(--primary)";
+  return TONE_SOLID[categoryTone(color)];
 }
 
 export function getCategoryIcon(name: string): LucideIcon {
@@ -131,8 +188,7 @@ export interface CategoryIconProps {
 
 export function CategoryIcon({ icon, color, size = "md", className }: CategoryIconProps) {
   const Icon = CATEGORY_ICON_MAP[icon] ?? Tag;
-  void color;
-  const colorClasses = NEUTRAL_CHIP;
+  const colorClasses = CATEGORY_COLOR_CLASSES[color] ?? CATEGORY_COLOR_CLASSES.slate;
   return (
     <span
       aria-hidden

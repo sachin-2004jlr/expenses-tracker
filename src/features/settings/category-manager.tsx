@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CategoryIcon, getCategoryIcon } from "@/components/shared/category-icon";
+import { COLOR_SWATCHES, CategoryIcon, categoryColorValue, categoryTone, getCategoryIcon } from "@/components/shared/category-icon";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
 import { cn } from "@/lib/utils";
@@ -184,6 +184,30 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                     >
                       <Icon className="size-4" aria-hidden />
                     </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <fieldset className="grid gap-1.5">
+              <legend className="text-sm font-normal">Colour</legend>
+              <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Colour">
+                {COLOR_SWATCHES.map(({ value: color, label }) => {
+                  const active = categoryTone(editor.color) === categoryTone(color);
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      aria-label={label}
+                      title={label}
+                      onClick={() => setEditor((s) => ({ ...s, color }))}
+                      className={cn(
+                        "size-8 rounded-full border-2 transition-transform duration-300 ease-(--ease-apple) hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        active ? "scale-110 border-foreground" : "border-card",
+                      )}
+                      style={{ background: categoryColorValue(color) }}
+                    />
                   );
                 })}
               </div>

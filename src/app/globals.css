@@ -5,31 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Talina (Pandeka Studio) is a licensed font. Put a licensed copy at public/fonts/talina.woff2
- * (or .woff / .otf / .ttf) and every section heading switches to it; until then the stack falls
- * back to Fredoka. The missing file is harmless: the browser simply moves to the next source.
- */
-@font-face {
-  font-family: "Talina";
-  src:
-    url("/fonts/talina.woff2") format("woff2"),
-    url("/fonts/talina.woff") format("woff"),
-    url("/fonts/talina.otf") format("opentype"),
-    url("/fonts/talina.ttf") format("truetype");
-  font-weight: 400 700;
-  font-display: swap;
-}
-
-/*
  * Design system: Apple (IN). Every colour below is one of the ten palette tokens
  * (or, for dark mode only, a mix of two of them). Components use the semantic names
  * (background, card, primary, income, …), never raw values.
  *
  *   ink      #1D1D1F  color-1   text primary
- *   link     #0066CC  color-2   the one accent: links, buttons, focus, selection, money in
- *   ember    #B64400  color-3   warnings only (budget getting close)
+ *   link     #0066CC  color-2   accent: links, buttons, focus, money in
+ *   ember    #B64400  color-3   accent: orange text (money out, the tracker)
  *   graphite #6E6E73  color-4   text secondary
- *   flame    #FF791B  color-5   warnings in dark mode only
+ *   flame    #FF791B  color-5   accent: orange fills and charts
  *   silver   #D2D2D7  color-6   surface: hairlines
  *   ice      #ADD8FF  color-7   surface: savings
  *   mist     #E8E8ED  color-8   surface: fills, hover
@@ -101,10 +85,8 @@
 
   /* Typography: SF Pro on Apple devices, Inter (closest open match) everywhere else. Weights 400 · 600. */
   --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
-  /* Section headings and titles: Talina (licensed, optional) → Fredoka. */
-  --font-heading: "Talina", var(--font-fredoka), "SF Pro Display", -apple-system, BlinkMacSystemFont, var(--font-inter), sans-serif;
-  /* Big display headlines: gritty brush marker. */
-  --font-display: var(--font-brush), "Talina", var(--font-fredoka), sans-serif;
+  --font-heading: "SF Pro Display", -apple-system, BlinkMacSystemFont, var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
   --text-xs: 12px;
   --text-xs--line-height: 16px;
@@ -194,26 +176,26 @@
   --sidebar-border: var(--palette-silver);
   --sidebar-ring: var(--palette-link);
 
-  /* Apple's colour use: neutrals plus one blue accent. Orange only warns, red only errors. */
-  --brand: var(--palette-link);
+  /* The money tracker's accent is orange; Savings' is blue. */
+  --brand: var(--palette-ember);
   --brand-foreground: var(--palette-white);
-  --highlight: var(--palette-ember);
+  --highlight: var(--palette-flame);
   --income: var(--palette-link);
   --income-foreground: var(--palette-link);
-  --expense: var(--palette-ink);
-  --expense-foreground: var(--palette-ink);
-  --net: var(--palette-graphite);
+  --expense: var(--palette-flame);
+  --expense-foreground: var(--palette-ember);
+  --net: var(--palette-ink);
   --saved: var(--palette-link);
   --saved-foreground: var(--palette-link);
   --saved-surface: var(--palette-ice);
 
-  --chart-1: var(--palette-link);
-  --chart-2: var(--palette-ink);
-  --chart-3: var(--palette-ice);
-  --chart-4: var(--palette-graphite);
-  --chart-5: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
-  --chart-6: var(--palette-silver);
-  --chart-7: color-mix(in srgb, var(--palette-ink) 55%, var(--palette-graphite));
+  --chart-1: var(--palette-flame);
+  --chart-2: var(--palette-link);
+  --chart-3: var(--palette-ember);
+  --chart-4: var(--palette-ice);
+  --chart-5: var(--palette-graphite);
+  --chart-6: var(--palette-ink);
+  --chart-7: var(--palette-silver);
   --chart-8: var(--palette-mist);
   --chart-grid: var(--palette-mist);
   --chart-axis: var(--palette-graphite);
@@ -252,26 +234,26 @@
   --sidebar-border: color-mix(in srgb, var(--palette-ink) 62%, var(--palette-graphite));
   --sidebar-ring: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
 
-  --brand: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
+  --brand: var(--palette-flame);
   --brand-foreground: var(--palette-ink);
   --highlight: var(--palette-flame);
   --income: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
   --income-foreground: color-mix(in srgb, var(--palette-link) 45%, var(--palette-ice));
-  --expense: var(--palette-canvas);
-  --expense-foreground: var(--palette-canvas);
-  --net: color-mix(in srgb, var(--palette-graphite) 50%, var(--palette-canvas));
+  --expense: var(--palette-flame);
+  --expense-foreground: var(--palette-flame);
+  --net: var(--palette-canvas);
   --saved: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
   --saved-foreground: color-mix(in srgb, var(--palette-link) 45%, var(--palette-ice));
   --saved-surface: color-mix(in srgb, var(--palette-link) 30%, var(--palette-ink));
 
-  --chart-1: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
-  --chart-2: var(--palette-canvas);
-  --chart-3: var(--palette-ice);
-  --chart-4: var(--palette-graphite);
-  --chart-5: var(--palette-link);
-  --chart-6: var(--palette-silver);
-  --chart-7: color-mix(in srgb, var(--palette-graphite) 50%, var(--palette-canvas));
-  --chart-8: color-mix(in srgb, var(--palette-ink) 60%, var(--palette-graphite));
+  --chart-1: var(--palette-flame);
+  --chart-2: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
+  --chart-3: var(--palette-ember);
+  --chart-4: var(--palette-ice);
+  --chart-5: var(--palette-graphite);
+  --chart-6: var(--palette-canvas);
+  --chart-7: var(--palette-silver);
+  --chart-8: var(--palette-mist);
   --chart-grid: color-mix(in srgb, var(--palette-ink) 70%, var(--palette-graphite));
   --chart-axis: color-mix(in srgb, var(--palette-graphite) 50%, var(--palette-canvas));
   --chart-bar-muted: color-mix(in srgb, var(--palette-ink) 55%, var(--palette-graphite));
@@ -312,12 +294,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Big display headlines: brush marker, sentence case. The face has one weight. */
+/* Display headlines (landing page): SF Pro Display, 600, sentence case, tight. */
 @utility display-heading {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0;
-  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
 }
 
 /* Apple-style hover for clickable tiles: a slightly deeper shadow, eased. */
