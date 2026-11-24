@@ -38,7 +38,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       <PageHeader
         title="Analytics"
         eyebrow={`${formatMonthLabel(first, { style: "short" })} – ${formatMonthLabel(last, { style: "short" })}`}
-        description={`Your income and expenses over the ${RANGE_LABEL[range]}, up to ${formatMonthLabel(month)}. Savings are not included.`}
+        description={`Your money over the ${RANGE_LABEL[range]}. Clear and simple.`}
         actions={<AnalyticsRange value={range} />}
       />
 

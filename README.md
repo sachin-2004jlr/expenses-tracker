@@ -1,6 +1,6 @@
 # Expenses Tracker
 
-A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Interface built on the Apple (IN) design system: light canvas, white cards, SF Pro type, blue actions, orange for the money tracker and blue for Savings, with a palette-only dark mode. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
+A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Laid out like apple.com: a thin frosted global nav, a local nav per page, big store-style page headers, shortcut rows and sideways tile shelves, in Apple's colours (neutrals plus one blue). Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
 
 Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
@@ -10,10 +10,10 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
 ## Features
 
-- **Landing page** (`/`): motion-graphics hero with rupee notes tumbling in 3D through an orange glow (three depth layers, pointer and scroll parallax, a still pile under `prefers-reduced-motion`), drawn entirely in code (`src/features/landing/`), then how it works, a worked example of the month and a final call to action.
+- **Landing page** (`/`): static apple.com/store-style page: global nav, ribbon, big headline with tagline and one blue call to action, shortcut row, "The essentials" tile shelf, the money-left maths, a savings section and a final call to action.
 - **Accounts** (`/register`, `/login`) with e-mail and password: scrypt-hashed passwords, encrypted session cookies, optional allow-list of e-mail addresses, name and password changes in Settings → Account.
 - **Dashboard** (`/dashboard`): income and expenses only, never savings. **Money left** = what was left from earlier months (carried in) + this month's income − this month's expenses, with the sum spelled out underneath, a share-of-money-spent bar, an allowance per remaining day, Add income / Add expense buttons and Income / Spent / Per-day tiles. Below: recent transactions, where the money went (one bar per category), budgets and money left day by day.
-- **Top bar** (frosted): month selector pill (previous / next / today, future months allowed), the one blue primary Add transaction button, global search that jumps to filtered transactions, quick links, account menu with theme switch and sign-out.
+- **Navigation**: global bar (Dashboard, Transactions, Calendar, Analytics, Savings, Settings; search flyout with quick links, `/` to open; `+` adds to the ledger of the current page, `N` too; account menu with appearance and sign-out). Phones get a full-screen menu. A local bar under it shows the page name, the month picker and, inside Savings, its sections.
 - **Add money in seconds**: income / expense toggle, amount auto-focused, category, date, tags and notes, validated on the client and again on the server. Edit, duplicate and confirmed delete on every transaction.
 - **Transactions**: full-text search across description, notes, category and tags, type / category / tag / date-range / amount-range filters, sortable columns, pagination; tables become cards on phones.
 - **Calendar**: month grid with per-day income and expense totals, week view, day panel, add-on-this-day.
@@ -80,7 +80,7 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 | Layer | Choice |
 | --- | --- |
 | Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript 5 |
-| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons. Apple (IN) design tokens in `src/app/globals.css` (10-colour palette, 28/36px radii, pills, `shadow-card`); SF Pro system font with Inter via `next/font` as fallback |
+| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons. Apple (IN) design tokens in `src/app/globals.css`. Fonts via `next/font`: Permanent Marker (brush) for big display headlines, Talina for section headings when a licensed file is placed in `public/fonts/` (Fredoka until then), SF Pro / Inter for body text and numbers |
 | Charts | Recharts 3 |
 | Auth | Auth.js v5 credentials provider, scrypt password hashing, JWT sessions |
 | Database | MongoDB (local MongoDB Community Server in development, MongoDB Atlas in production, in-memory server for tests) |

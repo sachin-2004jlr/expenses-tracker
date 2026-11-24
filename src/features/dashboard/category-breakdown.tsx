@@ -47,7 +47,7 @@ export function CategoryBreakdown({ items, month, monthLabel, limit = 6, classNa
                   <span className="w-24 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: "var(--expense)" }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: "var(--primary)" }} />
                 </div>
               </Link>
             </li>

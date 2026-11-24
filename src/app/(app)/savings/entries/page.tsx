@@ -39,7 +39,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
     <div className="space-y-6">
       <PageHeader
         eyebrow={allTime ? "All time" : formatMonthLabel(month)}
-        title="Savings entries"
+        title="Entries"
         description={
           <span className="flex flex-wrap gap-x-4 gap-y-1">
             <span>

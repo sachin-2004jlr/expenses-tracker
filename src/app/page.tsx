@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { ChevronRight, Equal, Minus, MoveDown, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CalendarDays,
+  ChartColumn,
+  ChevronRight,
+  Equal,
+  Minus,
+  PiggyBank,
+  Plus,
+  Repeat,
+  ShieldCheck,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
+import { ActionLink, Eyebrow, SectionHeading } from "@/components/shared/apple-ui";
 import { BrandLogo } from "@/components/shared/brand-logo";
-import { FallingNotes } from "@/features/landing/falling-notes";
-import styles from "@/features/landing/landing.module.css";
-import { NoteSymbols } from "@/features/landing/note-art";
-import { ParallaxHero } from "@/features/landing/parallax-hero";
+import { Shelf, ShelfItem } from "@/components/shared/shelf";
 import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -15,60 +26,31 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-type Tone = "tracker" | "savings" | "neutral";
+const focusRing = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
-const FEATURES: { icon: LucideIcon; tone: Tone; title: string; text: string }[] = [
-  {
-    icon: Wallet,
-    tone: "tracker",
-    title: "Every rupee, month by month.",
-    text: "Add income and expenses in seconds. Each month shows exactly what came in and what went out.",
-  },
-  {
-    icon: Repeat,
-    tone: "tracker",
-    title: "Leftovers roll forward.",
-    text: "Whatever you don't spend this month carries into the next one automatically. No manual sums.",
-  },
-  {
-    icon: PiggyBank,
-    tone: "savings",
-    title: "Savings stay separate.",
-    text: "Savings get their own balance, journal and goals. They're never added to or taken from your monthly money.",
-  },
-  {
-    icon: ShieldCheck,
-    tone: "neutral",
-    title: "Private and yours.",
-    text: "Sign in with e-mail and password, keep your data in your own database and export it any time.",
-  },
+/** The one filled button per viewport: Apple blue pill. */
+const primaryCta = cn(
+  "inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-base text-primary-foreground transition-colors duration-300 ease-(--ease-apple) hover:bg-primary/90 active:bg-primary/80",
+  focusRing,
+);
+
+const SHORTCUTS: { icon: LucideIcon; label: string; href: string }[] = [
+  { icon: ArrowDownLeft, label: "Income", href: "#essentials" },
+  { icon: ArrowUpRight, label: "Expenses", href: "#essentials" },
+  { icon: CalendarDays, label: "Calendar", href: "#essentials" },
+  { icon: ChartColumn, label: "Analytics", href: "#essentials" },
+  { icon: Target, label: "Budgets", href: "#essentials" },
+  { icon: PiggyBank, label: "Savings", href: "#savings" },
 ];
 
-const TONE_CHIP: Record<Tone, string> = {
-  tracker: "bg-flame/15 text-ember dark:text-flame",
-  savings: "bg-ice/60 text-link dark:bg-ice/15 dark:text-ice",
-  neutral: "bg-mist text-ink dark:bg-muted dark:text-foreground",
-};
-
 const EQUATION: { label: string; hint: string; op?: LucideIcon; result?: boolean }[] = [
-  { label: "Left from last month", hint: "Carried in automatically." },
+  { label: "Left from last month", hint: "Carried in for you." },
   { label: "Income", hint: "Salary, freelance, refunds.", op: Plus },
   { label: "Expenses", hint: "Everything you spent.", op: Minus },
   { label: "Money left", hint: "What you can still use.", op: Equal, result: true },
 ];
 
-const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
-
-const focusRing = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-
-/** The one filled button per viewport: Apple blue pill. */
-const primaryCta = cn(
-  "inline-flex h-11 items-center justify-center rounded-full bg-link px-6 text-base font-normal text-white transition-colors duration-300 ease-(--ease-apple) hover:bg-link/90 active:bg-link/80",
-  focusRing,
-);
-
-/** Secondary actions are text links with a chevron, never a second filled button. */
-const textLink = cn("inline-flex items-center gap-0.5 rounded-full text-base text-primary transition-opacity hover:underline active:opacity-70", focusRing);
+const tile = "flex h-full min-h-[24rem] flex-col rounded-2xl p-8 shadow-card tile-hover";
 
 export default async function LandingPage() {
   const user = await getCurrentUser();
@@ -76,187 +58,196 @@ export default async function LandingPage() {
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
-    <div className={cn("min-h-svh overflow-x-clip bg-background text-foreground", styles.page)}>
-      <NoteSymbols />
-
-      {/* The hero is always ink, whatever the theme: `dark` switches its tokens to the dark set. */}
-      <ParallaxHero className={cn("dark text-foreground", styles.hero)}>
-        <FallingNotes scene="hero" className={styles.heroZone} />
-
-        <div className="relative z-10 mx-auto flex min-h-[inherit] max-w-7xl flex-col px-5 sm:px-8">
-          <header className={cn("flex h-20 items-center justify-between", styles.fadeUp)}>
-            <BrandLogo className={cn("rounded-full", focusRing)} />
-            <nav aria-label="Landing" className="flex items-center gap-1 text-sm sm:gap-2">
-              <a
-                href="#how"
-                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
-              >
-                How it works
-              </a>
-              <a
-                href="#month"
-                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
-              >
-                Your month
-              </a>
+    <div className="min-h-svh overflow-x-clip bg-background text-foreground">
+      {/* Global navigation */}
+      <header className="sticky top-0 z-40 h-12 bg-background/80 backdrop-blur-xl backdrop-saturate-150 lg:h-11">
+        <nav aria-label="Landing" className="mx-auto flex h-full max-w-[1024px] items-center justify-between gap-4 px-4 lg:px-5">
+          <BrandLogo withText={false} size="sm" className={cn("rounded-full", focusRing)} />
+          <ul className="flex items-center gap-1 text-xs sm:gap-6">
+            {[
+              { href: "#essentials", label: "Features" },
+              { href: "#month", label: "How it works" },
+              { href: "#savings", label: "Savings" },
+            ].map((link) => (
+              <li key={link.href} className="hidden sm:block">
+                <a href={link.href} className={cn("rounded-full px-2 py-1 text-foreground/80 transition-colors hover:text-foreground active:opacity-60", focusRing)}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            <li>
               <Link
                 href={user ? "/dashboard" : "/login"}
-                className={cn(
-                  "ml-1 rounded-full bg-canvas/10 px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-canvas/20 active:bg-canvas/25",
-                  focusRing,
-                )}
+                className={cn("rounded-full px-2 py-1 text-foreground/80 transition-colors hover:text-foreground active:opacity-60", focusRing)}
                 data-testid="nav-signin"
               >
                 {user ? "Dashboard" : "Sign in"}
               </Link>
-            </nav>
-          </header>
+            </li>
+          </ul>
+        </nav>
+      </header>
 
-          <div className={cn("max-w-2xl pt-[6vh] sm:pt-[9vh] lg:max-w-3xl lg:pt-[10vh]", styles.heroCopy)}>
-            <p className={cn("text-base font-semibold text-flame", styles.fadeUp)} style={delay(0.1)}>
-              Personal finance, in rupees
-            </p>
-            <h1 className="display-heading mt-3 text-3xl md:text-5xl" data-testid="hero-title">
-              <span className={styles.line}>
-                <span className={styles.lineInner} style={delay(0.15)}>
-                  Know where{" "}
-                </span>
-              </span>
-              <span className={styles.line}>
-                <span className={cn(styles.lineInner, styles.accent)} style={delay(0.27)}>
-                  every rupee{" "}
-                </span>
-              </span>
-              <span className={styles.line}>
-                <span className={styles.lineInner} style={delay(0.39)}>
-                  goes.
-                </span>
-              </span>
-            </h1>
-            <p className={cn("mt-6 max-w-md text-base text-muted-foreground", styles.fadeUp)} style={delay(0.55)}>
-              A calm, private money tracker. Log what comes in and goes out, and watch what&apos;s left roll into next month. Savings get a space of their own.
-            </p>
-            <div className={cn("mt-8 flex flex-wrap items-center gap-x-6 gap-y-4", styles.fadeUp)} style={delay(0.7)}>
+      {/* Ribbon */}
+      <div className="bg-card px-4 py-4 text-center text-sm">
+        Savings are kept completely separate from your income and expenses.{" "}
+        <a href="#savings" className={cn("inline-flex items-center gap-0.5 rounded-full text-link hover:underline", focusRing)}>
+          See how
+          <ChevronRight className="size-3.5" aria-hidden />
+        </a>
+      </div>
+
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* Hero: Apple-store header */}
+        <section className="grid gap-8 pb-12 pt-12 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:items-center md:gap-12 md:pt-20 lg:pb-16">
+          <h1 className="display-heading text-3xl md:text-5xl" data-testid="hero-title">
+            Know where every rupee goes.
+          </h1>
+          <div className="md:text-right">
+            <p className="font-heading text-2xl font-semibold text-balance">The simplest way to track your money. In rupees.</p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 md:justify-end">
               <Link href={ctaHref} className={primaryCta} data-testid="cta-primary">
                 {ctaLabel}
               </Link>
-              <a href="#how" className={textLink}>
-                How it works
-                <ChevronRight className="size-4" aria-hidden />
-              </a>
+              <ActionLink href="#month">How it works</ActionLink>
             </div>
           </div>
+        </section>
 
-          <a
-            href="#how"
-            className={cn(
-              "relative z-10 mb-8 mt-auto hidden w-fit items-center gap-3 rounded-full pt-10 text-xs text-muted-foreground transition-colors hover:text-foreground active:opacity-70 lg:flex",
-              focusRing,
-              styles.fadeUp,
-            )}
-            style={delay(1)}
-          >
-            <span className={styles.cue} aria-hidden />
-            Scroll to see how it works
-          </a>
-        </div>
-      </ParallaxHero>
-
-      <main>
-        {/* How it works */}
-        <section id="how" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-20 sm:px-8 lg:py-28">
-          <h2 className="max-w-3xl text-2xl font-semibold md:text-3xl">
-            Simple by design. <span className="text-muted-foreground">Built to use every day.</span>
-          </h2>
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-            {FEATURES.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <li key={feature.title} className={cn("rounded-2xl bg-card p-7 shadow-card", styles.reveal)}>
-                  <span className={cn("flex size-11 items-center justify-center rounded-full", TONE_CHIP[feature.tone])}>
-                    <Icon className="size-5" aria-hidden />
+        {/* Shortcut row, like "Mac · iPhone · iPad" */}
+        <nav aria-label="What's inside" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden">
+          <ul className="flex gap-4 lg:justify-between">
+            {SHORTCUTS.map(({ icon: Icon, label, href }) => (
+              <li key={label}>
+                <a href={href} className={cn("group flex w-24 flex-col items-center gap-3 rounded-2xl py-2 text-center sm:w-28", focusRing)}>
+                  <span className="flex size-20 items-center justify-center rounded-full bg-card text-ink shadow-card transition-[box-shadow,transform] duration-300 ease-(--ease-apple) group-hover:shadow-card-hover group-active:scale-95 dark:text-foreground sm:size-24">
+                    <Icon className="size-8 sm:size-9" strokeWidth={1.25} aria-hidden />
                   </span>
-                  <h3 className="mt-6 text-base font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{feature.text}</p>
-                </li>
-              );
-            })}
+                  <span className="text-sm font-semibold">{label}</span>
+                </a>
+              </li>
+            ))}
           </ul>
+        </nav>
+
+        {/* The essentials shelf */}
+        <section id="essentials" aria-labelledby="essentials-title" className="scroll-mt-16 space-y-6 pt-16 md:pt-24">
+          <SectionHeading id="essentials-title" title="The essentials." subtitle="Everything you need. Nothing you don't." />
+          <Shelf label="Features">
+            <ShelfItem className="w-[min(88vw,26rem)]">
+              <div className={cn(tile, "bg-card")}>
+                <Eyebrow>Built in</Eyebrow>
+                <h4 className="mt-1 font-heading text-2xl font-semibold">Money left, explained.</h4>
+                <p className="mt-3 text-sm text-muted-foreground">One number that tells you what you can still spend, with the sum written out underneath.</p>
+                <div className="mt-auto rounded-2xl bg-background p-5" aria-label="Example">
+                  <p className="text-xs text-muted-foreground">Example</p>
+                  <p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums">₹23,510</p>
+                  <p className="mt-1 text-xs text-muted-foreground tabular-nums">₹88,566 carried + ₹62,023 income − ₹1,27,079 spent</p>
+                </div>
+              </div>
+            </ShelfItem>
+            <ShelfItem>
+              <div className={cn(tile, "dark bg-ink text-foreground")}>
+                <Eyebrow>Automatic</Eyebrow>
+                <h4 className="mt-1 font-heading text-2xl font-semibold">Leftovers roll forward.</h4>
+                <p className="mt-3 text-sm text-muted-foreground">Whatever you don&apos;t spend this month carries into the next one. No manual sums, ever.</p>
+                <Repeat className="mt-auto size-16 text-muted-foreground" strokeWidth={1} aria-hidden />
+              </div>
+            </ShelfItem>
+            <ShelfItem>
+              <div className={cn(tile, "bg-card")}>
+                <Eyebrow>Stay on track</Eyebrow>
+                <h4 className="mt-1 font-heading text-2xl font-semibold">Budgets that warn you early.</h4>
+                <p className="mt-3 text-sm text-muted-foreground">Set a limit per category and see what&apos;s left, with a daily allowance for the rest of the month.</p>
+                <div className="mt-auto space-y-4" aria-label="Example">
+                  {[
+                    { name: "Food", pct: 45, bar: "bg-income" },
+                    { name: "Shopping", pct: 86, bar: "bg-highlight" },
+                  ].map((row) => (
+                    <div key={row.name}>
+                      <div className="flex justify-between text-sm">
+                        <span>{row.name}</span>
+                        <span className="text-muted-foreground tabular-nums">{row.pct}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className={cn("h-full rounded-full", row.bar)} style={{ width: `${row.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ShelfItem>
+            <ShelfItem>
+              <div className={cn(tile, "bg-card")}>
+                <Eyebrow>See the pattern</Eyebrow>
+                <h4 className="mt-1 font-heading text-2xl font-semibold">Calendar and analytics.</h4>
+                <p className="mt-3 text-sm text-muted-foreground">Every day of the month at a glance, and trends over three, six or twelve months.</p>
+                <ChartColumn className="mt-auto size-16 text-link" strokeWidth={1} aria-hidden />
+              </div>
+            </ShelfItem>
+            <ShelfItem>
+              <div className={cn(tile, "dark bg-ink text-foreground")}>
+                <Eyebrow>Private</Eyebrow>
+                <h4 className="mt-1 font-heading text-2xl font-semibold">Yours, and only yours.</h4>
+                <p className="mt-3 text-sm text-muted-foreground">Sign in with e-mail and password. Export everything whenever you like.</p>
+                <ShieldCheck className="mt-auto size-16 text-muted-foreground" strokeWidth={1} aria-hidden />
+              </div>
+            </ShelfItem>
+          </Shelf>
         </section>
 
-        {/* The month, explained */}
-        <section id="month" className="scroll-mt-6 bg-card">
-          <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24">
-            <h2 className="max-w-3xl text-2xl font-semibold md:text-3xl">
-              One line of maths. <span className="text-muted-foreground">No guesswork.</span>
-            </h2>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground">Your dashboard works out the money you have left the same way every time.</p>
+        {/* The maths */}
+        <section id="month" aria-labelledby="month-title" className="scroll-mt-16 space-y-6 pt-16 md:pt-24">
+          <SectionHeading id="month-title" title="One line of maths." subtitle="No guesswork." />
+          <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {EQUATION.map(({ label, hint, op: Op, result }) => (
+              <li key={label} className={cn("flex flex-col rounded-2xl p-6 shadow-card", result ? "dark bg-ink text-foreground" : "bg-card")}>
+                <span className="flex size-9 items-center justify-center rounded-full bg-muted text-foreground">
+                  {Op ? <Op className="size-4" aria-hidden /> : <ArrowDownLeft className="size-4" aria-hidden />}
+                </span>
+                <span className="mt-6 font-heading text-xl font-semibold">{label}</span>
+                <span className="mt-1 text-sm text-muted-foreground">{hint}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-            <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="How money left is worked out">
-              {EQUATION.map((term) => {
-                const Op = term.op ?? MoveDown;
-                return (
-                  <li
-                    key={term.label}
-                    className={cn("rounded-2xl p-6", term.result ? "bg-flame text-ink" : "bg-background text-foreground", styles.reveal)}
-                  >
-                    <span
-                      className={cn("mb-5 flex size-9 items-center justify-center rounded-full", term.result ? "bg-ink text-flame" : "bg-card text-foreground shadow-card")}
-                      aria-hidden
-                    >
-                      <Op className="size-4" />
-                    </span>
-                    <p className="text-base font-semibold">{term.label}</p>
-                    <p className={cn("mt-1 text-sm", term.result ? "text-ink" : "text-muted-foreground")}>{term.hint}</p>
-                  </li>
-                );
-              })}
-            </ol>
-
-            <div className={cn("mt-4 flex items-start gap-4 rounded-2xl bg-background p-6", styles.reveal)}>
-              <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-full", TONE_CHIP.savings)}>
-                <PiggyBank className="size-5" aria-hidden />
-              </span>
-              <div>
-                <p className="text-base font-semibold">And savings?</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  They&apos;re not part of this sum. Savings are a separate ledger with their own balance, journal and goals, so nothing you save is ever added to or
-                  taken from your money left.
-                </p>
-              </div>
+        {/* Savings */}
+        <section id="savings" aria-labelledby="savings-title" className="scroll-mt-16 space-y-6 pt-16 md:pt-24">
+          <SectionHeading id="savings-title" title="And savings?" subtitle="A space of their own." />
+          <div className="grid gap-6 rounded-2xl bg-card p-8 shadow-card md:grid-cols-[auto_minmax(0,1fr)] md:items-center md:p-10">
+            <span className="flex size-20 items-center justify-center rounded-full bg-ice/50 text-link dark:bg-ice/15 dark:text-ice">
+              <PiggyBank className="size-9" strokeWidth={1.25} aria-hidden />
+            </span>
+            <div>
+              <p className="font-heading text-2xl font-semibold">A separate ledger, with its own balance, journal and goals.</p>
+              <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+                Money you put aside is never added to, or taken from, your money left. Record what you saved and what you used it for, and keep a note of why.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Final CTA: an ink tile with its own cascade of notes. */}
-        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
-          <div className={cn("dark relative isolate overflow-clip rounded-3xl text-foreground", styles.ctaTile)}>
-            <FallingNotes scene="cta" className="opacity-60" />
-            <div
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_50%,var(--palette-ink)_30%,transparent)]"
-              aria-hidden
-            />
-            <div className="relative px-6 py-20 text-center sm:px-10 lg:py-28">
-              <h2 className={cn("display-heading text-3xl md:text-5xl", styles.reveal)}>
-                Start tracking <span className={styles.accent}>today.</span>
-              </h2>
-              <p className={cn("mx-auto mt-5 max-w-md text-base text-muted-foreground", styles.reveal)}>
-                Free, private and quick to set up. Your first entry takes less than a minute.
-              </p>
-              <div className={cn("mt-9", styles.reveal)}>
-                <Link href={ctaHref} className={primaryCta}>
-                  {ctaLabel}
-                </Link>
-              </div>
+        {/* Final call to action */}
+        <section aria-labelledby="start-title" className="py-16 md:py-24">
+          <div className="rounded-3xl bg-card px-6 py-16 text-center shadow-card md:py-20">
+            <h2 id="start-title" className="display-heading text-3xl md:text-5xl">
+              Start today.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md font-heading text-xl font-semibold text-muted-foreground">Free, private and quick to set up.</p>
+            <div className="mt-8">
+              <Link href={ctaHref} className={primaryCta}>
+                {ctaLabel}
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:px-8">
-          <BrandLogo size="sm" className={cn("rounded-full", focusRing)} />
-          <p>Personal finance tracker · Indian rupee · Your own data</p>
+      <footer className="border-t border-border bg-background">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <span>Expenses · Personal finance tracker in Indian rupees</span>
+          <span>Your data stays yours.</span>
         </div>
       </footer>
     </div>

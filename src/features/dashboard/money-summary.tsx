@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, CalendarClock, Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ActionButton, Eyebrow } from "@/components/shared/apple-ui";
+import { Shelf, ShelfItem } from "@/components/shared/shelf";
 import { ChangePill } from "@/components/shared/stat-card";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { formatCurrency, formatCurrencyParts } from "@/lib/money";
@@ -22,12 +22,27 @@ export interface MoneySummaryProps {
   perDay: number;
   /** Days left in the month including today; null for past/future months. */
   daysLeft: number | null;
-  className?: string;
+}
+
+const tile = "flex h-full min-h-[23rem] flex-col rounded-2xl p-7 shadow-card tile-hover";
+
+function BigAmount({ paise, testId, negative }: { paise: number; testId?: string; negative?: boolean }) {
+  const parts = formatCurrencyParts(paise);
+  return (
+    <p className="mt-6 flex items-baseline gap-1 font-semibold tracking-tight tabular-nums" data-testid={testId}>
+      <span className={cn("text-4xl [overflow-wrap:anywhere]", negative && "text-destructive")}>
+        {parts.sign}
+        {parts.symbol}
+        {parts.integer}
+      </span>
+      <span className="text-2xl text-muted-foreground">.{parts.fraction}</span>
+    </p>
+  );
 }
 
 /**
- * The first thing on the dashboard: how much money is left, how that number was worked out (in
- * words), and this month's income and spending. Savings are a separate ledger and never appear here.
+ * "Your month" shelf: money left (with the sum spelled out), income, spending and what was carried
+ * in, as Apple-store tiles. Income and expenses only; savings are a separate ledger.
  */
 export function MoneySummary({
   balance,
@@ -40,59 +55,27 @@ export function MoneySummary({
   expensesChange,
   perDay,
   daysLeft,
-  className,
 }: MoneySummaryProps) {
   const { openCreate } = useTransactionDialog();
-  const parts = formatCurrencyParts(balance);
   const available = carriedIn + income;
   const spentShare = available > 0 ? Math.min(100, (expenses / available) * 100) : expenses > 0 ? 100 : 0;
   const perDayLeft = daysLeft && balance > 0 ? Math.floor(balance / daysLeft / 100) * 100 : null;
   const perDayRounded = Math.round(perDay / 100) * 100;
 
   return (
-    <section
-      aria-label="Money left"
-      className={cn(
-        "relative min-w-0 overflow-hidden rounded-3xl bg-card p-5 shadow-card sm:p-8",
-        className,
-      )}
-    >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
-        <div className="min-w-0">
-          <p className="text-base font-semibold">
-            Money left. <span className="text-muted-foreground">{monthLabel} so far.</span>
+    <Shelf label="Your month">
+      <ShelfItem className="w-[min(88vw,26rem)]">
+        <section aria-label="Money left" className={cn(tile, "bg-card")}>
+          <Eyebrow>{monthLabel} so far</Eyebrow>
+          <h4 className="mt-1 font-heading text-2xl font-semibold">Money left.</h4>
+          <BigAmount paise={balance} testId="total-balance" negative={balance < 0} />
+          <p className="mt-3 text-sm text-muted-foreground tabular-nums" data-testid="balance-breakdown">
+            <span className="text-foreground">{formatCurrency(carriedIn)}</span> carried from {previousMonthLabel} +{" "}
+            <span className="text-income-foreground">{formatCurrency(income)}</span> income − <span className="text-foreground">{formatCurrency(expenses)}</span> spent
           </p>
-          <p className="mt-2 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="total-balance">
-            <span className={cn("text-4xl [overflow-wrap:anywhere]", balance < 0 && "text-destructive")}>
-              {parts.sign}
-              {parts.symbol}
-              {parts.integer}
-            </span>
-            <span className="text-2xl text-muted-foreground">.{parts.fraction}</span>
-          </p>
-
-          {/* The sum, spelled out, so the number is never a mystery. */}
-          <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground tabular-nums" data-testid="balance-breakdown">
-            <span>
-              <span className="font-semibold text-foreground">{formatCurrency(carriedIn)}</span> carried from {previousMonthLabel}
-            </span>
-            <Plus className="size-3.5 shrink-0" aria-label="plus" />
-            <span>
-              <span className="font-semibold text-income-foreground">{formatCurrency(income)}</span> income
-            </span>
-            <Minus className="size-3.5 shrink-0" aria-label="minus" />
-            <span>
-              <span className="font-semibold text-expense-foreground">{formatCurrency(expenses)}</span> spent
-            </span>
-          </p>
-
-          <div className="mt-5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{available > 0 ? `Spent ${Math.round(spentShare)}% of the money you had` : "No money in yet this month"}</span>
-              {perDayLeft !== null && <span className="hidden sm:inline">≈ {formatCurrency(perDayLeft)} a day for {daysLeft} days</span>}
-            </div>
+          <div className="mt-auto pt-6">
             <div
-              className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+              className="h-1.5 overflow-hidden rounded-full bg-muted"
               role="progressbar"
               aria-label="Share of available money spent"
               aria-valuemin={0}
@@ -104,59 +87,57 @@ export function MoneySummary({
                 style={{ width: `${spentShare}%` }}
               />
             </div>
-            {perDayLeft !== null && <p className="mt-2 text-xs text-muted-foreground sm:hidden">≈ {formatCurrency(perDayLeft)} a day for {daysLeft} days</p>}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {available > 0 ? `Spent ${Math.round(spentShare)}% of the money you had.` : "No money in yet this month."}
+              {perDayLeft !== null && ` About ${formatCurrency(perDayLeft)} a day for the next ${daysLeft} days.`}
+            </p>
           </div>
+        </section>
+      </ShelfItem>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:flex">
-            <Button variant="secondary" onClick={() => openCreate({ type: "INCOME" })}>
-              <ArrowDownLeft data-icon="inline-start" className="text-income-foreground" aria-hidden />
-              Add income
-            </Button>
-            <Button variant="secondary" onClick={() => openCreate({ type: "EXPENSE" })}>
-              <ArrowUpRight data-icon="inline-start" className="text-expense-foreground" aria-hidden />
-              Add expense
-            </Button>
+      <ShelfItem>
+        <section aria-label="Income" className={cn(tile, "dark bg-ink text-foreground")}>
+          <Eyebrow>Money in</Eyebrow>
+          <h4 className="mt-1 font-heading text-2xl font-semibold">Income.</h4>
+          <BigAmount paise={income} testId="income-amount" />
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <ChangePill changePercent={incomeChange} increaseIsGood />
+            {incomeChange === null ? "Nothing to compare with last month." : "compared with last month."}
+          </p>
+          <div className="mt-auto pt-6">
+            <ActionButton onClick={() => openCreate({ type: "INCOME" })}>Add income</ActionButton>
           </div>
-        </div>
+        </section>
+      </ShelfItem>
 
-        <ul className="grid min-w-0 grid-cols-3 gap-2 lg:grid-cols-1" aria-label="This month">
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-income/12 text-income-foreground">
-              <ArrowDownLeft className="size-4" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">Income</p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg" data-testid="income-amount">{formatCurrency(income)}</p>
-            </div>
-            <ChangePill changePercent={incomeChange} increaseIsGood className="hidden lg:inline-flex" />
-          </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-expense/12 text-expense-foreground">
-              <ArrowUpRight className="size-4" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">Spent</p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg" data-testid="expense-amount">{formatCurrency(expenses)}</p>
-            </div>
-            <ChangePill changePercent={expensesChange} increaseIsGood={false} className="hidden lg:inline-flex" />
-          </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-muted text-foreground">
-              <CalendarClock className="size-4" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-muted-foreground">
-                <span className="sm:hidden">Per day</span>
-                <span className="hidden sm:inline">Average spend</span>
-              </p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg">
-                {formatCurrency(perDayRounded)}
-                <span className="hidden text-xs font-normal text-muted-foreground sm:inline"> / day</span>
-              </p>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </section>
+      <ShelfItem>
+        <section aria-label="Spent" className={cn(tile, "bg-card")}>
+          <Eyebrow>Money out</Eyebrow>
+          <h4 className="mt-1 font-heading text-2xl font-semibold">Spent.</h4>
+          <BigAmount paise={expenses} testId="expense-amount" />
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <ChangePill changePercent={expensesChange} increaseIsGood={false} />
+            {expensesChange === null ? "Nothing to compare with last month." : "compared with last month."}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            About <span className="text-foreground tabular-nums">{formatCurrency(perDayRounded)}</span> a day on average.
+          </p>
+          <div className="mt-auto pt-6">
+            <ActionButton onClick={() => openCreate({ type: "EXPENSE" })}>Add expense</ActionButton>
+          </div>
+        </section>
+      </ShelfItem>
+
+      <ShelfItem>
+        <section aria-label="Carried over" className={cn(tile, "bg-card")}>
+          <Eyebrow>Carried over</Eyebrow>
+          <h4 className="mt-1 font-heading text-2xl font-semibold">From {previousMonthLabel}.</h4>
+          <BigAmount paise={carriedIn} negative={carriedIn < 0} />
+          <p className="mt-3 text-sm text-muted-foreground">
+            What was left at the end of {previousMonthLabel}. It is already part of your money left. Savings never are.
+          </p>
+        </section>
+      </ShelfItem>
+    </Shelf>
   );
 }

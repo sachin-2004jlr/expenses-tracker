@@ -1,16 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Fredoka, Inter, Permanent_Marker } from "next/font/google";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-// SF Pro is used on Apple devices (system font); Inter is the closest open fallback elsewhere.
+// Body and numbers: SF Pro on Apple devices (system font), Inter elsewhere.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "600"],
+  display: "swap",
+});
+
+// Display headlines: a gritty brush marker.
+const brush = Permanent_Marker({
+  variable: "--font-brush",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
+// Section headings: Talina when its licensed file is in public/fonts, otherwise Fredoka (closest open match).
+const fredoka = Fredoka({
+  variable: "--font-fredoka",
+  subsets: ["latin"],
+  weight: ["600"],
   display: "swap",
 });
 
@@ -44,7 +60,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IN" suppressHydrationWarning className={`${inter.variable} h-full`}>
+    <html lang="en-IN" suppressHydrationWarning className={`${inter.variable} ${brush.variable} ${fredoka.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <TooltipProvider>{children}</TooltipProvider>

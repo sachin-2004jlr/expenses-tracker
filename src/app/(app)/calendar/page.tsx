@@ -25,8 +25,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         eyebrow="Calendar"
         description={
           transactions.length === 0
-            ? "No transactions this month yet. Pick a day to add one, or change the month at the top."
-            : `${transactions.length} transaction${transactions.length === 1 ? "" : "s"} · ${formatCurrency(income)} in · ${formatCurrency(expenses)} out. Pick a day to see what happened.`
+            ? "Every day of your month. At a glance."
+            : `${formatCurrency(income)} in. ${formatCurrency(expenses)} out. Day by day.`
         }
       />
       <MonthCalendar

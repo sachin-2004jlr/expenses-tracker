@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { COLOR_SWATCHES, CategoryIcon, categoryColorValue, categoryTone } from "@/components/shared/category-icon";
+import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CATEGORY_COLORS } from "@/lib/db/defaults";
@@ -261,30 +261,6 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                 </SelectContent>
               </Select>
             </div>
-            <fieldset className="grid gap-1.5">
-              <legend className="mb-1.5 text-sm font-normal">Colour</legend>
-              <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Goal colour">
-                {COLOR_SWATCHES.map(({ value: color, label }) => {
-                  const active = categoryTone(form.color) === categoryTone(color);
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      aria-label={label}
-                      title={label}
-                      onClick={() => setForm((f) => ({ ...f, color }))}
-                      className={cn(
-                        "size-8 rounded-full border-2 transition-transform duration-300 ease-(--ease-apple) hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        active ? "scale-110 border-foreground" : "border-card",
-                      )}
-                      style={{ background: categoryColorValue(color) }}
-                    />
-                  );
-                })}
-              </div>
-            </fieldset>
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}

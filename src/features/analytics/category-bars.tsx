@@ -44,7 +44,7 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
                     <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                       <span
                         className="block h-full rounded-full"
-                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: type === "INCOME" ? "var(--income)" : "var(--expense)" }}
+                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: "var(--primary)" }}
                       />
                     </span>
                     <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground tabular-nums">

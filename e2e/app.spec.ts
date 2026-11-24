@@ -148,6 +148,7 @@ test("transactions page: search and filter", async ({ page }) => {
 
 test("top bar search jumps to filtered transactions", async ({ page }) => {
   await page.goto("/dashboard");
+  await page.getByTestId("open-search").click();
   const search = page.getByRole("search").getByLabel("Search transactions");
   await search.fill("salary");
   await search.press("Enter");
