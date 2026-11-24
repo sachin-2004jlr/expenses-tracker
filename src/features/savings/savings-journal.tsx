@@ -130,7 +130,7 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
         <CardDescription>Your notepad for what you did with your savings: where the money went, rates, maturity dates, plans.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-5">
-        <form onSubmit={submit} className="grid gap-3 rounded-xl border border-border bg-card-elevated p-3" data-testid="journal-composer">
+        <form onSubmit={submit} className="grid gap-3 rounded-xl bg-card shadow-card-elevated p-3" data-testid="journal-composer">
           {linked && (
             <div className="flex items-center gap-2 rounded-lg bg-saved/10 px-2.5 py-1.5 text-xs">
               <CategoryIcon icon={linked.category?.icon ?? (linked.kind === "DEPOSIT" ? "piggy-bank" : "tag")} color={linked.category?.color ?? "sky"} size="sm" />
@@ -198,7 +198,7 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
 
         {pendingEntries.length > 0 && (
           <div className="grid gap-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Savings without a note</p>
+            <p className="text-xs font-normal text-muted-foreground">Savings without a note</p>
             <ul className="flex flex-wrap gap-2">
               {pendingEntries.map((entry) => (
                 <li key={entry.id}>

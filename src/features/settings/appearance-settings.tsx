@@ -14,15 +14,15 @@ export function AppearanceSettings() {
         <ThemeToggle size="md" />
         <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
           <li className="rounded-lg border border-border p-3">
-            <span className="block font-medium text-foreground">Light</span>
+            <span className="block font-normal text-foreground">Light</span>
             Bright surfaces, ideal in daylight.
           </li>
           <li className="rounded-lg border border-border p-3">
-            <span className="block font-medium text-foreground">Dark</span>
+            <span className="block font-normal text-foreground">Dark</span>
             Dimmed surfaces with the same colour semantics.
           </li>
           <li className="rounded-lg border border-border p-3">
-            <span className="block font-medium text-foreground">System</span>
+            <span className="block font-normal text-foreground">System</span>
             Matches your operating system automatically (default).
           </li>
         </ul>

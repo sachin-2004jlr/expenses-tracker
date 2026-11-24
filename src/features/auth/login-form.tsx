@@ -14,7 +14,7 @@ function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: st
     <button
       type="submit"
       disabled={pending}
-      className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand text-sm font-semibold text-brand-foreground shadow-glow-brand transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.99] disabled:opacity-70"
+      className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-normal text-primary-foreground hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.99] disabled:opacity-70"
     >
       {pending ? pendingLabel : label}
       {!pending && <ArrowRight className="size-4" aria-hidden />}
@@ -34,7 +34,7 @@ export function FieldError({ message, id }: { message?: string; id: string }) {
 export function FormAlert({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="flex gap-2 rounded-xl border border-expense/30 bg-expense/10 p-3 text-sm text-expense-foreground">
+    <p role="alert" className="flex gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
       <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
       {message}
     </p>

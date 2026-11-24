@@ -17,12 +17,12 @@ export function SectionCard({ title, description, action, label, className, chil
   return (
     <section
       aria-label={label ?? (typeof title === "string" ? title : undefined)}
-      className={cn("flex min-w-0 flex-col rounded-2xl border border-border bg-card p-4 sm:p-5", className)}
+      className={cn("flex min-w-0 flex-col rounded-2xl bg-card shadow-card p-4 sm:p-5", className)}
       {...props}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold leading-snug">{title}</h3>
+          <h3 className="text-base font-semibold leading-snug">{title}</h3>
           {description && <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
@@ -39,7 +39,7 @@ export function SectionLink({ href, children, className }: { href: string; child
       href={href}
       prefetch
       className={cn(
-        "inline-flex h-7 items-center gap-0.5 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+        "inline-flex h-7 items-center gap-0.5 rounded-full px-2.5 text-xs font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
         className,
       )}
     >

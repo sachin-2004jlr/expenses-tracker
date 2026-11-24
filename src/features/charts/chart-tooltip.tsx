@@ -22,7 +22,7 @@ export function ChartTooltipContent({ active, label, items = [], title, footer }
   if (!active || items.length === 0) return null;
   return (
     <div className="min-w-36 max-w-[min(16rem,calc(100vw-2rem))] rounded-lg border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
-      <p className="mb-1.5 font-medium">{title ?? label}</p>
+      <p className="mb-1.5 font-normal">{title ?? label}</p>
       <ul className="space-y-1">
         {items.map((item) => (
           <li key={item.name} className="flex items-center justify-between gap-3">
@@ -30,7 +30,7 @@ export function ChartTooltipContent({ active, label, items = [], title, footer }
               {item.color && <span className="size-2 rounded-sm" style={{ background: item.color }} aria-hidden />}
               {item.name}
             </span>
-            <span className="whitespace-nowrap font-medium tabular-nums">{formatCurrency(item.value)}</span>
+            <span className="whitespace-nowrap font-normal tabular-nums">{formatCurrency(item.value)}</span>
           </li>
         ))}
       </ul>

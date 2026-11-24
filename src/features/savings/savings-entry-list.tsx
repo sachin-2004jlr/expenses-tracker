@@ -72,7 +72,7 @@ export function SavingsEntryList({ entries, dateFormat, showJournal = true }: Sa
                   </span>
                 )}
                 <span className="min-w-0 flex-1">
-                  <span className="line-clamp-2 break-words text-sm font-medium">{entry.description}</span>
+                  <span className="line-clamp-2 break-words text-sm font-normal">{entry.description}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {added ? "Added" : "Used"}
                     {entry.category ? ` · ${entry.category.name}` : ""} · {formatIsoDate(entry.date, dateFormat)}

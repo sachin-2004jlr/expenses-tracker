@@ -49,13 +49,13 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
   return (
     <div
       className={cn(
-        "flex min-h-8 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-transparent px-2 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        "flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-card px-4 py-1.5 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
         disabled && "opacity-50",
       )}
       onClick={(event) => (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
     >
       {value.map((tag) => (
-        <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">
+        <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-normal text-foreground">
           {tag}
           <button
             type="button"

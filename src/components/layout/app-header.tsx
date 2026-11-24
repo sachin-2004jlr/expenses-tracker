@@ -78,22 +78,22 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
   const displayName = user?.name ?? user?.email ?? "Account";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:box-content lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl backdrop-saturate-150 supports-backdrop-filter:bg-background/70">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:box-content lg:px-8">
         {!monthScoped && (
           <div className="shrink-0 lg:hidden">
             <BrandLogo withText={false} size="sm" href="/dashboard" />
           </div>
         )}
 
-        <h1 className={cn("min-w-0 truncate text-base font-semibold sm:text-lg", monthScoped && "hidden lg:block")}>{title}</h1>
+        <h1 className={cn("min-w-0 truncate text-base font-semibold", monthScoped && "hidden lg:block")}>{title}</h1>
 
         {monthScoped && <MonthSelector month={month} currentMonth={currentMonth} size="sm" className="min-w-0" />}
 
         <div className="ml-auto flex min-w-0 items-center gap-2">
           {!inSavings && (
             <form onSubmit={submitSearch} role="search" className="hidden min-w-0 md:block md:w-56 xl:w-72">
-              <label className="flex h-9 w-full items-center gap-2 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground transition-colors focus-within:border-ring focus-within:text-foreground">
+              <label className="flex h-9 w-full items-center gap-2 rounded-full bg-muted px-3.5 text-sm text-muted-foreground transition-[background-color,box-shadow] duration-300 ease-(--ease-apple) hover:bg-silver/60 focus-within:bg-card focus-within:text-foreground focus-within:ring-2 focus-within:ring-ring">
                 <Search className="size-4 shrink-0" aria-hidden />
                 <input
                   ref={searchRef}
@@ -105,7 +105,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
                   className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
                 />
                 {!query && (
-                  <kbd className="hidden shrink-0 rounded border border-border px-1.5 font-mono text-[10px] text-muted-foreground xl:inline" aria-hidden>
+                  <kbd className="hidden shrink-0 rounded-full bg-card px-2 font-mono text-xs text-muted-foreground xl:inline" aria-hidden>
                     /
                   </kbd>
                 )}
@@ -114,7 +114,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
           )}
 
           {!inSavings && (
-            <Button onClick={quickAdd.open} title="Add transaction (N)" className="hidden shrink-0 rounded-full lg:inline-flex" data-testid="add-transaction">
+            <Button onClick={quickAdd.open} title="Add transaction (N)" className="hidden shrink-0 lg:inline-flex" data-testid="add-transaction">
               <Plus data-icon="inline-start" aria-hidden />
               Add transaction
             </Button>
@@ -127,12 +127,12 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
                   type="button"
                   aria-label="Account menu"
                   data-testid="account-menu"
-                  className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-1 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:pr-2.5"
+                  className="flex h-9 shrink-0 items-center gap-2 rounded-full pl-1 pr-1 text-sm transition-colors duration-300 ease-(--ease-apple) hover:bg-muted active:bg-silver/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:pr-2.5"
                 />
               }
             >
               <UserAvatar name={user?.name} email={user?.email} image={user?.image} size="sm" />
-              <span className="hidden max-w-32 truncate font-medium xl:inline">{displayName}</span>
+              <span className="hidden max-w-32 truncate font-normal xl:inline">{displayName}</span>
               <ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" aria-hidden />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-1.5rem)]">
@@ -140,7 +140,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
                 <DropdownMenuLabel className="flex items-center gap-2 py-2">
                   <UserAvatar name={user?.name} email={user?.email} image={user?.image} />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-foreground">{displayName}</span>
+                    <span className="block truncate text-sm font-normal text-foreground">{displayName}</span>
                     <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>
                   </span>
                 </DropdownMenuLabel>

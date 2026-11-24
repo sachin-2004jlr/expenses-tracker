@@ -78,7 +78,7 @@ function buildNotes(count: number, seed: number, mobileCount: number, center: nu
     return {
       id,
       layer,
-      // Distant notes use the warmer palettes so they read as orange, not grey, when dimmed.
+      // Distant notes use the flame/ember palettes so they read as orange, not grey, when dimmed.
       symbol: layer === "far" ? 2 + Math.floor(rand() * (NOTE_SYMBOL_COUNT - 2)) : Math.floor(rand() * NOTE_SYMBOL_COUNT),
       mobile: id < mobileCount,
       tumble,

@@ -75,7 +75,7 @@ export function BudgetManager({ categories, budgets, spent, monthLabel }: Budget
           {totalBudget > 0 && (
             <>
               {" "}
-              Total: <span className="font-medium text-foreground tabular-nums">{formatCurrency(totalBudget)}</span> a month.
+              Total: <span className="font-normal text-foreground tabular-nums">{formatCurrency(totalBudget)}</span> a month.
             </>
           )}
         </CardDescription>
@@ -97,7 +97,7 @@ export function BudgetManager({ categories, budgets, spent, monthLabel }: Budget
                   <form onSubmit={(e) => onSubmit(e, category)} className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <CategoryIcon icon={category.icon} color={category.color} />
                     <div className="min-w-0 flex-1">
-                      <label htmlFor={`budget-${category.id}`} className="block truncate text-sm font-medium">
+                      <label htmlFor={`budget-${category.id}`} className="block truncate text-sm font-normal">
                         {category.name}
                       </label>
                       <p

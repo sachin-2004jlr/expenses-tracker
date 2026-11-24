@@ -182,7 +182,7 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
               <li key={rule.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5", !rule.isActive && "opacity-60")}>
                 <CategoryIcon icon={rule.category.icon} color={rule.category.color} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{rule.description}</span>
+                  <span className="block truncate text-sm font-normal">{rule.description}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {rule.category.name} · {describeFrequency(rule.frequency, rule.interval)} · next {formatIsoDate(rule.nextRunDate, dateFormat)}
                     {rule.endDate ? ` · until ${formatIsoDate(rule.endDate, dateFormat)}` : ""}
@@ -226,7 +226,7 @@ export function RecurringManager({ rules, categories, today, dateFormat }: { rul
                   aria-checked={form.type === type}
                   onClick={() => setForm((f) => ({ ...f, type, categoryId: "" }))}
                   className={cn(
-                    "h-8 rounded-md text-sm font-medium transition-colors",
+                    "h-8 rounded-md text-sm font-normal transition-colors",
                     form.type === type ? (type === "INCOME" ? "bg-background text-income-foreground shadow-sm" : "bg-background text-expense-foreground shadow-sm") : "text-muted-foreground",
                   )}
                 >

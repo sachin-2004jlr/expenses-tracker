@@ -122,7 +122,7 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-1.5">
-            <label htmlFor="import-file" className="text-sm font-medium">
+            <label htmlFor="import-file" className="text-sm font-normal">
               Backup file (.json)
             </label>
             <input
@@ -131,13 +131,13 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
               type="file"
               accept="application/json,.json"
               onChange={(e) => void onFile(e.target.files?.[0])}
-              className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:bg-muted"
+              className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-normal file:text-foreground hover:file:bg-muted"
             />
           </div>
 
           {issues && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/8 p-3 text-sm" role="alert">
-              <p className="flex items-center gap-2 font-medium text-destructive">
+              <p className="flex items-center gap-2 font-normal text-destructive">
                 <TriangleAlert className="size-4" aria-hidden />
                 {fileName ?? "File"} was rejected
               </p>
@@ -174,7 +174,7 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
                       mode === option.value ? "border-foreground/40 bg-muted" : "border-border hover:bg-muted/60",
                     )}
                   >
-                    <span className="block font-medium">{option.title}</span>
+                    <span className="block font-normal">{option.title}</span>
                     <span className="block text-xs text-muted-foreground">{option.text}</span>
                   </button>
                 ))}

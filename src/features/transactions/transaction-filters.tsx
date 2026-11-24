@@ -87,7 +87,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
 
   return (
     <div className={cn("flex flex-col gap-3", pending && "opacity-80", className)} data-testid="transaction-filters">
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card shadow-card p-2">
         <InputGroup className="h-9 w-full border-transparent bg-muted/50 lg:w-auto lg:min-w-0 lg:flex-1">
           <InputGroupAddon>
             <Search aria-hidden />
@@ -162,12 +162,12 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
             <Funnel data-icon="inline-start" aria-hidden />
             <span className="hidden sm:inline">More filters</span>
             {activeCount > 0 && (
-              <span className="ml-1 rounded-full bg-foreground px-1.5 text-[10px] font-semibold text-background">{activeCount}</span>
+              <span className="ml-1 rounded-full bg-foreground px-1.5 text-xs font-semibold text-background">{activeCount}</span>
             )}
           </PopoverTrigger>
           <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] gap-4">
             <fieldset className="grid gap-2">
-              <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Date range</legend>
+              <legend className="text-xs font-normal text-muted-foreground">Date range</legend>
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label htmlFor="filter-from" className="text-xs">From</Label>
@@ -180,7 +180,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
               </div>
             </fieldset>
             <fieldset className="grid gap-2">
-              <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (₹)</legend>
+              <legend className="text-xs font-normal text-muted-foreground">Amount (₹)</legend>
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label htmlFor="filter-min" className="text-xs">Min</Label>
@@ -208,7 +208,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
             </fieldset>
             {tags.length > 0 && (
               <fieldset className="grid gap-2">
-                <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tags</legend>
+                <legend className="text-xs font-normal text-muted-foreground">Tags</legend>
                 <ul className="grid max-h-40 grid-cols-2 gap-1 overflow-y-auto">
                   {tags.map((tag) => {
                     const checked = filters.tags.includes(tag.name);
@@ -263,7 +263,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
 
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1">
+    <span className="inline-flex items-center gap-1 rounded-full bg-card shadow-card px-2.5 py-1">
       {label}
       <button
         type="button"

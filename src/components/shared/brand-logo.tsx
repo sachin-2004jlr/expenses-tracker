@@ -10,17 +10,17 @@ export interface BrandLogoProps {
   className?: string;
 }
 
-/** Orange mark + lowercase wordmark, matching the landing-page identity. */
+/** Ink circle mark + sentence-case wordmark. */
 export function BrandLogo({ withText = true, href = "/", size = "md", className }: BrandLogoProps) {
-  const box = size === "sm" ? "size-8 rounded-lg" : size === "lg" ? "size-12 rounded-2xl" : "size-9 rounded-xl";
+  const box = size === "sm" ? "size-8" : size === "lg" ? "size-12" : "size-9";
   const icon = size === "sm" ? "size-4" : size === "lg" ? "size-6" : "size-[18px]";
-  const text = size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-lg";
+  const text = size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-base";
   const content = (
     <>
-      <span className={cn("flex shrink-0 items-center justify-center bg-brand text-brand-foreground shadow-glow-brand", box)}>
+      <span className={cn("flex shrink-0 items-center justify-center rounded-full bg-ink text-canvas dark:bg-canvas dark:text-ink", box)}>
         <ShieldCheck className={icon} aria-hidden />
       </span>
-      {withText && <span className={cn("font-extrabold tracking-tight text-foreground", text)}>expenses.</span>}
+      {withText && <span className={cn("font-heading font-semibold tracking-tight text-foreground", text)}>Expenses</span>}
     </>
   );
   return (

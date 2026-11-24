@@ -49,7 +49,7 @@ export function RecentTransactions({ transactions, month, today, dateFormat, cla
               >
                 <CategoryIcon icon={tx.category.icon} color={tx.category.color} className="rounded-full" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{tx.description}</span>
+                  <span className="block truncate text-sm font-normal">{tx.description}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {tx.category.name} · {relativeDayLabel(tx.date, today, dateFormat)}
                   </span>

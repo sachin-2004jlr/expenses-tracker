@@ -9,14 +9,14 @@ import type { BudgetStatus, BudgetSummary } from "@/types";
 
 const BAR: Record<BudgetStatus, string> = {
   ok: "bg-income",
-  warning: "bg-brand",
-  over: "bg-expense",
+  warning: "bg-highlight",
+  over: "bg-destructive",
 };
 
 const TEXT: Record<BudgetStatus, string> = {
   ok: "text-income-foreground",
   warning: "text-brand",
-  over: "text-expense-foreground",
+  over: "text-destructive",
 };
 
 function ProgressBar({ percentage, status, label }: { percentage: number; status: BudgetStatus; label: string }) {
@@ -49,13 +49,13 @@ export function BudgetCard({ summary, monthLabel, daysLeft, className }: BudgetC
     return (
       <SectionCard title="Budgets" label="Budgets" className={className}>
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border p-4">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-brand/12 text-brand">
+          <span className="flex size-9 items-center justify-center rounded-full bg-highlight/15 text-brand">
             <Target className="size-4" aria-hidden />
           </span>
           <p className="text-sm text-muted-foreground">Give a category a monthly limit and see how much is left, plus a daily allowance for the rest of the month.</p>
           <Link
             href="/settings?tab=budgets"
-            className="inline-flex h-9 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
+            className="inline-flex h-9 items-center justify-center rounded-full bg-secondary px-4 text-sm font-normal text-secondary-foreground hover:bg-silver/70 active:bg-silver focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors hover:bg-brand/90"
             data-testid="budgets-cta"
           >
             Set budgets
@@ -78,14 +78,14 @@ export function BudgetCard({ summary, monthLabel, daysLeft, className }: BudgetC
       data-testid="budget-card"
     >
       <div className="rounded-xl bg-muted/50 p-3">
-        <p className="flex flex-wrap items-baseline gap-x-1.5 font-bold tracking-tight">
+        <p className="flex flex-wrap items-baseline gap-x-1.5 font-semibold tracking-tight">
           <span className="text-xl tabular-nums" data-testid="budget-spent">{formatCurrency(summary.totalSpent)}</span>
-          <span className="text-sm font-medium text-muted-foreground tabular-nums">of {formatCurrency(summary.totalBudget)}</span>
+          <span className="text-sm font-normal text-muted-foreground tabular-nums">of {formatCurrency(summary.totalBudget)}</span>
         </p>
         <div className="mt-2">
           <ProgressBar percentage={summary.percentage} status={summary.status} label="Total budget used" />
         </div>
-        <p className={cn("mt-2 text-xs font-medium", TEXT[summary.status])}>
+        <p className={cn("mt-2 text-xs font-normal", TEXT[summary.status])}>
           {over ? `Over by ${formatCurrency(-summary.totalRemaining)}` : `${formatCurrency(summary.totalRemaining)} left · ${formatPercent(summary.percentage)} used`}
         </p>
         {daysLeft !== null && !over && (
@@ -100,7 +100,7 @@ export function BudgetCard({ summary, monthLabel, daysLeft, className }: BudgetC
           <li key={item.categoryId} className="min-w-0">
             <div className="flex items-center gap-2">
               <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-normal">{item.name}</span>
               <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                 {formatCurrency(item.spent)} / {formatCurrency(item.budget)}
               </span>
@@ -108,7 +108,7 @@ export function BudgetCard({ summary, monthLabel, daysLeft, className }: BudgetC
             <div className="mt-1.5">
               <ProgressBar percentage={item.percentage} status={item.status} label={`${item.name} budget used`} />
             </div>
-            <p className={cn("mt-1 text-[11px] tabular-nums", item.remaining < 0 ? "text-expense-foreground" : "text-muted-foreground")}>
+            <p className={cn("mt-1 text-xs tabular-nums", item.remaining < 0 ? "text-destructive" : "text-muted-foreground")}>
               {item.remaining < 0 ? `Over by ${formatCurrency(-item.remaining)}` : `${formatCurrency(item.remaining)} left`}
             </p>
           </li>

@@ -43,13 +43,13 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
         description={
           <span className="flex flex-wrap gap-x-4 gap-y-1">
             <span>
-              Added <span className="font-medium text-saved-foreground tabular-nums">{formatCurrency(result.totals.added)}</span>
+              Added <span className="font-normal text-saved-foreground tabular-nums">{formatCurrency(result.totals.added)}</span>
             </span>
             <span>
-              Used <span className="font-medium text-foreground tabular-nums">{formatCurrency(result.totals.used)}</span>
+              Used <span className="font-normal text-foreground tabular-nums">{formatCurrency(result.totals.used)}</span>
             </span>
             <span>
-              Net <span className="font-medium tabular-nums">{formatCurrency(result.totals.net)}</span>
+              Net <span className="font-normal tabular-nums">{formatCurrency(result.totals.net)}</span>
             </span>
           </span>
         }
@@ -104,7 +104,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
         </div>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card px-4 py-2 sm:px-5">
+      <section className="rounded-2xl bg-card shadow-card px-4 py-2 sm:px-5">
         {result.items.length === 0 ? (
           <EmptyState
             icon={PiggyBank}

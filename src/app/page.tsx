@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { ArrowDown, ArrowRight, Equal, Minus, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
+import { ChevronRight, Equal, Minus, MoveDown, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { FallingNotes } from "@/features/landing/falling-notes";
 import styles from "@/features/landing/landing.module.css";
@@ -15,40 +15,60 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
+type Tone = "tracker" | "savings" | "neutral";
+
+const FEATURES: { icon: LucideIcon; tone: Tone; title: string; text: string }[] = [
   {
     icon: Wallet,
-    title: "Every rupee, month by month",
-    text: "Log income and expenses in a few seconds. Each month gets its own clear picture of what came in and what went out.",
+    tone: "tracker",
+    title: "Every rupee, month by month.",
+    text: "Add income and expenses in seconds. Each month shows exactly what came in and what went out.",
   },
   {
     icon: Repeat,
-    title: "Leftover rolls forward",
-    text: "Whatever you don't spend this month carries into the next one on its own. No manual carrying, no surprises.",
+    tone: "tracker",
+    title: "Leftovers roll forward.",
+    text: "Whatever you don't spend this month carries into the next one automatically. No manual sums.",
   },
   {
     icon: PiggyBank,
-    title: "Savings stay separate",
-    text: "Savings live in a space of their own, with their own balance, journal and goals. They never mix with your monthly money.",
+    tone: "savings",
+    title: "Savings stay separate.",
+    text: "Savings get their own balance, journal and goals. They're never added to or taken from your monthly money.",
   },
   {
     icon: ShieldCheck,
-    title: "Private and yours",
-    text: "An e-mail and password account on your own database. Export everything as JSON or CSV whenever you like.",
+    tone: "neutral",
+    title: "Private and yours.",
+    text: "Sign in with e-mail and password, keep your data in your own database and export it any time.",
   },
 ];
 
-const EQUATION: { label: string; hint: string; op?: LucideIcon; highlight?: boolean }[] = [
-  { label: "Left from last month", hint: "carried in automatically" },
-  { label: "Income", hint: "salary, freelance, refunds", op: Plus },
-  { label: "Expenses", hint: "everything you spent", op: Minus },
-  { label: "Money in hand", hint: "what you can still use", op: Equal, highlight: true },
+const TONE_CHIP: Record<Tone, string> = {
+  tracker: "bg-flame/15 text-ember dark:text-flame",
+  savings: "bg-ice/60 text-link dark:bg-ice/15 dark:text-ice",
+  neutral: "bg-mist text-ink dark:bg-muted dark:text-foreground",
+};
+
+const EQUATION: { label: string; hint: string; op?: LucideIcon; result?: boolean }[] = [
+  { label: "Left from last month", hint: "Carried in automatically." },
+  { label: "Income", hint: "Salary, freelance, refunds.", op: Plus },
+  { label: "Expenses", hint: "Everything you spent.", op: Minus },
+  { label: "Money left", hint: "What you can still use.", op: Equal, result: true },
 ];
 
 const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
 
-const primaryCta =
-  "inline-flex h-12 items-center gap-2 rounded-full bg-brand px-7 text-xs font-extrabold uppercase tracking-[0.15em] text-brand-foreground shadow-glow-brand transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 active:scale-[0.98]";
+const focusRing = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+/** The one filled button per viewport: Apple blue pill. */
+const primaryCta = cn(
+  "inline-flex h-11 items-center justify-center rounded-full bg-link px-6 text-base font-normal text-white transition-colors duration-300 ease-(--ease-apple) hover:bg-link/90 active:bg-link/80",
+  focusRing,
+);
+
+/** Secondary actions are text links with a chevron, never a second filled button. */
+const textLink = cn("inline-flex items-center gap-0.5 rounded-full text-base text-primary transition-opacity hover:underline active:opacity-70", focusRing);
 
 export default async function LandingPage() {
   const user = await getCurrentUser();
@@ -56,25 +76,35 @@ export default async function LandingPage() {
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
-    <div className={cn("dark min-h-svh overflow-x-clip text-foreground", styles.page)}>
+    <div className={cn("min-h-svh overflow-x-clip bg-background text-foreground", styles.page)}>
       <NoteSymbols />
 
-      <ParallaxHero className={styles.hero}>
+      {/* The hero is always ink, whatever the theme: `dark` switches its tokens to the dark set. */}
+      <ParallaxHero className={cn("dark text-foreground", styles.hero)}>
         <FallingNotes scene="hero" className={styles.heroZone} />
 
         <div className="relative z-10 mx-auto flex min-h-[inherit] max-w-7xl flex-col px-5 sm:px-8">
           <header className={cn("flex h-20 items-center justify-between", styles.fadeUp)}>
-            <BrandLogo />
-            <nav aria-label="Landing" className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
-              <a href="#how" className="hidden transition-colors hover:text-foreground sm:inline">
+            <BrandLogo className={cn("rounded-full", focusRing)} />
+            <nav aria-label="Landing" className="flex items-center gap-1 text-sm sm:gap-2">
+              <a
+                href="#how"
+                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
+              >
                 How it works
               </a>
-              <a href="#month" className="hidden transition-colors hover:text-foreground sm:inline">
+              <a
+                href="#month"
+                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
+              >
                 Your month
               </a>
               <Link
                 href={user ? "/dashboard" : "/login"}
-                className="rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:border-brand/60 hover:text-brand"
+                className={cn(
+                  "ml-1 rounded-full bg-canvas/10 px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-canvas/20 active:bg-canvas/25",
+                  focusRing,
+                )}
                 data-testid="nav-signin"
               >
                 {user ? "Dashboard" : "Sign in"}
@@ -82,12 +112,11 @@ export default async function LandingPage() {
             </nav>
           </header>
 
-          <div className={cn("max-w-xl pt-[7vh] sm:pt-[9vh] lg:max-w-3xl lg:pt-[11vh]", styles.heroCopy)}>
-            <p className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.28em] text-brand", styles.fadeUp)} style={delay(0.1)}>
-              <span className="h-px w-8 bg-brand" aria-hidden />
-              Personal finance · ₹
+          <div className={cn("max-w-2xl pt-[6vh] sm:pt-[9vh] lg:max-w-3xl lg:pt-[10vh]", styles.heroCopy)}>
+            <p className={cn("text-base font-semibold text-flame", styles.fadeUp)} style={delay(0.1)}>
+              Personal finance, in rupees
             </p>
-            <h1 className="display-heading mt-5 text-[clamp(2.6rem,12.5vw,4rem)] text-foreground sm:text-7xl lg:text-[4.5rem] xl:text-[5.25rem]" data-testid="hero-title">
+            <h1 className="display-heading mt-3 text-3xl md:text-5xl" data-testid="hero-title">
               <span className={styles.line}>
                 <span className={styles.lineInner} style={delay(0.15)}>
                   Know where{" "}
@@ -104,55 +133,51 @@ export default async function LandingPage() {
                 </span>
               </span>
             </h1>
-            <p className={cn("mt-6 max-w-md text-sm leading-relaxed text-white/65 sm:text-base", styles.fadeUp)} style={delay(0.55)}>
-              A calm, private money tracker. Log what comes in and goes out, watch your leftover roll into next month, and keep savings in a space of their own.
+            <p className={cn("mt-6 max-w-md text-base text-muted-foreground", styles.fadeUp)} style={delay(0.55)}>
+              A calm, private money tracker. Log what comes in and goes out, and watch what&apos;s left roll into next month. Savings get a space of their own.
             </p>
-            <div className={cn("mt-8 flex flex-wrap items-center gap-3", styles.fadeUp)} style={delay(0.7)}>
+            <div className={cn("mt-8 flex flex-wrap items-center gap-x-6 gap-y-4", styles.fadeUp)} style={delay(0.7)}>
               <Link href={ctaHref} className={primaryCta} data-testid="cta-primary">
                 {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <a
-                href="#how"
-                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-black/40 px-6 text-xs font-bold uppercase tracking-[0.15em] text-white/80 backdrop-blur transition-colors hover:border-white/30 hover:text-white"
-              >
+              <a href="#how" className={textLink}>
                 How it works
+                <ChevronRight className="size-4" aria-hidden />
               </a>
             </div>
           </div>
 
           <a
             href="#how"
-            className={cn("relative z-10 mb-8 mt-auto hidden w-fit items-center gap-3 pt-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/50 hover:text-white lg:flex", styles.fadeUp)}
+            className={cn(
+              "relative z-10 mb-8 mt-auto hidden w-fit items-center gap-3 rounded-full pt-10 text-xs text-muted-foreground transition-colors hover:text-foreground active:opacity-70 lg:flex",
+              focusRing,
+              styles.fadeUp,
+            )}
             style={delay(1)}
           >
             <span className={styles.cue} aria-hidden />
-            Scroll
+            Scroll to see how it works
           </a>
         </div>
-
-        <div className={styles.heroFade} aria-hidden />
       </ParallaxHero>
 
       <main>
         {/* How it works */}
         <section id="how" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-20 sm:px-8 lg:py-28">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand">How it works</p>
-          <h2 className="display-heading mt-4 max-w-3xl text-4xl sm:text-5xl lg:text-6xl">Simple enough to use every day</h2>
-          <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((feature, index) => {
+          <h2 className="max-w-3xl text-2xl font-semibold md:text-3xl">
+            Simple by design. <span className="text-muted-foreground">Built to use every day.</span>
+          </h2>
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+            {FEATURES.map((feature) => {
               const Icon = feature.icon;
               return (
-                <li key={feature.title} className={styles.reveal}>
-                  <span className={styles.rule} aria-hidden />
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-brand/12 text-brand">
-                      <Icon className="size-5" aria-hidden />
-                    </span>
-                    <span className="font-mono text-xs text-white/35">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-5 text-lg font-bold leading-snug">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/60">{feature.text}</p>
+                <li key={feature.title} className={cn("rounded-2xl bg-card p-7 shadow-card", styles.reveal)}>
+                  <span className={cn("flex size-11 items-center justify-center rounded-full", TONE_CHIP[feature.tone])}>
+                    <Icon className="size-5" aria-hidden />
+                  </span>
+                  <h3 className="mt-6 text-base font-semibold">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{feature.text}</p>
                 </li>
               );
             })}
@@ -160,79 +185,78 @@ export default async function LandingPage() {
         </section>
 
         {/* The month, explained */}
-        <section id="month" className="scroll-mt-6 border-y border-white/8 bg-[#080808]">
+        <section id="month" className="scroll-mt-6 bg-card">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24">
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-brand">Your month</p>
-            <h2 className="display-heading mt-4 max-w-3xl text-4xl sm:text-5xl lg:text-6xl">One line of math. No guesswork.</h2>
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
-              The dashboard shows how much money you have in hand, worked out the same way every time.
-            </p>
+            <h2 className="max-w-3xl text-2xl font-semibold md:text-3xl">
+              One line of maths. <span className="text-muted-foreground">No guesswork.</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-base text-muted-foreground">Your dashboard works out the money you have left the same way every time.</p>
 
-            <ol className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="How money in hand is worked out">
+            <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="How money left is worked out">
               {EQUATION.map((term) => {
-                const Op = term.op ?? ArrowDown;
+                const Op = term.op ?? MoveDown;
                 return (
                   <li
                     key={term.label}
-                    className={cn(
-                      "relative rounded-2xl border p-5",
-                      term.highlight ? "border-brand/50 bg-brand/10 shadow-glow-brand" : "border-white/10 bg-white/[0.03]",
-                      styles.reveal,
-                    )}
+                    className={cn("rounded-2xl p-6", term.result ? "bg-flame text-ink" : "bg-background text-foreground", styles.reveal)}
                   >
                     <span
-                      className={cn(
-                        "mb-4 flex size-8 items-center justify-center rounded-full",
-                        term.highlight ? "bg-brand text-brand-foreground" : "bg-white/8 text-white/70",
-                      )}
+                      className={cn("mb-5 flex size-9 items-center justify-center rounded-full", term.result ? "bg-ink text-flame" : "bg-card text-foreground shadow-card")}
                       aria-hidden
                     >
                       <Op className="size-4" />
                     </span>
-                    <p className={cn("text-lg font-bold", term.highlight && "text-brand")}>{term.label}</p>
-                    <p className="mt-1 text-xs text-white/50">{term.hint}</p>
+                    <p className="text-base font-semibold">{term.label}</p>
+                    <p className={cn("mt-1 text-sm", term.result ? "text-ink" : "text-muted-foreground")}>{term.hint}</p>
                   </li>
                 );
               })}
             </ol>
 
-            <div className={cn("mt-6 flex items-start gap-4 rounded-2xl border border-dashed border-white/12 p-5", styles.reveal)}>
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-400/12 text-sky-300">
+            <div className={cn("mt-4 flex items-start gap-4 rounded-2xl bg-background p-6", styles.reveal)}>
+              <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-full", TONE_CHIP.savings)}>
                 <PiggyBank className="size-5" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold">And savings?</p>
-                <p className="mt-1 text-sm leading-relaxed text-white/60">
-                  They are not part of this math at all. Savings have their own page, their own balance, a journal and goals, so your monthly numbers only ever show your monthly money.
+                <p className="text-base font-semibold">And savings?</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  They&apos;re not part of this sum. Savings are a separate ledger with their own balance, journal and goals, so nothing you save is ever added to or
+                  taken from your money left.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="relative isolate overflow-clip">
-          <FallingNotes scene="cta" className="opacity-60" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_50%,#040404_30%,transparent)]" aria-hidden />
-          <div className="relative mx-auto max-w-7xl px-5 py-28 text-center sm:px-8 lg:py-36">
-            <h2 className={cn("display-heading text-5xl sm:text-6xl lg:text-7xl", styles.reveal)}>
-              Start tracking <span className={styles.accent}>today</span>
-            </h2>
-            <p className={cn("mx-auto mt-5 max-w-md text-sm text-white/60 sm:text-base", styles.reveal)}>Free, private and quick to set up. Your first entry takes less than a minute.</p>
-            <div className={cn("mt-9", styles.reveal)}>
-              <Link href={ctaHref} className={primaryCta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </Link>
+        {/* Final CTA: an ink tile with its own cascade of notes. */}
+        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
+          <div className={cn("dark relative isolate overflow-clip rounded-3xl text-foreground", styles.ctaTile)}>
+            <FallingNotes scene="cta" className="opacity-60" />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_50%,var(--palette-ink)_30%,transparent)]"
+              aria-hidden
+            />
+            <div className="relative px-6 py-20 text-center sm:px-10 lg:py-28">
+              <h2 className={cn("display-heading text-3xl md:text-5xl", styles.reveal)}>
+                Start tracking <span className={styles.accent}>today.</span>
+              </h2>
+              <p className={cn("mx-auto mt-5 max-w-md text-base text-muted-foreground", styles.reveal)}>
+                Free, private and quick to set up. Your first entry takes less than a minute.
+              </p>
+              <div className={cn("mt-9", styles.reveal)}>
+                <Link href={ctaHref} className={primaryCta}>
+                  {ctaLabel}
+                </Link>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/8">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-xs text-white/45 sm:flex-row sm:px-8">
-          <BrandLogo size="sm" />
-          <p>Personal finance tracker · Indian Rupee · Your own data</p>
+      <footer className="border-t border-border">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:px-8">
+          <BrandLogo size="sm" className={cn("rounded-full", focusRing)} />
+          <p>Personal finance tracker · Indian rupee · Your own data</p>
         </div>
       </footer>
     </div>

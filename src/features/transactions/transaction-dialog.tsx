@@ -186,7 +186,7 @@ export function TransactionDialog(props: TransactionDialogProps) {
                         amountRef.current?.focus();
                       }}
                       className={cn(
-                        "flex h-9 items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                        "flex h-9 items-center justify-center gap-1.5 rounded-md text-sm font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                         active ? option.active : "text-muted-foreground hover:text-foreground",
                       )}
                     >
@@ -324,7 +324,6 @@ export function TransactionDialog(props: TransactionDialogProps) {
             <Button
               type="submit"
               disabled={formState.isSubmitting}
-              className={cn(isIncome ? "bg-income text-white hover:bg-income/90" : "bg-expense text-white hover:bg-expense/90")}
             >
               {formState.isSubmitting ? "Saving…" : mode === "edit" ? "Save changes" : isIncome ? "Add income" : "Add expense"}
             </Button>

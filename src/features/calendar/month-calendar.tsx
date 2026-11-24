@@ -87,7 +87,7 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
       >
         <span
           className={cn(
-            "inline-flex size-5 items-center justify-center rounded-full text-[11px] font-medium tabular-nums sm:size-6 sm:text-xs",
+            "inline-flex size-5 items-center justify-center rounded-full text-xs font-normal tabular-nums sm:size-6 sm:text-xs",
             isToday && "bg-primary text-primary-foreground",
           )}
         >
@@ -99,7 +99,7 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
               {totals.income > 0 && <span className="size-1.5 rounded-full bg-income" />}
               {totals.expenses > 0 && <span className="size-1.5 rounded-full bg-expense" />}
             </span>
-            <span className="mt-auto hidden min-w-0 flex-col gap-0.5 text-[11px] leading-tight tabular-nums sm:flex">
+            <span className="mt-auto hidden min-w-0 flex-col gap-0.5 text-xs leading-tight tabular-nums sm:flex">
               {totals.income > 0 && <span className="truncate text-income-foreground">+{formatCompactCurrency(totals.income)}</span>}
               {totals.expenses > 0 && <span className="truncate text-expense-foreground">−{formatCompactCurrency(totals.expenses)}</span>}
             </span>
@@ -130,7 +130,7 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
                   aria-checked={view === option}
                   onClick={() => setView(option)}
                   className={cn(
-                    "h-7 rounded-md px-3 text-xs font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                    "h-7 rounded-md px-3 text-xs font-normal capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                     view === option ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -141,7 +141,7 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
           </CardAction>
         </CardHeader>
         <CardContent>
-          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:gap-1 sm:text-[11px]">
+          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-xs font-normal text-muted-foreground sm:gap-1 sm:text-xs">
             {labels.map((label) => (
               <div key={label}>{label}</div>
             ))}
@@ -166,12 +166,12 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
               <span className="flex flex-wrap gap-x-3">
                 {selectedTotals.income > 0 && (
                   <span>
-                    In <Amount paise={selectedTotals.income} className="font-medium text-income-foreground" />
+                    In <Amount paise={selectedTotals.income} className="font-normal text-income-foreground" />
                   </span>
                 )}
                 {selectedTotals.expenses > 0 && (
                   <span>
-                    Out <Amount paise={selectedTotals.expenses} className="font-medium text-expense-foreground" />
+                    Out <Amount paise={selectedTotals.expenses} className="font-normal text-expense-foreground" />
                   </span>
                 )}
               </span>

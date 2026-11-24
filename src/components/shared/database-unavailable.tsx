@@ -8,7 +8,7 @@ export function DatabaseUnavailable({ kind, message }: { kind: "not-configured" 
     return (
       <div className="flex min-h-svh items-center justify-center bg-background px-6">
         <meta httpEquiv="refresh" content={String(RETRY_SECONDS)} />
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center text-card-foreground" role="alert">
+        <div className="w-full max-w-md rounded-3xl bg-card shadow-card p-8 text-center text-card-foreground" role="alert">
           <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Database className="size-6" aria-hidden />
           </span>
@@ -19,7 +19,7 @@ export function DatabaseUnavailable({ kind, message }: { kind: "not-configured" 
           {/* A plain link reloads the page without needing client JavaScript. */}
           <a
             href=""
-            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground"
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors duration-300 ease-(--ease-apple) hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <RotateCw className="size-4" aria-hidden />
             Retry now
@@ -32,14 +32,14 @@ export function DatabaseUnavailable({ kind, message }: { kind: "not-configured" 
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-background px-6">
-      <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-8 text-card-foreground">
+      <div className="w-full max-w-lg rounded-3xl bg-card shadow-card p-8 text-card-foreground">
         <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <Database className="size-6" aria-hidden />
         </span>
         <h1 className="text-xl font-semibold tracking-tight">Database not configured</h1>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
         <div className="mt-6 space-y-3 text-sm">
-          <p className="font-medium">How to fix</p>
+          <p className="font-normal">How to fix</p>
           <ol className="list-decimal space-y-2 pl-5 text-muted-foreground">
             <li>
               Locally: install and start MongoDB Community Server (it listens on{" "}

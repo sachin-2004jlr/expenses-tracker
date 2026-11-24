@@ -106,32 +106,73 @@ export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   target: Target,
 };
 
-/** Tailwind classes for each category colour token (soft background + readable foreground). */
-export const CATEGORY_COLOR_CLASSES: Record<string, string> = {
-  slate: "bg-slate-500/12 text-slate-600 dark:text-slate-300",
-  red: "bg-red-500/12 text-red-600 dark:text-red-400",
-  orange: "bg-orange-500/12 text-orange-600 dark:text-orange-400",
-  amber: "bg-amber-500/14 text-amber-700 dark:text-amber-400",
-  yellow: "bg-yellow-500/14 text-yellow-700 dark:text-yellow-400",
-  lime: "bg-lime-500/14 text-lime-700 dark:text-lime-400",
-  green: "bg-green-500/12 text-green-700 dark:text-green-400",
-  emerald: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400",
-  teal: "bg-teal-500/12 text-teal-700 dark:text-teal-400",
-  cyan: "bg-cyan-500/12 text-cyan-700 dark:text-cyan-400",
-  sky: "bg-sky-500/12 text-sky-700 dark:text-sky-400",
-  blue: "bg-blue-500/12 text-blue-600 dark:text-blue-400",
-  indigo: "bg-indigo-500/12 text-indigo-600 dark:text-indigo-400",
-  violet: "bg-violet-500/12 text-violet-600 dark:text-violet-400",
-  purple: "bg-purple-500/12 text-purple-600 dark:text-purple-400",
-  fuchsia: "bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-400",
-  pink: "bg-pink-500/12 text-pink-600 dark:text-pink-400",
-  rose: "bg-rose-500/12 text-rose-600 dark:text-rose-400",
+/**
+ * Category colours map onto six tones of the design-system palette, so every stored colour name
+ * still means something while the UI never leaves the palette.
+ */
+export type PaletteTone = "flame" | "ember" | "link" | "ice" | "graphite" | "ink";
+
+const TONE_OF: Record<string, PaletteTone> = {
+  orange: "flame",
+  amber: "flame",
+  yellow: "flame",
+  red: "ember",
+  rose: "ember",
+  pink: "ember",
+  fuchsia: "ember",
+  blue: "link",
+  indigo: "link",
+  emerald: "link",
+  green: "link",
+  sky: "ice",
+  cyan: "ice",
+  teal: "ice",
+  lime: "ice",
+  slate: "graphite",
+  violet: "ink",
+  purple: "ink",
 };
 
-/** Solid colour for charts, resolved from Tailwind's theme variables so it follows the design system. */
+const TONE_CHIP: Record<PaletteTone, string> = {
+  flame: "bg-flame/15 text-ember dark:text-flame",
+  ember: "bg-ember/10 text-ember dark:bg-ember/25 dark:text-flame",
+  link: "bg-link/10 text-link dark:bg-link/25 dark:text-income-foreground",
+  ice: "bg-ice/45 text-link dark:bg-ice/15 dark:text-ice",
+  graphite: "bg-mist text-graphite dark:bg-muted dark:text-muted-foreground",
+  ink: "bg-mist text-ink dark:bg-muted dark:text-foreground",
+};
+
+const TONE_SOLID: Record<PaletteTone, string> = {
+  flame: "var(--palette-flame)",
+  ember: "var(--palette-ember)",
+  link: "var(--income)",
+  ice: "var(--palette-ice)",
+  graphite: "var(--palette-graphite)",
+  ink: "var(--net)",
+};
+
+/** The six swatches offered in colour pickers (one stored colour name per tone). */
+export const COLOR_SWATCHES = [
+  { value: "orange", label: "Orange" },
+  { value: "red", label: "Burnt orange" },
+  { value: "blue", label: "Blue" },
+  { value: "sky", label: "Light blue" },
+  { value: "slate", label: "Grey" },
+  { value: "violet", label: "Ink" },
+] as const;
+
+export function categoryTone(color: string): PaletteTone {
+  return TONE_OF[color] ?? "graphite";
+}
+
+/** Soft background + readable foreground for each stored colour name. */
+export const CATEGORY_COLOR_CLASSES: Record<string, string> = Object.fromEntries(
+  Object.keys(TONE_OF).map((name) => [name, TONE_CHIP[TONE_OF[name]!]]),
+);
+
+/** Solid palette colour for bars and swatches. */
 export function categoryColorValue(color: string): string {
-  const known = color in CATEGORY_COLOR_CLASSES ? color : "slate";
-  return `var(--color-${known}-500)`;
+  return TONE_SOLID[categoryTone(color)];
 }
 
 export function getCategoryIcon(name: string): LucideIcon {

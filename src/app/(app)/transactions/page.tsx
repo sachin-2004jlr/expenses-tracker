@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AddTransactionButton } from "@/components/shared/add-transaction-button";
 import { Amount } from "@/components/shared/money";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/features/transactions/pagination";
@@ -27,26 +26,25 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       <PageHeader
         title="Transactions"
         description="Every income and expense you have recorded. Tap a row to edit it."
-        actions={<AddTransactionButton className="rounded-full" />}
       />
 
       {result.total > 0 && (
         <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Totals for these transactions">
-          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
             <dt className="text-xs text-muted-foreground">Income</dt>
-            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
               <Amount paise={result.totals.income} className="text-income-foreground" />
             </dd>
           </div>
-          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
             <dt className="text-xs text-muted-foreground">Expenses</dt>
-            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
               <Amount paise={result.totals.expenses} className="text-expense-foreground" />
             </dd>
           </div>
-          <div className="min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4">
+          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
             <dt className="text-xs text-muted-foreground">Net</dt>
-            <dd className="mt-1 truncate text-sm font-bold sm:text-lg">
+            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
               <Amount paise={result.totals.net} colorBySign />
             </dd>
           </div>

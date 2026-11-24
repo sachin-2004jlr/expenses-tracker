@@ -38,20 +38,20 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
       />
 
       <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
-        <section className="flex min-w-0 flex-col justify-between rounded-3xl border border-saved/30 bg-card bg-[radial-gradient(120%_120%_at_100%_0%,color-mix(in_oklch,var(--saved)_16%,transparent),transparent_55%)] p-5 sm:p-7" aria-label="Savings balance">
+        <section className="flex min-w-0 flex-col justify-between rounded-3xl bg-card p-5 shadow-card sm:p-8" aria-label="Savings balance">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-saved/15 text-saved-foreground">
               <PiggyBank className="size-4" aria-hidden />
             </span>
-            <h3 className="text-sm font-medium text-muted-foreground">Savings balance</h3>
+            <h3 className="text-base font-semibold">Savings balance. <span className="text-muted-foreground">Kept on its own.</span></h3>
           </div>
-          <p className="mt-4 flex items-baseline gap-1 font-bold tracking-tight" data-testid="savings-balance">
-            <span className={cn("text-4xl [overflow-wrap:anywhere] sm:text-5xl", overview.balance < 0 && "text-expense-foreground")}>
+          <p className="mt-4 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="savings-balance">
+            <span className={cn("text-4xl [overflow-wrap:anywhere]", overview.balance < 0 && "text-destructive")}>
               {balance.sign}
               {balance.symbol}
               {balance.integer}
             </span>
-            <span className="text-lg text-muted-foreground">.{balance.fraction}</span>
+            <span className="text-2xl text-muted-foreground">.{balance.fraction}</span>
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             <span className="font-semibold text-foreground tabular-nums">{formatCurrency(overview.addedAllTime)}</span> added ·{" "}
@@ -87,9 +87,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <section className="min-w-0 self-start rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Recent savings activity">
+        <section className="min-w-0 self-start rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="Recent savings activity">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[15px] font-semibold">Recent savings activity</h3>
+            <h3 className="text-base font-semibold">Recent savings activity</h3>
             <Link href={`/savings/entries${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
               All entries <ArrowUpRight className="size-3" aria-hidden />
             </Link>
@@ -120,8 +120,8 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
         </section>
 
         <div className="grid min-w-0 grid-cols-1 content-start gap-4 lg:gap-6">
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="What you did with your savings">
-            <h3 className="text-[15px] font-semibold">What you did with your savings</h3>
+          <section className="min-w-0 rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="What you did with your savings">
+            <h3 className="text-base font-semibold">What you did with your savings</h3>
             <p className="text-xs text-muted-foreground">All time, by category</p>
             {overview.usedByCategory.length === 0 ? (
               <p className="mt-4 text-sm text-muted-foreground">Nothing used from savings yet.</p>
@@ -131,14 +131,14 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                   <li key={item.categoryId}>
                     <div className="flex items-center gap-2">
                       <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-normal">{item.name}</span>
                       <span className="whitespace-nowrap text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                     </div>
                     <div className="mt-1.5 flex items-center gap-2">
                       <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
-                        <span className="block h-full rounded-full" style={{ width: `${Math.max(2, item.percentage)}%`, background: categoryColorValue(item.color) }} />
+                        <span className="block h-full rounded-full" style={{ width: `${Math.max(2, item.percentage)}%`, background: "var(--saved)" }} />
                       </span>
-                      <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                      <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                         {item.count}× · {formatPercent(item.percentage, 0)}
                       </span>
                     </div>
@@ -148,9 +148,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             )}
           </section>
 
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Savings per month">
+          <section className="min-w-0 rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="Savings per month">
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold">Added vs used</h3>
+              <h3 className="text-base font-semibold">Added vs used</h3>
               <span className="text-xs text-muted-foreground">last 12 months</span>
             </div>
             <ul className="mt-4 grid h-32 grid-cols-12 items-end gap-1" aria-label="Monthly savings in and out">
@@ -168,7 +168,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                 </li>
               ))}
             </ul>
-            <div className="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-muted-foreground">
+            <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <span className="size-2 rounded-sm bg-saved" aria-hidden /> Added
@@ -182,9 +182,9 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
           </section>
 
           {overview.goals.length > 0 && (
-            <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-label="Goals">
+            <section className="min-w-0 rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="Goals">
               <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-semibold">Goals</h3>
+                <h3 className="text-base font-semibold">Goals</h3>
                 <Link href={`/savings/goals${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
                   All goals <ArrowUpRight className="size-3" aria-hidden />
                 </Link>
@@ -193,7 +193,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                 {overview.goals.slice(0, 4).map((goal) => (
                   <li key={goal.id}>
                     <div className="flex items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0 truncate font-medium">{goal.name}</span>
+                      <span className="min-w-0 truncate font-normal">{goal.name}</span>
                       <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                         {formatCurrency(goal.saved)} / {formatCurrency(goal.targetAmount)}
                       </span>

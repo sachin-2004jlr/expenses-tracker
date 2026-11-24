@@ -50,7 +50,7 @@ export function AccountSettings({ user }: { user: CurrentUser }) {
             <div className="flex items-center gap-3">
               <UserAvatar name={profileState.values?.name ?? user.name} email={user.email} image={user.image} size="lg" />
               <div className="min-w-0 text-sm">
-                <p className="font-medium [overflow-wrap:anywhere]">{profileState.values?.name ?? user.name ?? "—"}</p>
+                <p className="font-normal [overflow-wrap:anywhere]">{profileState.values?.name ?? user.name ?? "—"}</p>
                 <p className="text-muted-foreground [overflow-wrap:anywhere]">{user.email}</p>
               </div>
             </div>

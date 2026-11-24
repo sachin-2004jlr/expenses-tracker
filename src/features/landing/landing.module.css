@@ -1,8 +1,10 @@
-/* Landing page motion graphics: falling rupee notes in the brand orange. */
+/*
+ * Landing page motion graphics: falling rupee notes in the palette's flame and ember oranges
+ * over an ink hero. Every colour is a design-system palette variable.
+ */
 
 .page {
-  background: #040404;
-  color-scheme: dark;
+  background: var(--background);
 }
 
 /* ---------------------------------------------------------------- hero frame */
@@ -12,23 +14,23 @@
   isolation: isolate;
   overflow: clip;
   min-height: max(100svh, 46rem);
+  color-scheme: dark;
   background:
-    radial-gradient(90% 55% at 70% 100%, color-mix(in oklch, var(--brand) 9%, transparent), transparent 70%),
-    #040404;
+    radial-gradient(90% 55% at 70% 100%, color-mix(in srgb, var(--palette-flame) 12%, transparent), transparent 70%),
+    var(--palette-ink);
+}
+
+/* Final call to action: an ink tile (36px corners) with its own cascade and a soft flame glow. */
+.ctaTile {
+  color-scheme: dark;
+  background:
+    radial-gradient(80% 70% at 50% 110%, color-mix(in srgb, var(--palette-flame) 14%, transparent), transparent 70%),
+    var(--palette-ink);
 }
 
 .heroCopy {
   transform: translate3d(0, calc(var(--sy, 0) * -70px), 0);
   opacity: calc(1 - var(--sy, 0) * 1.3);
-}
-
-.heroFade {
-  position: absolute;
-  inset: auto 0 0;
-  height: 7rem;
-  background: linear-gradient(to bottom, transparent, #040404);
-  pointer-events: none;
-  z-index: 5;
 }
 
 /* ---------------------------------------------------------------- note field */
@@ -70,7 +72,7 @@
   width: 130%;
   height: 80%;
   transform: translateX(-50%);
-  background: radial-gradient(closest-side, color-mix(in oklch, var(--brand) 42%, transparent), transparent);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--palette-flame) 42%, transparent), transparent);
   opacity: 0.5;
   animation: breathe 7s ease-in-out infinite alternate;
 }
@@ -157,7 +159,7 @@
 .shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, #2a0c00, #000);
+  background: var(--palette-ink);
   opacity: 0.1;
   will-change: opacity;
 }
@@ -273,17 +275,18 @@
 
 .lineInner {
   display: block;
-  animation: rise 1s cubic-bezier(0.2, 0.75, 0.1, 1) both;
+  animation: rise 1s var(--ease-apple-slow) both;
   animation-delay: var(--d, 0s);
 }
 
 .fadeUp {
-  animation: fadeUp 0.9s cubic-bezier(0.2, 0.75, 0.1, 1) both;
+  animation: fadeUp 0.7s cubic-bezier(0.15, 0, 0.2, 1) both;
   animation-delay: var(--d, 0s);
 }
 
+/* Orange headline words on the ink hero (flame on ink is well above 3:1 for large text). */
 .accent {
-  background: linear-gradient(100deg, #ffc184 0%, var(--brand) 45%, #ff8a3d 100%);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--palette-flame) 55%, var(--palette-canvas)) 0%, var(--palette-flame) 60%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -309,14 +312,14 @@
   }
 }
 
-/* Scroll cue: a short orange tick sliding down a hairline. */
+/* Scroll cue: a short flame tick sliding down a hairline. */
 .cue {
   position: relative;
   display: block;
   width: 1px;
   height: 2.5rem;
   overflow: hidden;
-  background: color-mix(in oklch, white 14%, transparent);
+  background: color-mix(in srgb, var(--palette-canvas) 20%, transparent);
 }
 
 .cue::after {
@@ -324,7 +327,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 40%;
-  background: var(--brand);
+  background: var(--palette-flame);
   animation: cue 1.8s cubic-bezier(0.6, 0, 0.3, 1) infinite;
 }
 
@@ -348,7 +351,7 @@
   height: 2px;
   width: 100%;
   transform-origin: left center;
-  background: linear-gradient(90deg, var(--brand), transparent);
+  background: linear-gradient(90deg, var(--palette-flame), transparent);
 }
 
 @supports (animation-timeline: view()) {

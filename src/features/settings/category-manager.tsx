@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORY_COLOR_CLASSES, CategoryIcon, getCategoryIcon } from "@/components/shared/category-icon";
+import { COLOR_SWATCHES, CategoryIcon, categoryColorValue, categoryTone, getCategoryIcon } from "@/components/shared/category-icon";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/db/defaults";
 import { cn } from "@/lib/utils";
@@ -95,7 +95,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
                   <li key={category.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted">
                     <CategoryIcon icon={category.icon} color={category.color} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{category.name}</span>
+                      <span className="block truncate text-sm font-normal">{category.name}</span>
                       <span className="block text-xs text-muted-foreground">
                         {category.transactionCount} transaction{category.transactionCount === 1 ? "" : "s"}
                         {category.isDefault ? " · default" : ""}
@@ -164,7 +164,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
               </div>
             )}
             <fieldset className="grid gap-1.5">
-              <legend className="text-sm font-medium">Icon</legend>
+              <legend className="text-sm font-normal">Icon</legend>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-1" role="radiogroup" aria-label="Icon">
                 {CATEGORY_ICONS.map((icon) => {
                   const Icon = getCategoryIcon(icon);
@@ -189,24 +189,24 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
               </div>
             </fieldset>
             <fieldset className="grid gap-1.5">
-              <legend className="text-sm font-medium">Colour</legend>
+              <legend className="text-sm font-normal">Colour</legend>
               <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Colour">
-                {CATEGORY_COLORS.map((color) => {
-                  const active = editor.color === color;
+                {COLOR_SWATCHES.map(({ value: color, label }) => {
+                  const active = categoryTone(editor.color) === categoryTone(color);
                   return (
                     <button
                       key={color}
                       type="button"
                       role="radio"
                       aria-checked={active}
-                      aria-label={color}
+                      aria-label={label}
+                      title={label}
                       onClick={() => setEditor((s) => ({ ...s, color }))}
                       className={cn(
-                        "size-7 rounded-full border-2 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                        CATEGORY_COLOR_CLASSES[color],
-                        active ? "scale-110 border-foreground" : "border-transparent",
+                        "size-8 rounded-full border-2 transition-transform duration-300 ease-(--ease-apple) hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        active ? "scale-110 border-foreground" : "border-card",
                       )}
-                      style={{ background: `var(--color-${color}-500)` }}
+                      style={{ background: categoryColorValue(color) }}
                     />
                   );
                 })}
@@ -214,7 +214,7 @@ export function CategoryManager({ categories }: { categories: CategoryWithStats[
             </fieldset>
             <div className="flex items-center gap-3 rounded-lg border border-border p-3">
               <CategoryIcon icon={editor.icon} color={editor.color} size="lg" />
-              <span className="text-sm font-medium">{editor.name.trim() || "Preview"}</span>
+              <span className="text-sm font-normal">{editor.name.trim() || "Preview"}</span>
             </div>
             {error && (
               <p role="alert" className="text-sm text-destructive">

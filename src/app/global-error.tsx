@@ -17,7 +17,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-5 inline-flex h-10 items-center rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground"
+            className="mt-5 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors duration-300 ease-(--ease-apple) hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             Reload
           </button>
