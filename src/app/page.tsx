@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Equal, Minus, MoveDown, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
+import { ChromeArcs } from "@/components/ui/chrome-arcs";
 import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +42,7 @@ const FEATURES: { icon: LucideIcon; tone: Tone; title: string; text: string }[] 
 ];
 
 const TONE_CHIP: Record<Tone, string> = {
-  tracker: "bg-flame/15 text-ember dark:text-flame",
+  tracker: "bg-ink text-canvas dark:bg-canvas dark:text-ink",
   savings: "bg-ice/60 text-link dark:bg-ice/15 dark:text-ice",
   neutral: "bg-mist text-ink dark:bg-muted dark:text-foreground",
 };
@@ -63,95 +65,85 @@ const primaryCta = cn(
 /** Secondary actions are text links with a chevron, never a second filled button. */
 const textLink = cn("inline-flex items-center gap-0.5 rounded-full text-base text-primary transition-opacity hover:underline active:opacity-70", focusRing);
 
-/** Orange headline words on ink (flame on ink is well above 3:1 for large text). */
-const accent =
-  "bg-[linear-gradient(100deg,color-mix(in_srgb,var(--palette-flame)_55%,var(--palette-canvas))_0%,var(--palette-flame)_60%)] bg-clip-text text-transparent";
-
-/** Soft flame glow under an ink surface. */
-const inkGlow = "bg-ink bg-[radial-gradient(90%_60%_at_70%_100%,color-mix(in_srgb,var(--palette-flame)_12%,transparent),transparent_70%)]";
-
 export default async function LandingPage() {
   const user = await getCurrentUser();
   const ctaHref = user ? "/dashboard" : "/register";
   const ctaLabel = user ? "Open dashboard" : "Get started";
 
   return (
-    <div className="min-h-svh overflow-x-clip bg-background text-foreground">
-      {/* The hero is always ink, whatever the theme: `dark` switches its tokens to the dark set. */}
-      <section className={cn("dark relative isolate text-foreground", inkGlow)}>
-        <div className="mx-auto flex max-w-7xl flex-col px-5 pb-20 sm:px-8 lg:pb-28">
-          <header className="flex h-20 items-center justify-between">
-            <BrandLogo className={cn("rounded-full", focusRing)} />
-            <nav aria-label="Landing" className="flex items-center gap-1 text-sm sm:gap-2">
-              <a
-                href="#how"
-                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
-              >
-                How it works
-              </a>
-              <a
-                href="#month"
-                className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
-              >
-                Your month
-              </a>
-              <Link
-                href={user ? "/dashboard" : "/login"}
-                className={cn("ml-1 rounded-full bg-canvas/10 px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-canvas/20 active:bg-canvas/25", focusRing)}
-                data-testid="nav-signin"
-              >
-                {user ? "Dashboard" : "Sign in"}
-              </Link>
-            </nav>
-          </header>
-
-          <div className="grid items-center gap-12 pt-[6vh] sm:pt-[9vh] lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:pt-[10vh]">
-            <div className="max-w-2xl">
-              <p className="text-base font-semibold text-flame">Personal finance, in rupees</p>
-              <h1 className="display-heading mt-3 text-3xl md:text-5xl" data-testid="hero-title">
-                Know where <span className={accent}>every rupee</span> goes.
-              </h1>
-              <p className="mt-6 max-w-md text-base text-muted-foreground">
-                A calm, private money tracker. Log what comes in and goes out, and watch what&apos;s left roll into next month. Savings get a space of their own.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-                <Link href={ctaHref} className={primaryCta} data-testid="cta-primary">
-                  {ctaLabel}
-                </Link>
-                <a href="#how" className={textLink}>
+    <div className="min-h-svh overflow-x-clip bg-background pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] text-foreground">
+      {/* Hero: black chrome arcs behind everything; `dark` switches the tokens to the dark set. */}
+      <ChromeArcs className="dark h-auto text-foreground" label="Chrome arcs">
+        <div className="relative w-full">
+          {/* Legibility: darker behind the words, the arcs stay bright where there is no text. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.72)_0%,rgb(0_0_0/0.58)_55%,rgb(0_0_0/0.78)_100%)] lg:bg-[linear-gradient(90deg,rgb(0_0_0/0.78)_0%,rgb(0_0_0/0.42)_48%,rgb(0_0_0/0.12)_100%)]"
+          />
+          <div className="relative mx-auto flex min-h-svh max-w-7xl flex-col px-5 pb-16 sm:px-8 lg:pb-20 short:min-h-0 short:pb-10">
+            <header className="flex h-20 items-center justify-between short:h-14">
+              <BrandLogo className={cn("rounded-full", focusRing)} />
+              <nav aria-label="Landing" className="flex items-center gap-1 text-sm sm:gap-2">
+                <a
+                  href="#how"
+                  className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
+                >
                   How it works
-                  <ChevronRight className="size-4" aria-hidden />
                 </a>
+                <a
+                  href="#month"
+                  className={cn("hidden rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground active:opacity-70 sm:inline", focusRing)}
+                >
+                  Your month
+                </a>
+                <Link
+                  href={user ? "/dashboard" : "/login"}
+                  className={cn(
+                    "ml-1 inline-flex h-10 items-center rounded-full bg-canvas/10 px-4 text-sm text-foreground backdrop-blur transition-colors hover:bg-canvas/20 active:bg-canvas/25",
+                    focusRing,
+                  )}
+                  data-testid="nav-signin"
+                >
+                  {user ? "Dashboard" : "Sign in"}
+                </Link>
+              </nav>
+            </header>
+
+            <div className="grid flex-1 items-center gap-10 pt-[4vh] sm:pt-[7vh] lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-12 lg:pt-0 short:pt-2">
+              <div className="max-w-2xl">
+                <p className="text-base font-semibold text-silver">Personal finance, in rupees</p>
+                <h1 className="display-heading mt-3 text-3xl md:text-5xl short:text-2xl" data-testid="hero-title">
+                  Know where <span className="chrome-text">every rupee</span> goes.
+                </h1>
+                <p className="mt-6 max-w-md text-base text-muted-foreground short:mt-3">
+                  A calm, private money tracker. Log what comes in and goes out, and watch what&apos;s left roll into next month. Savings get a space of their own.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 short:mt-4">
+                  <Link href={ctaHref} className={primaryCta} data-testid="cta-primary">
+                    {ctaLabel}
+                  </Link>
+                  <a href="#how" className={textLink}>
+                    How it works
+                    <ChevronRight className="size-4" aria-hidden />
+                  </a>
+                </div>
+              </div>
+
+              {/* Right side: the rolled ₹500 note. */}
+              <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-3xl bg-ink shadow-card ring-1 ring-white/10 lg:mx-0 lg:aspect-[9/14] lg:max-w-none lg:justify-self-end lg:w-[min(100%,26rem)]">
+                <Image
+                  src="/landing/rupee-roll.jpg"
+                  alt="A rolled-up ₹500 note held with a rubber band, on a dark surface"
+                  fill
+                  sizes="(min-width: 1024px) 26rem, (min-width: 640px) 24rem, 90vw"
+                  fetchPriority="high"
+                  className="object-cover object-[50%_62%]"
+                />
               </div>
             </div>
-
-            {/* A still example of the dashboard's first card. */}
-            <figure aria-label="Example of the money left card" className="w-full max-w-md justify-self-center rounded-3xl bg-card p-7 shadow-card lg:justify-self-end">
-              <p className="text-xs text-muted-foreground">Example</p>
-              <p className="mt-1 text-base font-semibold">
-                Money left. <span className="text-muted-foreground">November so far.</span>
-              </p>
-              <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums">₹23,510</p>
-              <p className="mt-2 text-sm text-muted-foreground tabular-nums">₹88,566 carried + ₹62,023 income − ₹1,27,079 spent</p>
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full w-[84%] rounded-full bg-highlight" />
-              </div>
-              <ul className="mt-5 grid grid-cols-3 gap-2 text-xs">
-                {[
-                  ["Income", "₹62,023"],
-                  ["Spent", "₹1,27,079"],
-                  ["Per day", "₹7,475"],
-                ].map(([label, value]) => (
-                  <li key={label} className="rounded-2xl bg-background p-3">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="mt-1 block truncate text-sm font-semibold tabular-nums">{value}</span>
-                  </li>
-                ))}
-              </ul>
-            </figure>
           </div>
         </div>
-      </section>
+      </ChromeArcs>
 
       <main>
         {/* How it works */}
@@ -187,15 +179,15 @@ export default async function LandingPage() {
               {EQUATION.map((term) => {
                 const Op = term.op ?? MoveDown;
                 return (
-                  <li key={term.label} className={cn("rounded-2xl p-6", term.result ? "bg-flame text-ink" : "bg-background text-foreground")}>
+                  <li key={term.label} className={cn("rounded-2xl p-6", term.result ? "bg-ink text-canvas" : "bg-background text-foreground")}>
                     <span
-                      className={cn("mb-5 flex size-9 items-center justify-center rounded-full", term.result ? "bg-ink text-flame" : "bg-card text-foreground shadow-card")}
+                      className={cn("mb-5 flex size-9 items-center justify-center rounded-full", term.result ? "bg-canvas text-ink" : "bg-card text-foreground shadow-card")}
                       aria-hidden
                     >
                       <Op className="size-4" />
                     </span>
                     <p className="text-base font-semibold">{term.label}</p>
-                    <p className={cn("mt-1 text-sm", term.result ? "text-ink" : "text-muted-foreground")}>{term.hint}</p>
+                    <p className={cn("mt-1 text-sm", term.result ? "text-silver" : "text-muted-foreground")}>{term.hint}</p>
                   </li>
                 );
               })}
@@ -216,21 +208,24 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* Final call to action */}
+        {/* Final call to action, on the same chrome arcs */}
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
-          <div className={cn("dark relative isolate overflow-clip rounded-3xl text-foreground", inkGlow)}>
-            <div className="relative px-6 py-20 text-center sm:px-10 lg:py-28">
-              <h2 className="display-heading text-3xl md:text-5xl">
-                Start tracking <span className={accent}>today.</span>
-              </h2>
-              <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">Free, private and quick to set up. Your first entry takes less than a minute.</p>
-              <div className="mt-9">
-                <Link href={ctaHref} className={primaryCta}>
-                  {ctaLabel}
-                </Link>
+          <ChromeArcs className="dark h-auto rounded-3xl text-foreground" speed={0.6} label="Chrome arcs">
+            <div className="relative w-full">
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_50%,rgb(0_0_0/0.7)_20%,transparent)]" />
+              <div className="relative px-6 py-20 text-center sm:px-10 lg:py-28">
+                <h2 className="display-heading text-3xl md:text-5xl">
+                  Start tracking <span className="chrome-text">today.</span>
+                </h2>
+                <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">Free, private and quick to set up. Your first entry takes less than a minute.</p>
+                <div className="mt-9">
+                  <Link href={ctaHref} className={primaryCta}>
+                    {ctaLabel}
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          </ChromeArcs>
         </section>
       </main>
 

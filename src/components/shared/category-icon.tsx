@@ -134,17 +134,18 @@ const TONE_OF: Record<string, PaletteTone> = {
 };
 
 const TONE_CHIP: Record<PaletteTone, string> = {
-  flame: "bg-flame/15 text-ember dark:text-flame",
-  ember: "bg-ember/10 text-ember dark:bg-ember/25 dark:text-flame",
+  // Chrome tones replace the old orange ones: silver and black chrome.
+  flame: "bg-silver/60 text-ink dark:bg-silver/20 dark:text-canvas",
+  ember: "bg-ink text-canvas dark:bg-canvas dark:text-ink",
   link: "bg-link/10 text-link dark:bg-link/25 dark:text-income-foreground",
   ice: "bg-ice/45 text-link dark:bg-ice/15 dark:text-ice",
   graphite: "bg-mist text-graphite dark:bg-muted dark:text-muted-foreground",
-  ink: "bg-mist text-ink dark:bg-muted dark:text-foreground",
+  ink: "bg-graphite text-white dark:bg-graphite dark:text-canvas",
 };
 
 const TONE_SOLID: Record<PaletteTone, string> = {
-  flame: "var(--palette-flame)",
-  ember: "var(--palette-ember)",
+  flame: "var(--palette-graphite)",
+  ember: "var(--brand)",
   link: "var(--income)",
   ice: "var(--palette-ice)",
   graphite: "var(--palette-graphite)",
@@ -153,12 +154,12 @@ const TONE_SOLID: Record<PaletteTone, string> = {
 
 /** The six swatches offered in colour pickers (one stored colour name per tone). */
 export const COLOR_SWATCHES = [
-  { value: "orange", label: "Orange" },
-  { value: "red", label: "Burnt orange" },
+  { value: "orange", label: "Silver" },
+  { value: "red", label: "Black" },
   { value: "blue", label: "Blue" },
   { value: "sky", label: "Light blue" },
   { value: "slate", label: "Grey" },
-  { value: "violet", label: "Ink" },
+  { value: "violet", label: "Charcoal" },
 ] as const;
 
 export function categoryTone(color: string): PaletteTone {

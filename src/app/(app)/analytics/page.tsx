@@ -42,7 +42,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         actions={<AnalyticsRange value={range} />}
       />
 
-      <section aria-label="Range totals" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <section aria-label="Range totals" className="grid grid-cols-1 gap-3 min-[440px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <StatCard label="Total income" icon={ArrowUpRight} tone="income" value={formatCurrency(overview.totals.income)} hint={`Avg ${formatCurrency(overview.averages.income)} / month`} />
         <StatCard label="Total expenses" icon={ArrowDownRight} tone="expense" value={formatCurrency(overview.totals.expenses)} hint={`Avg ${formatCurrency(overview.averages.expenses)} / month`} />
         <StatCard

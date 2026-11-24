@@ -55,7 +55,7 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
       onClick={(event) => (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
     >
       {value.map((tag) => (
-        <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-normal text-foreground">
+        <span key={tag} className="inline-flex items-center gap-0.5 rounded-full bg-muted py-0.5 pl-2.5 pr-0.5 text-xs font-normal text-foreground">
           {tag}
           <button
             type="button"
@@ -64,7 +64,7 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
               remove(tag);
             }}
             aria-label={`Remove tag ${tag}`}
-            className="rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            className="-my-1 flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-silver/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             disabled={disabled}
           >
             <X className="size-3" aria-hidden />
@@ -89,7 +89,7 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
         placeholder={value.length === 0 ? placeholder : ""}
         aria-invalid={rest["aria-invalid"]}
         aria-describedby={undefined}
-        className="min-w-24 flex-1 bg-transparent py-0.5 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+        className="min-w-24 flex-1 bg-transparent py-0.5 text-base outline-none placeholder:text-muted-foreground"
       />
       <datalist id={listId}>
         {available.map((suggestion) => (

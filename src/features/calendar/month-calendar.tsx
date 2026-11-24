@@ -107,7 +107,7 @@ export function MonthCalendar({ month, today, transactions, firstDayOfWeek, date
         )}
         {totals && compact && (
           <span className="sr-only">
-            {totals.count} transactions
+            {totals.count} transaction{totals.count === 1 ? "" : "s"}
           </span>
         )}
       </button>

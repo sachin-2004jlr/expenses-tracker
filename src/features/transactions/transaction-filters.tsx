@@ -127,7 +127,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
         </div>
 
         <Select value={filters.category ?? ALL} onValueChange={(value) => update({ category: value })} items={categoryItems}>
-          <SelectTrigger className="min-w-0 flex-1 rounded-full sm:w-48 sm:flex-none" aria-label="Filter by category">
+          <SelectTrigger className="min-w-40 flex-1 rounded-full sm:w-48 sm:flex-none" aria-label="Filter by category">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -214,7 +214,7 @@ export function TransactionFiltersBar({ filters, categories, tags, month, classN
                     const checked = filters.tags.includes(tag.name);
                     return (
                       <li key={tag.name}>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-muted">
+                        <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-full px-2.5 py-1 text-sm hover:bg-muted">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(next) => {

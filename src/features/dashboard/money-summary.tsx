@@ -63,7 +63,7 @@ export function MoneySummary({
             Money left. <span className="text-muted-foreground">{monthLabel} so far.</span>
           </p>
           <p className="mt-2 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="total-balance">
-            <span className={cn("text-4xl [overflow-wrap:anywhere]", balance < 0 && "text-destructive")}>
+            <span className={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-2xl" : "text-4xl", balance < 0 && "text-destructive")}>
               {parts.sign}
               {parts.symbol}
               {parts.integer}

@@ -63,14 +63,14 @@ export function StatCard({
   const hasChange = changePercent !== undefined;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2 rounded-2xl bg-card shadow-card p-4 text-card-foreground sm:p-5", className)}>
+    <div className={cn("@container flex min-w-0 flex-col gap-2 rounded-2xl bg-card shadow-card p-4 text-card-foreground sm:p-5", className)}>
       <div className="flex items-center gap-2">
         <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", TONE_ICON[tone])}>
           <Icon className="size-3.5" aria-hidden />
         </span>
         <p className="min-w-0 truncate text-sm font-normal text-muted-foreground">{label}</p>
       </div>
-      <p className="min-w-0 text-2xl font-semibold tracking-tight tabular-nums [overflow-wrap:anywhere]">{value}</p>
+      <p className="min-w-0 whitespace-nowrap text-xl font-semibold tracking-tight tabular-nums @[15rem]:text-2xl">{value}</p>
       {(hasChange || hint) && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           {hasChange && <ChangePill changePercent={changePercent ?? null} increaseIsGood={increaseIsGood} />}

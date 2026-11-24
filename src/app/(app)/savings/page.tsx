@@ -46,7 +46,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             <h3 className="text-base font-semibold">Savings balance. <span className="text-muted-foreground">Kept on its own.</span></h3>
           </div>
           <p className="mt-4 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="savings-balance">
-            <span className={cn("text-4xl [overflow-wrap:anywhere]", overview.balance < 0 && "text-destructive")}>
+            <span className={cn("whitespace-nowrap", balance.integer.length > 8 ? "text-2xl" : "text-4xl", overview.balance < 0 && "text-destructive")}>
               {balance.sign}
               {balance.symbol}
               {balance.integer}
@@ -90,7 +90,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
         <section className="min-w-0 self-start rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="Recent savings activity">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold">Recent savings activity</h3>
-            <Link href={`/savings/entries${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
+            <Link href={`/savings/entries${query}`} prefetch className="-my-2 inline-flex min-h-10 items-center gap-0.5 rounded-full px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
               All entries <ArrowUpRight className="size-3" aria-hidden />
             </Link>
           </div>
@@ -185,7 +185,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             <section className="min-w-0 rounded-2xl bg-card shadow-card p-4 sm:p-5" aria-label="Goals">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold">Goals</h3>
-                <Link href={`/savings/goals${query}`} prefetch className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
+                <Link href={`/savings/goals${query}`} prefetch className="-my-2 inline-flex min-h-10 items-center gap-0.5 rounded-full px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
                   All goals <ArrowUpRight className="size-3" aria-hidden />
                 </Link>
               </div>

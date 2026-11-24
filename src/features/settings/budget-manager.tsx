@@ -96,21 +96,22 @@ export function BudgetManager({ categories, budgets, spent, monthLabel }: Budget
                 <li key={category.id} className="py-3">
                   <form onSubmit={(e) => onSubmit(e, category)} className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <CategoryIcon icon={category.icon} color={category.color} />
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-36 flex-1">
                       <label htmlFor={`budget-${category.id}`} className="block truncate text-sm font-normal">
                         {category.name}
                       </label>
                       <p
                         className={cn(
                           "text-xs tabular-nums",
-                          !current ? "text-muted-foreground" : status === "over" ? "text-expense-foreground" : status === "warning" ? "text-brand" : "text-muted-foreground",
+                          !current ? "text-muted-foreground" : status === "over" ? "text-destructive" : status === "warning" ? "font-semibold text-foreground" : "text-muted-foreground",
                         )}
                       >
                         {formatCurrency(used)} spent{current ? ` of ${formatCurrency(current)}` : " this month"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <InputGroup className="w-36">
+                    {/* Narrow phones: the amount field drops to its own line under the name. */}
+                    <div className="flex items-center gap-1.5 max-sm:w-full max-sm:pl-11">
+                      <InputGroup className="w-36 max-sm:flex-1">
                         <InputGroupAddon>
                           <InputGroupText>₹</InputGroupText>
                         </InputGroupAddon>

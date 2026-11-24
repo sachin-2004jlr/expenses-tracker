@@ -28,23 +28,27 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         description="Every income and expense you have recorded. Tap a row to edit it."
       />
 
+      {/* Phones: one card of full-width rows, so long amounts are never cut. Wider: three tiles. */}
       {result.total > 0 && (
-        <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Totals for these transactions">
-          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
-            <dt className="text-xs text-muted-foreground">Income</dt>
-            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
+        <dl
+          className="overflow-hidden rounded-2xl bg-card shadow-card sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible sm:rounded-none sm:bg-transparent sm:shadow-none"
+          aria-label="Totals for these transactions"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0 sm:block sm:rounded-2xl sm:border-0 sm:bg-card sm:p-4 sm:shadow-card">
+            <dt className="text-sm text-muted-foreground sm:text-xs">Income</dt>
+            <dd className="whitespace-nowrap text-base font-semibold sm:mt-1 sm:text-sm lg:text-base">
               <Amount paise={result.totals.income} className="text-income-foreground" />
             </dd>
           </div>
-          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
-            <dt className="text-xs text-muted-foreground">Expenses</dt>
-            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0 sm:block sm:rounded-2xl sm:border-0 sm:bg-card sm:p-4 sm:shadow-card">
+            <dt className="text-sm text-muted-foreground sm:text-xs">Expenses</dt>
+            <dd className="whitespace-nowrap text-base font-semibold sm:mt-1 sm:text-sm lg:text-base">
               <Amount paise={result.totals.expenses} className="text-expense-foreground" />
             </dd>
           </div>
-          <div className="min-w-0 rounded-2xl bg-card shadow-card p-3 sm:p-4">
-            <dt className="text-xs text-muted-foreground">Net</dt>
-            <dd className="mt-1 truncate text-sm font-semibold sm:text-lg">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0 sm:block sm:rounded-2xl sm:border-0 sm:bg-card sm:p-4 sm:shadow-card">
+            <dt className="text-sm text-muted-foreground sm:text-xs">Net</dt>
+            <dd className="whitespace-nowrap text-base font-semibold sm:mt-1 sm:text-sm lg:text-base">
               <Amount paise={result.totals.net} colorBySign />
             </dd>
           </div>

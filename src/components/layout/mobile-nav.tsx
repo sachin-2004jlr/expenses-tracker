@@ -27,7 +27,7 @@ export function MobileNav() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 supports-backdrop-filter:bg-background/75 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/85 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur-xl backdrop-saturate-150 supports-backdrop-filter:bg-background/75 lg:hidden"
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5 items-end">
           <TabItem item={HOME} active={isActivePath(pathname, DASHBOARD_PATH)} />

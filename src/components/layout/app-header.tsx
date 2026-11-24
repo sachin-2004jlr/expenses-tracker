@@ -102,7 +102,7 @@ export function AppHeader({ user, currentMonth }: AppHeaderProps) {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search transactions"
                   aria-label="Search transactions"
-                  className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                  className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
                 />
                 {!query && (
                   <kbd className="hidden shrink-0 rounded-full bg-card px-2 font-mono text-xs text-muted-foreground xl:inline" aria-hidden>

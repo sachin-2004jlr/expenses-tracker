@@ -196,7 +196,7 @@ export function DataManagement({ transactionCount }: { transactionCount: number 
           <CardDescription>Delete all transactions, tags and recurring rules. Export a backup first.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
             <Checkbox checked={resetCategories} onCheckedChange={(checked) => setResetCategories(Boolean(checked))} />
             Also reset categories to the defaults
           </label>

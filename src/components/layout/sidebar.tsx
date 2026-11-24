@@ -49,7 +49,7 @@ function GroupLabel({ children, dot }: { children: string; dot: string }) {
 
 /**
  * Desktop sidebar. The monthly money tracker and the savings module are two clearly separate
- * groups (orange vs blue) because they are two separate ledgers.
+ * groups (black chrome vs blue) because they are two separate ledgers.
  */
 export function Sidebar() {
   const pathname = usePathname();

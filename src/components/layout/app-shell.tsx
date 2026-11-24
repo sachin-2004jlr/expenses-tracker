@@ -24,7 +24,7 @@ export function AppShell({ categories, tagSuggestions, today, currentMonth, user
   return (
     <TransactionDialogProvider categories={categories} tagSuggestions={tagSuggestions} today={today}>
       <SavingsDialogProvider categories={categories.filter((c) => c.type === "SAVINGS")} today={today}>
-        <div className="flex min-h-svh w-full bg-background">
+        <div className="flex min-h-svh w-full bg-background pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col overflow-x-clip lg:pl-64">
             <AppHeader user={user} currentMonth={currentMonth} />

@@ -74,7 +74,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                       type="button"
                       onClick={() => setSort(column.field)}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-sm text-xs font-normal hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                        "inline-flex h-8 items-center gap-1 rounded-full text-xs font-normal hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                         active ? "text-foreground" : "text-muted-foreground",
                         column.field === "amount" && "flex-row-reverse",
                       )}

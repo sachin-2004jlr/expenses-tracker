@@ -15,7 +15,7 @@ const BAR: Record<BudgetStatus, string> = {
 
 const TEXT: Record<BudgetStatus, string> = {
   ok: "text-income-foreground",
-  warning: "text-brand",
+  warning: "font-semibold text-foreground",
   over: "text-destructive",
 };
 

@@ -67,7 +67,7 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
           )}
         </div>
         <details className="mt-3 text-xs text-muted-foreground">
-          <summary className="cursor-pointer select-none hover:text-foreground">View as table</summary>
+          <summary className="cursor-pointer select-none py-3 hover:text-foreground">View as table</summary>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>

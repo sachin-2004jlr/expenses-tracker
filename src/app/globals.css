@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Short viewports, e.g. phones held sideways. */
+@custom-variant short (@media (max-height: 500px));
 
 /*
  * Design system: Apple (IN). Every colour below is one of the ten palette tokens
@@ -11,9 +13,9 @@
  *
  *   ink      #1D1D1F  color-1   text primary
  *   link     #0066CC  color-2   accent: links, buttons, focus, money in
- *   ember    #B64400  color-3   accent: orange text (money out, the tracker)
+ *   ember    #B64400  color-3   (unused: no orange in the UI)
  *   graphite #6E6E73  color-4   text secondary
- *   flame    #FF791B  color-5   accent: orange fills and charts
+ *   flame    #FF791B  color-5   (unused: no orange in the UI)
  *   silver   #D2D2D7  color-6   surface: hairlines
  *   ice      #ADD8FF  color-7   surface: savings
  *   mist     #E8E8ED  color-8   surface: fills, hover
@@ -162,7 +164,7 @@
   --accent-foreground: var(--palette-ink);
   /* Red is reserved for errors, destructive actions and warnings. */
   --destructive: #e30000;
-  --warning: var(--palette-ember);
+  --warning: var(--palette-ink);
   --border: var(--palette-silver);
   --input: var(--palette-silver);
   --ring: var(--palette-link);
@@ -177,25 +179,27 @@
   --sidebar-ring: var(--palette-link);
 
   /* The money tracker's accent is orange; Savings' is blue. */
-  --brand: var(--palette-ember);
+  /* Chrome look (Chrome Arcs): black, silver and white for the tracker; blue for actions,
+     money in and Savings. No orange anywhere; red only for errors and over-budget. */
+  --brand: var(--palette-ink);
   --brand-foreground: var(--palette-white);
-  --highlight: var(--palette-flame);
+  --highlight: var(--palette-ink);
   --income: var(--palette-link);
   --income-foreground: var(--palette-link);
-  --expense: var(--palette-flame);
-  --expense-foreground: var(--palette-ember);
-  --net: var(--palette-ink);
+  --expense: var(--palette-ink);
+  --expense-foreground: var(--palette-ink);
+  --net: var(--palette-graphite);
   --saved: var(--palette-link);
   --saved-foreground: var(--palette-link);
   --saved-surface: var(--palette-ice);
 
-  --chart-1: var(--palette-flame);
+  --chart-1: var(--palette-ink);
   --chart-2: var(--palette-link);
-  --chart-3: var(--palette-ember);
+  --chart-3: var(--palette-graphite);
   --chart-4: var(--palette-ice);
-  --chart-5: var(--palette-graphite);
-  --chart-6: var(--palette-ink);
-  --chart-7: var(--palette-silver);
+  --chart-5: var(--palette-silver);
+  --chart-6: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
+  --chart-7: color-mix(in srgb, var(--palette-ink) 55%, var(--palette-graphite));
   --chart-8: var(--palette-mist);
   --chart-grid: var(--palette-mist);
   --chart-axis: var(--palette-graphite);
@@ -221,7 +225,7 @@
   --accent: color-mix(in srgb, var(--palette-ink) 70%, var(--palette-graphite));
   --accent-foreground: var(--palette-canvas);
   --destructive: #ff5a5a;
-  --warning: var(--palette-flame);
+  --warning: var(--palette-canvas);
   --border: color-mix(in srgb, var(--palette-ink) 62%, var(--palette-graphite));
   --input: color-mix(in srgb, var(--palette-ink) 55%, var(--palette-graphite));
   --ring: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
@@ -234,21 +238,21 @@
   --sidebar-border: color-mix(in srgb, var(--palette-ink) 62%, var(--palette-graphite));
   --sidebar-ring: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
 
-  --brand: var(--palette-flame);
+  --brand: var(--palette-canvas);
   --brand-foreground: var(--palette-ink);
-  --highlight: var(--palette-flame);
+  --highlight: var(--palette-canvas);
   --income: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
   --income-foreground: color-mix(in srgb, var(--palette-link) 45%, var(--palette-ice));
-  --expense: var(--palette-flame);
-  --expense-foreground: var(--palette-flame);
-  --net: var(--palette-canvas);
+  --expense: var(--palette-canvas);
+  --expense-foreground: var(--palette-canvas);
+  --net: color-mix(in srgb, var(--palette-graphite) 50%, var(--palette-canvas));
   --saved: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
   --saved-foreground: color-mix(in srgb, var(--palette-link) 45%, var(--palette-ice));
   --saved-surface: color-mix(in srgb, var(--palette-link) 30%, var(--palette-ink));
 
-  --chart-1: var(--palette-flame);
+  --chart-1: var(--palette-canvas);
   --chart-2: color-mix(in srgb, var(--palette-link) 55%, var(--palette-ice));
-  --chart-3: var(--palette-ember);
+  --chart-3: color-mix(in srgb, var(--palette-graphite) 50%, var(--palette-canvas));
   --chart-4: var(--palette-ice);
   --chart-5: var(--palette-graphite);
   --chart-6: var(--palette-canvas);
@@ -300,6 +304,21 @@
   font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1.05;
+}
+
+/* Chrome text: the silver-white-ice sheen of the Chrome Arcs background, for headline accents. */
+@utility chrome-text {
+  background-image: linear-gradient(
+    100deg,
+    var(--palette-silver) 0%,
+    var(--palette-white) 28%,
+    var(--palette-ice) 52%,
+    var(--palette-white) 74%,
+    var(--palette-silver) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Apple-style hover for clickable tiles: a slightly deeper shadow, eased. */
