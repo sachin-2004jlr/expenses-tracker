@@ -11,10 +11,10 @@ export interface AddTransactionButtonProps extends Omit<ComponentProps<typeof Bu
   label?: string;
 }
 
-export function AddTransactionButton({ defaults, label = "Add transaction", variant = "secondary", ...props }: AddTransactionButtonProps) {
+export function AddTransactionButton({ defaults, label = "Add transaction", ...props }: AddTransactionButtonProps) {
   const { openCreate } = useTransactionDialog();
   return (
-    <Button onClick={() => openCreate(defaults)} variant={variant} {...props}>
+    <Button onClick={() => openCreate(defaults)} {...props}>
       <Plus data-icon="inline-start" aria-hidden />
       {label}
     </Button>

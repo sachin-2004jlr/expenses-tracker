@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChartColumn } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CategoryIcon } from "@/components/shared/category-icon";
+import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatPercent } from "@/lib/money";
 import type { CategoryBreakdownItem, TransactionType } from "@/types";
@@ -38,16 +38,16 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
                   className="group grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 rounded-lg px-1 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                 >
                   <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-                  <span className="min-w-0 truncate text-sm font-normal">{item.name}</span>
+                  <span className="min-w-0 truncate text-sm font-medium">{item.name}</span>
                   <span className="whitespace-nowrap text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                   <span className="col-start-2 col-end-4 flex items-center gap-2">
                     <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                       <span
                         className="block h-full rounded-full"
-                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: type === "INCOME" ? "var(--income)" : "var(--expense)" }}
+                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: categoryColorValue(item.color) }}
                       />
                     </span>
-                    <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground tabular-nums">
+                    <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground tabular-nums">
                       {item.count}× · {formatPercent(item.percentage, item.percentage >= 10 ? 0 : 1)}
                     </span>
                   </span>

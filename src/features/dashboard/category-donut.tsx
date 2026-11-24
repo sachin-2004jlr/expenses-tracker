@@ -5,13 +5,12 @@ import { useMemo, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartPie } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CategoryIcon } from "@/components/shared/category-icon";
+import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { CategoryBreakdownItem, MonthKey, TransactionType } from "@/types";
 import { ChartTooltipContent } from "@/features/charts/chart-tooltip";
-import { CATEGORICAL_COLORS } from "@/features/charts/chart-utils";
 
 export interface CategoryDonutProps {
   items: CategoryBreakdownItem[];
@@ -52,11 +51,11 @@ export function CategoryDonut({
   const slices = useMemo<Slice[]>(() => {
     const head = items.slice(0, maxSlices);
     const tail = items.slice(maxSlices);
-    const result: Slice[] = head.map((item, index) => ({
+    const result: Slice[] = head.map((item) => ({
       key: item.categoryId,
       name: item.name,
       icon: item.icon,
-      color: CATEGORICAL_COLORS[index % CATEGORICAL_COLORS.length]!,
+      color: categoryColorValue(item.color),
       amount: item.amount,
       count: item.count,
       percentage: item.percentage,
@@ -131,7 +130,7 @@ export function CategoryDonut({
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-xs text-muted-foreground">{activeSlice ? activeSlice.name : "Total"}</span>
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{activeSlice ? activeSlice.name : "Total"}</span>
                 <span className="text-lg font-semibold tabular-nums">{formatCurrency(activeSlice ? activeSlice.amount : total, { compact: total >= 10_000_000 })}</span>
               </div>
             </div>
@@ -158,11 +157,11 @@ export function CategoryDonut({
                       <CategoryIcon icon={slice.icon} color={items.find((i) => i.categoryId === slice.key)?.color ?? "slate"} size="sm" />
                       <span className="min-w-0">
                         <span className="block truncate">{slice.name}</span>
-                        <span className="block text-xs leading-tight text-muted-foreground tabular-nums">
+                        <span className="block text-[11px] leading-tight text-muted-foreground tabular-nums">
                           {slice.count}× · {formatPercent(slice.percentage, slice.percentage >= 10 ? 0 : 1)}
                         </span>
                       </span>
-                      <span className="whitespace-nowrap text-right font-normal tabular-nums">{formatCurrency(slice.amount, { compact: slice.amount >= 1_000_000_000 })}</span>
+                      <span className="whitespace-nowrap text-right font-medium tabular-nums">{formatCurrency(slice.amount, { compact: slice.amount >= 1_000_000_000 })}</span>
                     </Link>
                   </li>
                 );

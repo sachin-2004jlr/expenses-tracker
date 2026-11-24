@@ -61,7 +61,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
   return (
     <>
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-2xl bg-card shadow-card md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -74,7 +74,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                       type="button"
                       onClick={() => setSort(column.field)}
                       className={cn(
-                        "inline-flex h-8 items-center gap-1 rounded-full text-xs font-normal hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                        "inline-flex h-8 items-center gap-1 rounded-sm text-xs font-medium uppercase tracking-wide hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                         active ? "text-foreground" : "text-muted-foreground",
                         column.field === "amount" && "flex-row-reverse",
                       )}
@@ -85,7 +85,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
                   </TableHead>
                 );
               })}
-              <TableHead className="hidden w-24 px-3 text-xs font-normal text-muted-foreground lg:table-cell">Type</TableHead>
+              <TableHead className="hidden w-24 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:table-cell">Type</TableHead>
               <TableHead className="w-12 px-3">
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -96,7 +96,7 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
               <TableRow key={tx.id} className="cursor-pointer" onClick={() => openEdit(tx)} data-testid="transaction-row">
                 <TableCell className="px-3 py-3 text-muted-foreground tabular-nums">{formatIsoDate(tx.date, dateFormat)}</TableCell>
                 <TableCell className="max-w-0 px-3">
-                  <div className="truncate font-normal">{tx.description}</div>
+                  <div className="truncate font-medium">{tx.description}</div>
                   {(tx.notes || tx.tags.length > 0) && (
                     <div className="truncate text-xs text-muted-foreground">
                       {tx.tags.map((t) => `#${t.name}`).join(" ")}
@@ -129,13 +129,13 @@ export function TransactionTable({ transactions, sort, dir, dateFormat, hasFilte
       </div>
 
       {/* Mobile cards */}
-      <ul className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-card md:hidden" aria-label="Transactions">
+      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card md:hidden" aria-label="Transactions">
         {transactions.map((tx) => (
           <li key={tx.id} className="flex items-center gap-2 py-3 pl-3 pr-1.5">
             <button type="button" onClick={() => openEdit(tx)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`Edit ${tx.description}`}>
               <CategoryIcon icon={tx.category.icon} color={tx.category.color} className="rounded-full" />
               <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 hyphens-auto break-words text-sm font-normal">{tx.description}</span>
+                <span className="line-clamp-2 hyphens-auto break-words text-sm font-medium">{tx.description}</span>
                 <span className="block truncate text-xs text-muted-foreground">
                   {tx.category.name} · {formatIsoDate(tx.date, dateFormat)}
                   {tx.tags.length > 0 && <> · {tx.tags.map((t) => `#${t.name}`).join(" ")}</>}

@@ -49,13 +49,13 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
   return (
     <div
       className={cn(
-        "flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-card px-4 py-1.5 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        "flex min-h-8 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-transparent px-2 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
         disabled && "opacity-50",
       )}
       onClick={(event) => (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
     >
       {value.map((tag) => (
-        <span key={tag} className="inline-flex items-center gap-0.5 rounded-full bg-muted py-0.5 pl-2.5 pr-0.5 text-xs font-normal text-foreground">
+        <span key={tag} className="inline-flex items-center gap-0.5 rounded-full bg-muted py-0.5 pl-2.5 pr-0.5 text-xs font-medium text-foreground">
           {tag}
           <button
             type="button"
@@ -64,7 +64,7 @@ export function TagInput({ id, value, onChange, suggestions = [], placeholder = 
               remove(tag);
             }}
             aria-label={`Remove tag ${tag}`}
-            className="-my-1 flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-silver/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            className="-my-1 flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             disabled={disabled}
           >
             <X className="size-3" aria-hidden />

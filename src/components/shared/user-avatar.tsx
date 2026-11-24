@@ -17,7 +17,7 @@ function initials(name?: string | null, email?: string | null): string {
 
 /** Avatar image when available, initials otherwise. Plain <img> avoids next/image domain config. */
 export function UserAvatar({ name, email, image, size = "md", className }: UserAvatarProps) {
-  const box = size === "sm" ? "size-7 text-xs" : size === "lg" ? "size-12 text-base" : "size-8 text-xs";
+  const box = size === "sm" ? "size-7 text-[11px]" : size === "lg" ? "size-12 text-base" : "size-8 text-xs";
   if (image) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -32,7 +32,7 @@ export function UserAvatar({ name, email, image, size = "md", className }: UserA
   return (
     <span
       aria-hidden
-      className={cn("flex shrink-0 items-center justify-center rounded-full bg-mist font-semibold text-ink dark:bg-muted dark:text-foreground", box, className)}
+      className={cn("flex shrink-0 items-center justify-center rounded-full bg-brand/15 font-semibold text-brand ring-1 ring-brand/30", box, className)}
     >
       {initials(name, email)}
     </span>

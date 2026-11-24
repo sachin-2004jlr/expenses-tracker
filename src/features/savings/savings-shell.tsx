@@ -18,7 +18,7 @@ export function SavingsTabs() {
   const month = useSearchParams().get("month");
   return (
     <nav aria-label="Savings sections" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:hidden">
-      <ul className="inline-flex min-w-full gap-1 rounded-2xl bg-card shadow-card p-1 sm:min-w-0">
+      <ul className="inline-flex min-w-full gap-1 rounded-2xl border border-border bg-card p-1 sm:min-w-0">
         {SAVINGS_NAV.map((tab) => {
           const Icon = tab.icon;
           const active = isActiveSavingsPath(pathname, tab.href);
@@ -29,7 +29,7 @@ export function SavingsTabs() {
                 prefetch
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-sm font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                  "relative flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   active ? "bg-saved/15 text-saved-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >

@@ -144,7 +144,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
               const colour = categoryColorValue(goal.color);
               const width = Math.min(100, Math.max(0, goal.percentage));
               return (
-                <li key={goal.id} className="min-w-0 rounded-xl bg-card shadow-card-elevated p-4" data-testid="savings-goal">
+                <li key={goal.id} className="min-w-0 rounded-xl border border-border bg-card-elevated p-4" data-testid="savings-goal">
                   <div className="flex items-start gap-2">
                     <span className="mt-1 size-2.5 shrink-0 rounded-full" style={{ background: colour }} aria-hidden />
                     <div className="min-w-0 flex-1">
@@ -176,7 +176,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                     </DropdownMenu>
                   </div>
                   <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5">
-                    <span className="text-xl font-semibold tabular-nums">{formatCurrency(goal.saved)}</span>
+                    <span className="text-xl font-bold tabular-nums">{formatCurrency(goal.saved)}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">of {formatCurrency(goal.targetAmount)}</span>
                   </p>
                   <div
@@ -262,7 +262,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
               </Select>
             </div>
             <fieldset className="grid gap-1.5">
-              <legend className="mb-1.5 text-sm font-normal">Colour</legend>
+              <legend className="mb-1.5 text-sm font-medium">Colour</legend>
               <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Goal colour">
                 {COLOR_SWATCHES.map(({ value: color, label }) => {
                   const active = categoryTone(form.color) === categoryTone(color);
@@ -275,10 +275,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                       aria-label={label}
                       title={label}
                       onClick={() => setForm((f) => ({ ...f, color }))}
-                      className={cn(
-                        "size-8 rounded-full border-2 transition-transform duration-300 ease-(--ease-apple) hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        active ? "scale-110 border-foreground" : "border-card",
-                      )}
+                      className={cn("size-8 rounded-full border-2 transition-transform", active ? "scale-110 border-foreground" : "border-transparent")}
                       style={{ background: categoryColorValue(color) }}
                     />
                   );

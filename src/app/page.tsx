@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Equal, Minus, MoveDown, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { ChromeArcs } from "@/components/ui/chrome-arcs";
+import { RupeeRoll3D } from "@/features/landing/rupee-roll-3d";
 import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -129,16 +129,9 @@ export default async function LandingPage() {
                 </div>
               </div>
 
-              {/* Right side: the rolled ₹500 note. */}
-              <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-3xl bg-ink shadow-card ring-1 ring-white/10 lg:mx-0 lg:aspect-[9/14] lg:max-w-none lg:justify-self-end lg:w-[min(100%,26rem)]">
-                <Image
-                  src="/landing/rupee-roll.jpg"
-                  alt="A rolled-up ₹500 note held with a rubber band, on a dark surface"
-                  fill
-                  sizes="(min-width: 1024px) 26rem, (min-width: 640px) 24rem, 90vw"
-                  fetchPriority="high"
-                  className="object-cover object-[50%_62%]"
-                />
+              {/* Right side: the rolled ₹500 note, cut out of its photo and turning in 3D. */}
+              <div className="flex justify-center lg:justify-end lg:pr-12">
+                <RupeeRoll3D />
               </div>
             </div>
           </div>

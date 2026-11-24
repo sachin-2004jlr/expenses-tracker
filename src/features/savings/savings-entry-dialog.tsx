@@ -136,7 +136,7 @@ export function SavingsEntryDialog({ open, onOpenChange, mode, entry, defaults, 
                         amountRef.current?.focus();
                       }}
                       className={cn(
-                        "flex h-9 items-center justify-center gap-1.5 rounded-md text-sm font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                        "flex h-9 items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                         active ? option.active : "text-muted-foreground hover:text-foreground",
                       )}
                     >

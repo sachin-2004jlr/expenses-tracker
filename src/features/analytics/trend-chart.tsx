@@ -72,11 +72,11 @@ export function TrendChart({ series, title = "Monthly trend", description = "Inc
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-left text-muted-foreground">
-                  <th className="py-1 pr-3 font-normal">Month</th>
-                  <th className="py-1 pr-3 text-right font-normal">Income</th>
-                  <th className="py-1 pr-3 text-right font-normal">Expenses</th>
-                  <th className="py-1 pr-3 text-right font-normal">Net</th>
-                  <th className="py-1 text-right font-normal">Rate</th>
+                  <th className="py-1 pr-3 font-medium">Month</th>
+                  <th className="py-1 pr-3 text-right font-medium">Income</th>
+                  <th className="py-1 pr-3 text-right font-medium">Expenses</th>
+                  <th className="py-1 pr-3 text-right font-medium">Net</th>
+                  <th className="py-1 text-right font-medium">Rate</th>
                 </tr>
               </thead>
               <tbody>

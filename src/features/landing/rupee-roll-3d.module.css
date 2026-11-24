@@ -1,0 +1,165 @@
+/*
+ * A rolled ₹500 note as a real 3D cylinder: 40 vertical slices, each showing its strip of the
+ * note unrolled from the photo (rupee-roll-wrap.webp covers 360°), turning back and forth like a
+ * product on a turntable. The top of the roll, the shading and the floor shadow stay still.
+ *
+ * Geometry is in photo pixels scaled by --s: radius 110px, body 521px tall at --s = 1.
+ */
+.stage {
+  --s: 1;
+  --r: calc(110px * var(--s));
+  --h: calc(521px * var(--s));
+  /* 40 slices: 9° each. Width = 2r·sin(4.5°) (+0.6px so no hairline gaps), depth = r·cos(4.5°). */
+  --sw: calc(var(--r) * 0.1569182 + 0.6px);
+  --depth: calc(var(--r) * 0.9969173);
+  /* The texture's full width is the circumference. */
+  --tw: calc(var(--r) * 6.2831853);
+  --cap-w: calc(232.3px * var(--s));
+  --cap-h: calc(39.7px * var(--s));
+  --cap-x: calc(5.7px * var(--s));
+  --cap-y: calc(20.8px * var(--s));
+  position: relative;
+  width: var(--cap-w);
+  height: calc(var(--cap-y) + var(--h) + 48px * var(--s));
+  /* A soft dark halo keeps the roll readable over the bright chrome streaks. */
+  isolation: isolate;
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: -18% -45%;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.28) 60%, transparent);
+  pointer-events: none;
+}
+
+.float {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--cap-y) + var(--h));
+  animation: float 3.6s ease-in-out infinite alternate;
+}
+
+.cylinder {
+  position: absolute;
+  left: var(--cap-x);
+  top: var(--cap-y);
+  width: calc(var(--r) * 2);
+  height: var(--h);
+  transform-style: preserve-3d;
+  animation: turn 7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.slice {
+  position: absolute;
+  top: 0;
+  left: calc(var(--r) - var(--sw) / 2);
+  width: var(--sw);
+  height: var(--h);
+  background-image: url("/landing/rupee-roll-wrap.webp");
+  background-repeat: repeat-x;
+  background-size: var(--tw) var(--h);
+  /* Slice i sits at angle i·9° and shows the strip of the note at that angle (the front of the
+     photo is at 0°, so the texture starts at -90°). */
+  background-position-x: calc(var(--tw) * (var(--i) * 9 + 90) / -360 + var(--sw) / 2);
+  transform: rotateY(calc(var(--i) * 9deg)) translateZ(var(--depth));
+  backface-visibility: hidden;
+}
+
+/* Fixed studio lighting over the turning paper: darker rims sell the curve. */
+.shade {
+  position: absolute;
+  left: var(--cap-x);
+  top: var(--cap-y);
+  width: calc(var(--r) * 2);
+  height: var(--h);
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.72) 0%,
+      rgb(0 0 0 / 0.45) 6%,
+      rgb(0 0 0 / 0.12) 14%,
+      rgb(255 255 255 / 0.05) 24%,
+      rgb(0 0 0 / 0) 36%,
+      rgb(0 0 0 / 0) 62%,
+      rgb(0 0 0 / 0.16) 78%,
+      rgb(0 0 0 / 0.45) 90%,
+      rgb(0 0 0 / 0.75) 100%
+    ),
+    linear-gradient(180deg, rgb(0 0 0 / 0.18) 0%, rgb(0 0 0 / 0) 12%, rgb(0 0 0 / 0) 88%, rgb(0 0 0 / 0.35) 100%);
+}
+
+/* The spiral top of the roll. It looks the same from every angle, so it does not turn. */
+.cap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cap-w);
+  height: var(--cap-h);
+  background: url("/landing/rupee-roll-top.webp") center / 100% 100% no-repeat;
+}
+
+.shadow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(10px * var(--s));
+  width: calc(var(--r) * 2.5);
+  height: calc(34px * var(--s));
+  translate: -50% 0;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.35) 55%, transparent);
+  animation: shadow 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes turn {
+  from {
+    transform: rotateY(-28deg);
+  }
+  to {
+    transform: rotateY(28deg);
+  }
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-10px * var(--s)));
+  }
+}
+
+@keyframes shadow {
+  from {
+    scale: 1;
+    opacity: 1;
+  }
+  to {
+    scale: 0.88;
+    opacity: 0.75;
+  }
+}
+
+/* Phones: a smaller roll. */
+@media (max-width: 639px) {
+  .stage {
+    --s: 0.74;
+  }
+}
+
+/* Short screens (phones held sideways). */
+@media (max-height: 500px) {
+  .stage {
+    --s: 0.6;
+  }
+}
+
+/* Reduced motion: the roll rests, facing front, exactly like the photo. */
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .cylinder,
+  .shadow {
+    animation: none;
+  }
+}

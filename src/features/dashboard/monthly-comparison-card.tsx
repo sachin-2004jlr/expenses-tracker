@@ -14,7 +14,7 @@ function ChangeBadge({ comparison, increaseIsGood }: { comparison: MetricCompari
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-normal tabular-nums",
+        "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums",
         good === true && "bg-income/12 text-income-foreground",
         good === false && "bg-expense/12 text-expense-foreground",
         good === null && "bg-muted text-muted-foreground",
@@ -47,7 +47,7 @@ export function MonthlyComparisonCard({ comparison, className }: { comparison: M
           {rows.map((row) => (
             <li key={row.label} className="flex items-center justify-between gap-3 py-2">
               <div className="min-w-0">
-                <p className="text-sm font-normal">{row.label}</p>
+                <p className="text-sm font-medium">{row.label}</p>
                 <p className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
                   <span className="text-foreground">{formatCurrency(row.data.current)}</span> vs {formatCurrency(row.data.previous)}
                 </p>
@@ -60,16 +60,16 @@ export function MonthlyComparisonCard({ comparison, className }: { comparison: M
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr>
-                <th scope="col" className="pb-2 pr-2 text-left font-normal">Metric</th>
-                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-normal">{formatMonthLabel(comparison.currentMonth, { style: "short-month-only" })}</th>
-                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-normal">{formatMonthLabel(comparison.previousMonth, { style: "short-month-only" })}</th>
-                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-normal">Change</th>
+                <th scope="col" className="pb-2 pr-2 text-left font-medium">Metric</th>
+                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-medium">{formatMonthLabel(comparison.currentMonth, { style: "short-month-only" })}</th>
+                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-medium">{formatMonthLabel(comparison.previousMonth, { style: "short-month-only" })}</th>
+                <th scope="col" className="whitespace-nowrap pb-2 pl-3 text-right font-medium">Change</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.label} className="border-t border-border">
-                  <th scope="row" className="py-2 pr-2 text-left font-normal">{row.label}</th>
+                  <th scope="row" className="py-2 pr-2 text-left font-medium">{row.label}</th>
                   <td className="whitespace-nowrap py-2 pl-3 text-right tabular-nums">{formatCurrency(row.data.current)}</td>
                   <td className="whitespace-nowrap py-2 pl-3 text-right tabular-nums text-muted-foreground">{formatCurrency(row.data.previous)}</td>
                   <td className="whitespace-nowrap py-2 pl-3 text-right">
@@ -82,7 +82,7 @@ export function MonthlyComparisonCard({ comparison, className }: { comparison: M
         </div>
         {topChanges.length > 0 && (
           <div>
-            <p className="mb-2 text-xs font-normal text-muted-foreground">Biggest category moves</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Biggest category moves</p>
             <ul className="space-y-1.5 text-sm">
               {topChanges.map((c) => (
                 <li key={c.categoryId} className="flex items-center justify-between gap-3">

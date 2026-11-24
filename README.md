@@ -1,6 +1,6 @@
 # Expenses Tracker
 
-A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Interface built on the Apple (IN) design system: light canvas, white cards, SF Pro type, blue actions, black-and-silver chrome for the money tracker and blue for Savings (no orange), with a palette-only dark mode. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
+A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Montserrat type and the original card/button components, in a chrome palette (black, silver and white for the money tracker, blue for actions and Savings, no orange), light theme by default with a dark mode. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
 
 Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
@@ -10,7 +10,7 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
 ## Features
 
-- **Landing page** (`/`): hero on the animated Chrome Arcs WebGL background (`src/components/ui/chrome-arcs.tsx`, pauses off screen, still frame under `prefers-reduced-motion`, CSS fallback without WebGL) with a chrome-text headline, one blue call to action and a photo of a rolled ₹500 note (`public/landing/rupee-roll.jpg`) on the right; then how it works, a worked example of the month and a final call to action on the same arcs.
+- **Landing page** (`/`): hero on the animated Chrome Arcs WebGL background (`src/components/ui/chrome-arcs.tsx`, pauses off screen, still frame under `prefers-reduced-motion`, CSS fallback without WebGL) with a chrome-text headline, one blue call to action and, on the right, the rolled ₹500 note cut out of its photo and rebuilt as a CSS 3D cylinder that turns back and forth (`src/features/landing/rupee-roll-3d.tsx`; assets in `public/landing/`: `rupee-roll.png` transparent cut-out, `rupee-roll-wrap.webp` unrolled texture, `rupee-roll-top.webp` top of the roll); then how it works, a worked example of the month and a final call to action on the same arcs.
 - **Accounts** (`/register`, `/login`) with e-mail and password: scrypt-hashed passwords, encrypted session cookies, optional allow-list of e-mail addresses, name and password changes in Settings → Account.
 - **Dashboard** (`/dashboard`): income and expenses only, never savings. **Money left** = what was left from earlier months (carried in) + this month's income − this month's expenses, with the sum spelled out underneath, a share-of-money-spent bar, an allowance per remaining day, Add income / Add expense buttons and Income / Spent / Per-day tiles. Below: recent transactions, where the money went (one bar per category), budgets and money left day by day.
 - **Top bar** (frosted): month selector pill (previous / next / today, future months allowed), the one blue primary Add transaction button, global search that jumps to filtered transactions, quick links, account menu with theme switch and sign-out.
@@ -80,7 +80,7 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 | Layer | Choice |
 | --- | --- |
 | Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript 5 |
-| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons. Apple (IN) design tokens in `src/app/globals.css` (10-colour palette, 28/36px radii, pills, `shadow-card`); SF Pro system font with Inter via `next/font` as fallback. `chrome-text` utility for the silver-white-ice headline sheen; `short:` variant for phones held sideways |
+| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons, Montserrat via `next/font`. Palette and semantic colour tokens in `src/app/globals.css` (chrome: black, silver, white, blue); `chrome-text` utility for the headline sheen; `short:` variant for phones held sideways |
 | Charts | Recharts 3 |
 | Auth | Auth.js v5 credentials provider, scrypt password hashing, JWT sessions |
 | Database | MongoDB (local MongoDB Community Server in development, MongoDB Atlas in production, in-memory server for tests) |

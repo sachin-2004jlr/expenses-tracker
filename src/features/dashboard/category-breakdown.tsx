@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChartPie } from "lucide-react";
-import { CategoryIcon } from "@/components/shared/category-icon";
+import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SectionCard, SectionLink } from "@/components/shared/section-card";
 import { formatCurrency, formatPercent } from "@/lib/money";
@@ -42,12 +42,12 @@ export function CategoryBreakdown({ items, month, monthLabel, limit = 6, classNa
               >
                 <div className="flex items-center gap-3">
                   <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-normal">{item.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{formatPercent(item.percentage, 0)}</span>
                   <span className="w-24 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: "var(--expense)" }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: categoryColorValue(item.color) }} />
                 </div>
               </Link>
             </li>

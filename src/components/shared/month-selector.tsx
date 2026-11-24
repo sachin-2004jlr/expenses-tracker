@@ -38,7 +38,7 @@ export function MonthSelector({ month, currentMonth, className, size = "md" }: M
   const iconSize = size === "sm" ? "icon-sm" : "icon";
 
   return (
-    <div className={cn("inline-flex h-9 min-w-0 items-center gap-0.5 rounded-full bg-muted p-0.5", className)}>
+    <div className={cn("inline-flex h-10 min-w-0 items-center gap-0.5 rounded-full border border-border bg-card p-1", className)}>
       <Button
         variant="ghost"
         size={iconSize}
@@ -48,7 +48,7 @@ export function MonthSelector({ month, currentMonth, className, size = "md" }: M
         aria-label={`Previous month, ${formatMonthLabel(previous)}`}
       >
         <ChevronLeft aria-hidden />
-        <NavPending className="inset-0 rounded-full ring-2 ring-ring/50" />
+        <NavPending className="inset-0 rounded-full ring-2 ring-brand/50" />
       </Button>
       <span
         className={cn("min-w-[6.5rem] flex-1 truncate px-1 text-center font-semibold tabular-nums sm:min-w-[9rem] sm:flex-none", size === "sm" ? "text-sm" : "text-sm sm:text-base")}
@@ -66,10 +66,10 @@ export function MonthSelector({ month, currentMonth, className, size = "md" }: M
         aria-label={`Next month, ${formatMonthLabel(next)}`}
       >
         <ChevronRight aria-hidden />
-        <NavPending className="inset-0 rounded-full ring-2 ring-ring/50" />
+        <NavPending className="inset-0 rounded-full ring-2 ring-brand/50" />
       </Button>
       {month !== currentMonth && (
-        <Button variant="secondary" size="sm" nativeButton={false} render={<Link href={hrefFor(currentMonth)} prefetch scroll={false} />} className="ml-0.5 hidden h-8 bg-card hover:bg-card/80 sm:inline-flex">
+        <Button variant="secondary" size="sm" nativeButton={false} render={<Link href={hrefFor(currentMonth)} prefetch scroll={false} />} className="ml-0.5 hidden rounded-full sm:inline-flex">
           Today
         </Button>
       )}

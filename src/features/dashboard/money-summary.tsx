@@ -53,22 +53,21 @@ export function MoneySummary({
     <section
       aria-label="Money left"
       className={cn(
-        "relative min-w-0 overflow-hidden rounded-3xl bg-card p-5 shadow-card sm:p-8",
+        "relative min-w-0 overflow-hidden rounded-3xl border border-border bg-card p-5 sm:p-7",
+        "bg-[radial-gradient(120%_120%_at_100%_0%,color-mix(in_oklch,var(--brand)_14%,transparent),transparent_55%)]",
         className,
       )}
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
-          <p className="text-base font-semibold">
-            Money left. <span className="text-muted-foreground">{monthLabel} so far.</span>
-          </p>
-          <p className="mt-2 flex items-baseline gap-1 font-semibold tracking-tight" data-testid="total-balance">
-            <span className={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-2xl" : "text-4xl", balance < 0 && "text-destructive")}>
+          <p className="text-sm font-medium text-muted-foreground">Money left · {monthLabel}</p>
+          <p className="mt-2 flex items-baseline gap-1 font-bold tracking-tight" data-testid="total-balance">
+            <span className={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", balance < 0 && "text-destructive")}>
               {parts.sign}
               {parts.symbol}
               {parts.integer}
             </span>
-            <span className="text-2xl text-muted-foreground">.{parts.fraction}</span>
+            <span className="text-lg text-muted-foreground sm:text-xl">.{parts.fraction}</span>
           </p>
 
           {/* The sum, spelled out, so the number is never a mystery. */}
@@ -100,7 +99,7 @@ export function MoneySummary({
               aria-valuenow={Math.round(spentShare)}
             >
               <div
-                className={cn("h-full rounded-full transition-[width] duration-500", spentShare >= 90 ? "bg-destructive" : spentShare >= 70 ? "bg-highlight" : "bg-income")}
+                className={cn("h-full rounded-full transition-[width] duration-500", spentShare >= 90 ? "bg-destructive" : spentShare >= 70 ? "bg-brand" : "bg-income")}
                 style={{ width: `${spentShare}%` }}
               />
             </div>
@@ -108,40 +107,40 @@ export function MoneySummary({
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:flex">
-            <Button variant="secondary" onClick={() => openCreate({ type: "INCOME" })}>
+            <Button variant="outline" onClick={() => openCreate({ type: "INCOME" })} className="rounded-full">
               <ArrowDownLeft data-icon="inline-start" className="text-income-foreground" aria-hidden />
               Add income
             </Button>
-            <Button variant="secondary" onClick={() => openCreate({ type: "EXPENSE" })}>
-              <ArrowUpRight data-icon="inline-start" className="text-expense-foreground" aria-hidden />
+            <Button onClick={() => openCreate({ type: "EXPENSE" })} className="rounded-full">
+              <ArrowUpRight data-icon="inline-start" aria-hidden />
               Add expense
             </Button>
           </div>
         </div>
 
         <ul className="grid min-w-0 grid-cols-3 gap-2 lg:grid-cols-1" aria-label="This month">
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-income/12 text-income-foreground">
+          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-income/12 text-income-foreground">
               <ArrowDownLeft className="size-4" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">Income</p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg" data-testid="income-amount">{formatCurrency(income)}</p>
+              <p className="truncate text-base font-bold tabular-nums sm:text-lg" data-testid="income-amount">{formatCurrency(income)}</p>
             </div>
             <ChangePill changePercent={incomeChange} increaseIsGood className="hidden lg:inline-flex" />
           </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-expense/12 text-expense-foreground">
+          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-expense/12 text-expense-foreground">
               <ArrowUpRight className="size-4" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">Spent</p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg" data-testid="expense-amount">{formatCurrency(expenses)}</p>
+              <p className="truncate text-base font-bold tabular-nums sm:text-lg" data-testid="expense-amount">{formatCurrency(expenses)}</p>
             </div>
             <ChangePill changePercent={expensesChange} increaseIsGood={false} className="hidden lg:inline-flex" />
           </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-background p-3.5 lg:flex-row lg:items-center lg:gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full lg:size-9 bg-muted text-foreground">
+          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-muted text-foreground">
               <CalendarClock className="size-4" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
@@ -149,9 +148,9 @@ export function MoneySummary({
                 <span className="sm:hidden">Per day</span>
                 <span className="hidden sm:inline">Average spend</span>
               </p>
-              <p className="truncate text-base font-semibold tabular-nums sm:text-lg">
+              <p className="truncate text-base font-bold tabular-nums sm:text-lg">
                 {formatCurrency(perDayRounded)}
-                <span className="hidden text-xs font-normal text-muted-foreground sm:inline"> / day</span>
+                <span className="hidden text-xs font-medium text-muted-foreground sm:inline"> / day</span>
               </p>
             </div>
           </li>

@@ -3,7 +3,7 @@ import { KeyRound } from "lucide-react";
 export function SetupRequired({ title, message, steps }: { title: string; message: string; steps: string[] }) {
   return (
     <div className="flex min-h-svh items-center justify-center bg-background px-6">
-      <div className="w-full max-w-lg rounded-3xl bg-card shadow-card p-8 text-card-foreground">
+      <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-8 text-card-foreground">
         <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-brand/15 text-brand">
           <KeyRound className="size-6" aria-hidden />
         </span>

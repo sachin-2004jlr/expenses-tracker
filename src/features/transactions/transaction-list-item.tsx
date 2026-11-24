@@ -41,7 +41,7 @@ export function TransactionListItem({
     >
       <CategoryIcon icon={transaction.category.icon} color={transaction.category.color} />
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 hyphens-auto break-words text-sm font-normal">{transaction.description}</span>
+        <span className="line-clamp-2 hyphens-auto break-words text-sm font-medium">{transaction.description}</span>
         <span className="block truncate text-xs text-muted-foreground">
           {transaction.category.name}
           {showDate && <> · {dateLabel}</>}

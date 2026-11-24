@@ -31,8 +31,8 @@ export function Pagination({ page, pageCount, total, pageSize }: PaginationProps
   return (
     <nav aria-label="Pagination" className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
       <p>
-        Showing <span className="font-normal text-foreground tabular-nums">{from}–{to}</span> of{" "}
-        <span className="font-normal text-foreground tabular-nums">{total}</span>
+        Showing <span className="font-medium text-foreground tabular-nums">{from}–{to}</span> of{" "}
+        <span className="font-medium text-foreground tabular-nums">{total}</span>
       </p>
       {pageCount > 1 && (
         <div className="flex items-center gap-1">

@@ -31,7 +31,7 @@ export function RangeSelector({ value, onChange, className, label = "Time range"
             aria-checked={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-7 min-w-10 rounded-md px-2.5 text-xs font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "h-7 min-w-10 rounded-md px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
               active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >
