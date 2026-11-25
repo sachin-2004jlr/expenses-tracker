@@ -89,8 +89,9 @@
   /* Typography: Montserrat (headings use the same family, heavier). */
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  /* Headings, titles and big numbers: Victory Striker Sans (condensed caps). Body stays Montserrat. */
+  --font-heading: var(--font-victory), var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-victory), var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
   /* Shapes: the original scale, derived from --radius. */
   --radius-sm: calc(var(--radius) * 0.6);
@@ -249,6 +250,8 @@
   html {
     @apply font-sans;
     -webkit-tap-highlight-color: transparent;
+    /* Victory has a single weight: never fake a bold or italic version of it. */
+    font-synthesis: none;
   }
   body {
     @apply bg-background text-foreground antialiased;
@@ -260,7 +263,13 @@
   h1,
   h2,
   h3 {
-    letter-spacing: -0.02em;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    /* Victory's capitals are 1.12em tall: tighter leading makes lines collide. Tailwind's text-*
+       sizes read --tw-leading, so this carries through every heading size. */
+    --tw-leading: 1.22;
+    line-height: 1.22;
   }
 }
 
@@ -271,10 +280,11 @@
 /* Display headlines: heavy, uppercase, tight (landing page). */
 @utility display-heading {
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: -0.03em;
-  line-height: 0.92;
+  letter-spacing: 0.01em;
+  --tw-leading: 1.16;
+  line-height: 1.16;
 }
 
 /* Chrome text: the silver-white-ice sheen of the Chrome Arcs background, for headline accents. */

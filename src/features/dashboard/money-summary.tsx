@@ -62,7 +62,7 @@ export function MoneySummary({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <p className="text-sm font-medium text-muted-foreground">Money left · {monthLabel}</p>
-          <p className="mt-2 flex items-baseline gap-1 font-bold tracking-tight tabular-nums" data-testid="total-balance">
+          <p className="mt-2 flex items-baseline gap-1 font-heading tracking-wide tabular-nums" data-testid="total-balance">
             <RollingAmount
               paise={balance}
               integerClassName={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", balance < 0 && "text-destructive")}
@@ -118,39 +118,37 @@ export function MoneySummary({
           </div>
         </div>
 
-        <ul className="grid min-w-0 grid-cols-3 gap-2 lg:grid-cols-1" aria-label="This month">
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+        {/* Phones: one card of full-width rows so long amounts always fit. Wider: three tiles. */}
+        <ul className="min-w-0 overflow-hidden rounded-2xl border border-border bg-background/40 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent lg:grid-cols-1" aria-label="This month">
+          <li className="flex min-w-0 items-center gap-3 border-b border-border px-3 py-2.5 last:border-0 sm:flex-col sm:items-start sm:gap-2 sm:rounded-2xl sm:border sm:bg-background/40 sm:p-3 sm:last:border lg:flex-row lg:items-center lg:gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-income/12 text-income-foreground">
               <ArrowDownLeft className="size-4" aria-hidden />
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3 sm:block">
               <p className="text-xs text-muted-foreground">Income</p>
-              <p className="truncate text-base font-bold tabular-nums sm:text-lg" data-testid="income-amount">{formatCurrency(income)}</p>
+              <p className="whitespace-nowrap text-base font-bold tabular-nums sm:truncate sm:text-lg" data-testid="income-amount">{formatCurrency(income)}</p>
             </div>
             <ChangePill changePercent={incomeChange} increaseIsGood className="hidden lg:inline-flex" />
           </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+          <li className="flex min-w-0 items-center gap-3 border-b border-border px-3 py-2.5 last:border-0 sm:flex-col sm:items-start sm:gap-2 sm:rounded-2xl sm:border sm:bg-background/40 sm:p-3 sm:last:border lg:flex-row lg:items-center lg:gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-expense/12 text-expense-foreground">
               <ArrowUpRight className="size-4" aria-hidden />
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3 sm:block">
               <p className="text-xs text-muted-foreground">Spent</p>
-              <p className="truncate text-base font-bold tabular-nums sm:text-lg" data-testid="expense-amount">{formatCurrency(expenses)}</p>
+              <p className="whitespace-nowrap text-base font-bold tabular-nums sm:truncate sm:text-lg" data-testid="expense-amount">{formatCurrency(expenses)}</p>
             </div>
             <ChangePill changePercent={expensesChange} increaseIsGood={false} className="hidden lg:inline-flex" />
           </li>
-          <li className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-background/40 p-3 lg:flex-row lg:items-center lg:gap-3">
+          <li className="flex min-w-0 items-center gap-3 border-b border-border px-3 py-2.5 last:border-0 sm:flex-col sm:items-start sm:gap-2 sm:rounded-2xl sm:border sm:bg-background/40 sm:p-3 sm:last:border lg:flex-row lg:items-center lg:gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-xl lg:size-9 bg-muted text-foreground">
               <CalendarClock className="size-4" aria-hidden />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-muted-foreground">
-                <span className="sm:hidden">Per day</span>
-                <span className="hidden sm:inline">Average spend</span>
-              </p>
-              <p className="truncate text-base font-bold tabular-nums sm:text-lg">
+            <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3 sm:block">
+              <p className="truncate text-xs text-muted-foreground">Average spend</p>
+              <p className="whitespace-nowrap text-base font-bold tabular-nums sm:truncate sm:text-lg">
                 {formatCurrency(perDayRounded)}
-                <span className="hidden text-xs font-medium text-muted-foreground sm:inline"> / day</span>
+                <span className="text-xs font-medium text-muted-foreground"> / day</span>
               </p>
             </div>
           </li>

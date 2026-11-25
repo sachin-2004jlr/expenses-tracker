@@ -1,6 +1,6 @@
 # Expenses Tracker
 
-A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Montserrat type and the original card/button components, in a chrome palette (black, silver and white for the money tracker, blue for actions and Savings, no orange), light theme by default with a dark mode. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
+A personal finance tracker for income and expenses, with a completely separate savings ledger, in **Indian Rupees (₹, en-IN)** with **e-mail + password accounts**. Victory Striker Sans for headings, titles and big numbers with Montserrat body text, the original card/button components, in a chrome palette (black, silver and white for the money tracker, blue for actions and Savings, no orange), light theme by default with a dark mode. Built with Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, Auth.js and MongoDB. Deploys to Vercel.
 
 Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
@@ -10,7 +10,7 @@ Repository: https://github.com/sachin-2004jlr/expenses-tracker
 
 ## Features
 
-- **Landing page** (`/`): hero on the animated Chrome Arcs WebGL background (`src/components/ui/chrome-arcs.tsx`, pauses off screen, still frame under `prefers-reduced-motion`, CSS fallback without WebGL) with a chrome-text headline, one blue call to action and a crumpled ₹500 note cut-out on the right (`public/landing/crumpled-500.webp`); then how it works, a worked example of the month and a final call to action on the same arcs.
+- **Landing page** (`/`): one dark, monochrome page: hero on the animated Chrome Arcs WebGL background (`src/components/ui/chrome-arcs.tsx`) with a chrome-text headline, a white call-to-action pill and the crumpled ₹500 note lying flat (`public/landing/crumpled-500.webp`), a strip of key points, frosted-glass feature cards, how money left is worked out next to an example card, the separate Savings ledger, and a final call to action on the arcs.
 - **Accounts** (`/register`, `/login`) with e-mail and password: scrypt-hashed passwords, encrypted session cookies, optional allow-list of e-mail addresses, name and password changes in Settings → Account.
 - **Dashboard** (`/dashboard`): income and expenses only, never savings. **Money left** = what was left from earlier months (carried in) + this month's income − this month's expenses, with the sum spelled out underneath, a share-of-money-spent bar, an allowance per remaining day, Add income / Add expense buttons and Income / Spent / Per-day tiles. Below: recent transactions, where the money went (one bar per category), budgets and money left day by day.
 - **Top bar** (frosted): month selector pill (previous / next / today, future months allowed), the one blue primary Add transaction button, global search that jumps to filtered transactions, quick links, account menu with theme switch and sign-out.
@@ -80,7 +80,7 @@ Setup: generate a secret with `npx auth secret` (or `openssl rand -base64 32`) a
 | Layer | Choice |
 | --- | --- |
 | Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript 5 |
-| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons, Montserrat via `next/font`. Palette and semantic colour tokens in `src/app/globals.css` (chrome: black, silver, white, blue); `chrome-text` utility for the headline sheen; `short:` variant for phones held sideways |
+| Styling / UI | Tailwind CSS 4, shadcn/ui (Base UI primitives), Lucide icons, Montserrat via `next/font` for body text; Victory Striker Sans (`src/app/fonts/`, `next/font/local`; demo licence, personal use only) for headings, titles, big numbers and the wordmark. Palette and semantic colour tokens in `src/app/globals.css` (chrome: black, silver, white, blue); `chrome-text` utility for the headline sheen; `short:` variant for phones held sideways |
 | Charts | Recharts 3 |
 | Auth | Auth.js v5 credentials provider, scrypt password hashing, JWT sessions |
 | Database | MongoDB (local MongoDB Community Server in development, MongoDB Atlas in production, in-memory server for tests) |

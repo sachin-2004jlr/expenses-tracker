@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,6 +10,14 @@ import "./globals.css";
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Headings, titles, big numbers and the wordmark: Victory Striker Sans (demo licence: personal use only).
+const victory = localFont({
+  src: "./fonts/victory-striker-sans.woff2",
+  variable: "--font-victory",
+  weight: "400",
   display: "swap",
 });
 
@@ -48,7 +57,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IN" suppressHydrationWarning className={`${montserrat.variable} ${geistMono.variable} h-full`}>
+    <html lang="en-IN" suppressHydrationWarning className={`${montserrat.variable} ${victory.variable} ${geistMono.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <TooltipProvider>{children}</TooltipProvider>

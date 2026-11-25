@@ -47,7 +47,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             </span>
             <h3 className="text-sm font-medium text-muted-foreground">Savings balance</h3>
           </div>
-          <p className="mt-4 flex items-baseline gap-1 font-bold tracking-tight tabular-nums" data-testid="savings-balance">
+          <p className="mt-4 flex items-baseline gap-1 font-heading tracking-wide tabular-nums" data-testid="savings-balance">
             <RollingAmount
               paise={overview.balance}
               integerClassName={cn("whitespace-nowrap", balance.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", overview.balance < 0 && "text-destructive")}

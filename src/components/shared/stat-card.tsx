@@ -70,7 +70,7 @@ export function StatCard({
         </span>
         <p className="min-w-0 truncate text-sm font-medium text-muted-foreground">{label}</p>
       </div>
-      <p className="min-w-0 whitespace-nowrap text-xl font-bold tracking-tight tabular-nums @[15rem]:text-2xl">{value}</p>
+      <p className="min-w-0 whitespace-nowrap font-heading text-2xl tracking-wide tabular-nums @[15rem]:text-3xl">{value}</p>
       {(hasChange || hint) && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           {hasChange && <ChangePill changePercent={changePercent ?? null} increaseIsGood={increaseIsGood} />}

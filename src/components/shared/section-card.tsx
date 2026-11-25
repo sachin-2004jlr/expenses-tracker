@@ -22,7 +22,7 @@ export function SectionCard({ title, description, action, label, className, chil
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold leading-snug text-balance">{title}</h3>
+          <h3 className="text-lg leading-snug text-balance">{title}</h3>
           {description && <p className="mt-0.5 text-xs leading-relaxed text-pretty text-muted-foreground">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
