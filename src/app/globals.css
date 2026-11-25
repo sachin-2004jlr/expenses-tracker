@@ -271,6 +271,11 @@
     --tw-leading: 1.22;
     line-height: 1.22;
   }
+  /* Victory's capitals rise slightly above their line box. A truncated heading clips to its
+     padding box, so give it a sliver of room or the tops of the letters get shaved off. */
+  :where(h1, h2, h3, .font-heading, .display-heading).truncate {
+    padding-block: 0.14em;
+  }
 }
 
 @utility tabular-nums {
