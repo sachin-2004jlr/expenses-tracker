@@ -292,7 +292,9 @@
   line-height: 1.16;
 }
 
-/* Chrome text: the silver-white-ice sheen of the Chrome Arcs background, for headline accents. */
+/* Chrome text: the silver-white-ice sheen of the Chrome Arcs background, for headline accents.
+   Use it on an inline <span>: the gradient only paints inside the element's box, and Victory's tall
+   glyphs rise above a block's line box, so on a block element their tops would turn invisible. */
 @utility chrome-text {
   background-image: linear-gradient(
     100deg,

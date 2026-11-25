@@ -242,7 +242,9 @@ export default async function LandingPage() {
                 <p className="text-sm text-white/60">Money left · November</p>
                 <span className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/60">Example</span>
               </div>
-              <p className="mt-3 font-heading text-6xl tabular-nums chrome-text sm:text-7xl">₹23,510</p>
+              <p className="mt-3 font-heading text-6xl leading-[1.2] tabular-nums sm:text-7xl">
+                <span className="chrome-text">₹23,510</span>
+              </p>
               <p className="mt-3 text-sm text-pretty text-white/50 tabular-nums">₹88,566 carried + ₹62,023 income − ₹1,27,079 spent</p>
               <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full w-[84%] rounded-full bg-gradient-to-r from-white/60 to-ice" />
