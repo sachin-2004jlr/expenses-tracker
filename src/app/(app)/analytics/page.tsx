@@ -34,7 +34,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const linkQuery = `&from=${monthRange(first).start}&to=${monthRange(last).end}`;
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader
         title="Analytics"
         eyebrow={`${formatMonthLabel(first, { style: "short" })} – ${formatMonthLabel(last, { style: "short" })}`}

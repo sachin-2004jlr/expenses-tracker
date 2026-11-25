@@ -36,7 +36,7 @@ export default async function SavingsEntriesPage({ searchParams }: { searchParam
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader
         eyebrow={allTime ? "All time" : formatMonthLabel(month)}
         title="Savings entries"

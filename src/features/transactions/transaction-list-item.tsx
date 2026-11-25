@@ -34,7 +34,7 @@ export function TransactionListItem({
       type="button"
       onClick={() => openEdit(transaction)}
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+        "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
         className,
       )}
       aria-label={`Edit ${transaction.description}`}

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, NotebookPen, PiggyBank, Scale } from "lucide-react";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { RollingAmount } from "@/components/shared/rolling-amount";
 import { StatCard } from "@/components/shared/stat-card";
 import { SavingsEntryList } from "@/features/savings/savings-entry-list";
 import { SavingsAddButtons } from "@/features/savings/savings-shell";
@@ -29,7 +31,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
   const query = params.month ? `?month=${month}` : "";
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader
         eyebrow={monthLabel}
         title="Savings"
@@ -45,13 +47,12 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
             </span>
             <h3 className="text-sm font-medium text-muted-foreground">Savings balance</h3>
           </div>
-          <p className="mt-4 flex items-baseline gap-1 font-bold tracking-tight" data-testid="savings-balance">
-            <span className={cn("whitespace-nowrap", balance.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", overview.balance < 0 && "text-destructive")}>
-              {balance.sign}
-              {balance.symbol}
-              {balance.integer}
-            </span>
-            <span className="text-lg text-muted-foreground">.{balance.fraction}</span>
+          <p className="mt-4 flex items-baseline gap-1 font-bold tracking-tight tabular-nums" data-testid="savings-balance">
+            <RollingAmount
+              paise={overview.balance}
+              integerClassName={cn("whitespace-nowrap", balance.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", overview.balance < 0 && "text-destructive")}
+              fractionClassName="text-lg text-muted-foreground"
+            />
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             <span className="font-semibold text-foreground tabular-nums">{formatCurrency(overview.addedAllTime)}</span> added ·{" "}
@@ -127,7 +128,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
               <p className="mt-4 text-sm text-muted-foreground">Nothing used from savings yet.</p>
             ) : (
               <ul className="mt-4 space-y-3">
-                {overview.usedByCategory.map((item) => (
+                {overview.usedByCategory.map((item, index) => (
                   <li key={item.categoryId}>
                     <div className="flex items-center gap-2">
                       <CategoryIcon icon={item.icon} color={item.color} size="sm" />
@@ -136,7 +137,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                     </div>
                     <div className="mt-1.5 flex items-center gap-2">
                       <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
-                        <span className="block h-full rounded-full" style={{ width: `${Math.max(2, item.percentage)}%`, background: categoryColorValue(item.color) }} />
+                        <span className="bar-grow block h-full rounded-full" style={{ width: `${Math.max(2, item.percentage)}%`, background: categoryColorValue(item.color), "--i": index } as CSSProperties} />
                       </span>
                       <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
                         {item.count}× · {formatPercent(item.percentage, 0)}
@@ -190,7 +191,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                 </Link>
               </div>
               <ul className="mt-3 space-y-3">
-                {overview.goals.slice(0, 4).map((goal) => (
+                {overview.goals.slice(0, 4).map((goal, index) => (
                   <li key={goal.id}>
                     <div className="flex items-center justify-between gap-2 text-sm">
                       <span className="min-w-0 truncate font-medium">{goal.name}</span>
@@ -199,7 +200,7 @@ export default async function SavingsOverviewPage({ searchParams }: { searchPara
                       </span>
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, goal.percentage)}%`, background: categoryColorValue(goal.color) }} />
+                      <div className="bar-grow h-full rounded-full" style={{ width: `${Math.min(100, goal.percentage)}%`, background: categoryColorValue(goal.color), "--i": index } as CSSProperties} />
                     </div>
                   </li>
                 ))}

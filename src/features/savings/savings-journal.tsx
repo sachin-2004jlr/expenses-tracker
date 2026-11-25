@@ -121,7 +121,7 @@ export function SavingsJournal({ notes, pendingEntries, today, dateFormat }: Sav
   };
 
   return (
-    <Card>
+    <Card className="page-enter">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <NotebookPen className="size-4 text-saved-foreground" aria-hidden />

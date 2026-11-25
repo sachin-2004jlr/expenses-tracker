@@ -23,7 +23,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   );
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader
         title="Transactions"
         description="Every income and expense you have recorded. Tap a row to edit it."

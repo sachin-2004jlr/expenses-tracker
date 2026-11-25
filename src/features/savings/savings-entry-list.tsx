@@ -63,7 +63,7 @@ export function SavingsEntryList({ entries, dateFormat, showJournal = true }: Sa
           const KindIcon = added ? ArrowDownToLine : ArrowUpFromLine;
           return (
             <li key={entry.id} className="flex items-start gap-2 py-2.5" data-testid="savings-entry">
-              <button type="button" onClick={() => openEdit(entry)} className="flex min-w-0 flex-1 items-start gap-3 text-left" aria-label={`Edit ${entry.description}`}>
+              <button type="button" onClick={() => openEdit(entry)} className="-my-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg py-1 text-left transition-colors active:bg-accent" aria-label={`Edit ${entry.description}`}>
                 {entry.category ? (
                   <CategoryIcon icon={entry.category.icon} color={entry.category.color} />
                 ) : (

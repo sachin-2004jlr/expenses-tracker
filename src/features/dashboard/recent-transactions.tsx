@@ -45,7 +45,7 @@ export function RecentTransactions({ transactions, month, today, dateFormat, cla
                 type="button"
                 onClick={() => openEdit(tx)}
                 aria-label={`Edit ${tx.description}`}
-                className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-accent/60 active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               >
                 <CategoryIcon icon={tx.category.icon} color={tx.category.color} className="rounded-full" />
                 <span className="min-w-0 flex-1">

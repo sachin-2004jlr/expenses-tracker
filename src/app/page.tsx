@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Equal, Minus, MoveDown, PiggyBank, Plus, Repeat, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-logo";
 import { ChromeArcs } from "@/components/ui/chrome-arcs";
-import { RupeeRoll3D } from "@/features/landing/rupee-roll-3d";
 import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -112,10 +112,10 @@ export default async function LandingPage() {
             <div className="grid flex-1 items-center gap-10 pt-[4vh] sm:pt-[7vh] lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-12 lg:pt-0 short:pt-2">
               <div className="max-w-2xl">
                 <p className="text-base font-semibold text-silver">Personal finance, in rupees</p>
-                <h1 className="display-heading mt-3 text-3xl md:text-5xl short:text-2xl" data-testid="hero-title">
+                <h1 className="display-heading mt-3 text-3xl text-balance md:text-5xl short:text-2xl" data-testid="hero-title">
                   Know where <span className="chrome-text">every rupee</span> goes.
                 </h1>
-                <p className="mt-6 max-w-md text-base text-muted-foreground short:mt-3">
+                <p className="mt-6 max-w-md text-base text-pretty text-muted-foreground short:mt-3">
                   A calm, private money tracker. Log what comes in and goes out, and watch what&apos;s left roll into next month. Savings get a space of their own.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 short:mt-4">
@@ -129,9 +129,17 @@ export default async function LandingPage() {
                 </div>
               </div>
 
-              {/* Right side: the rolled ₹500 note, cut out of its photo and turning in 3D. */}
-              <div className="flex justify-center lg:justify-end lg:pr-12">
-                <RupeeRoll3D />
+              {/* Right side: a crumpled ₹500 note (transparent cut-out). */}
+              <div className="flex justify-center lg:justify-end lg:pr-6">
+                <Image
+                  src="/landing/crumpled-500.webp"
+                  alt="A crumpled ₹500 note"
+                  width={941}
+                  height={1672}
+                  sizes="(min-width: 1024px) 24rem, (min-width: 640px) 20rem, 68vw"
+                  fetchPriority="high"
+                  className="h-auto w-[68vw] max-w-80 drop-shadow-[0_28px_40px_rgb(0_0_0/0.65)] lg:w-96 lg:max-w-none short:w-40"
+                />
               </div>
             </div>
           </div>

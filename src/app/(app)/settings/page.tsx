@@ -95,7 +95,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader title="Settings" description="Your preferences, account, categories, budgets, repeating transactions and data." />
       <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
         <nav aria-label="Settings sections" className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">

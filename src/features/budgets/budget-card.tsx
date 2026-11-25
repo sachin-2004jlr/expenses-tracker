@@ -30,7 +30,7 @@ function ProgressBar({ percentage, status, label }: { percentage: number; status
       aria-valuemax={100}
       aria-valuenow={Math.round(width)}
     >
-      <div className={cn("h-full rounded-full transition-[width] duration-500", BAR[status])} style={{ width: `${width}%` }} />
+      <div className={cn("bar-grow h-full rounded-full transition-[width] duration-500", BAR[status])} style={{ width: `${width}%` }} />
     </div>
   );
 }

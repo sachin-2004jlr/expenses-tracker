@@ -2,6 +2,7 @@
 
 import { ArrowDownLeft, ArrowUpRight, CalendarClock, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RollingAmount } from "@/components/shared/rolling-amount";
 import { ChangePill } from "@/components/shared/stat-card";
 import { useTransactionDialog } from "@/features/transactions/transaction-dialog-provider";
 import { formatCurrency, formatCurrencyParts } from "@/lib/money";
@@ -53,7 +54,7 @@ export function MoneySummary({
     <section
       aria-label="Money left"
       className={cn(
-        "relative min-w-0 overflow-hidden rounded-3xl border border-border bg-card p-5 sm:p-7",
+        "relative min-w-0 overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-16px_rgb(0_0_0/0.18)] sm:p-7",
         "bg-[radial-gradient(120%_120%_at_100%_0%,color-mix(in_oklch,var(--brand)_14%,transparent),transparent_55%)]",
         className,
       )}
@@ -61,13 +62,12 @@ export function MoneySummary({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
         <div className="min-w-0">
           <p className="text-sm font-medium text-muted-foreground">Money left · {monthLabel}</p>
-          <p className="mt-2 flex items-baseline gap-1 font-bold tracking-tight" data-testid="total-balance">
-            <span className={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", balance < 0 && "text-destructive")}>
-              {parts.sign}
-              {parts.symbol}
-              {parts.integer}
-            </span>
-            <span className="text-lg text-muted-foreground sm:text-xl">.{parts.fraction}</span>
+          <p className="mt-2 flex items-baseline gap-1 font-bold tracking-tight tabular-nums" data-testid="total-balance">
+            <RollingAmount
+              paise={balance}
+              integerClassName={cn("whitespace-nowrap", parts.integer.length > 8 ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl", balance < 0 && "text-destructive")}
+              fractionClassName="text-lg text-muted-foreground sm:text-xl"
+            />
           </p>
 
           {/* The sum, spelled out, so the number is never a mystery. */}

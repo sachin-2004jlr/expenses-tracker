@@ -34,7 +34,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const count = summary.current.transactionCount;
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{greeting}</h2>
         <p className="text-sm text-muted-foreground">

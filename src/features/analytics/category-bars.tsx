@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { ChartColumn } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
@@ -31,7 +32,7 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
           <EmptyState icon={ChartColumn} title={type === "EXPENSE" ? "No expenses in this range" : "No income in this range"} compact />
         ) : (
           <ul className="space-y-2.5">
-            {visible.map((item) => (
+            {visible.map((item, index) => (
               <li key={item.categoryId}>
                 <Link
                   href={`/transactions?category=${item.categoryId}&type=${type}${linkQuery}`}
@@ -43,8 +44,8 @@ export function CategoryBars({ items, type, title, description, linkQuery = "", 
                   <span className="col-start-2 col-end-4 flex items-center gap-2">
                     <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
                       <span
-                        className="block h-full rounded-full"
-                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: categoryColorValue(item.color) }}
+                        className="bar-grow block h-full rounded-full"
+                        style={{ width: `${max === 0 ? 0 : Math.max(2, (item.amount / max) * 100)}%`, background: categoryColorValue(item.color), "--i": index } as CSSProperties}
                       />
                     </span>
                     <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground tabular-nums">

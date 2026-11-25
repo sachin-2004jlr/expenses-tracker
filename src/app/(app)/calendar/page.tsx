@@ -19,7 +19,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const expenses = transactions.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <PageHeader
         title={formatMonthLabel(month)}
         eyebrow="Calendar"

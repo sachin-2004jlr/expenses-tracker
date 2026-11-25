@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { ChartPie } from "lucide-react";
 import { CategoryIcon, categoryColorValue } from "@/components/shared/category-icon";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -34,7 +35,7 @@ export function CategoryBreakdown({ items, month, monthLabel, limit = 6, classNa
         <EmptyState icon={ChartPie} title="No spending yet" description={`Expenses you add in ${monthLabel} show up here by category.`} compact />
       ) : (
         <ul className="space-y-3.5">
-          {head.map((item) => (
+          {head.map((item, index) => (
             <li key={item.categoryId}>
               <Link
                 href={`/transactions?month=${month}&category=${item.categoryId}&type=EXPENSE`}
@@ -47,7 +48,7 @@ export function CategoryBreakdown({ items, month, monthLabel, limit = 6, classNa
                   <span className="w-24 shrink-0 text-right text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: categoryColorValue(item.color) }} />
+                  <div className="bar-grow h-full rounded-full" style={{ width: `${Math.max(3, (item.amount / top) * 100)}%`, background: categoryColorValue(item.color), "--i": index } as CSSProperties} />
                 </div>
               </Link>
             </li>

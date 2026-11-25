@@ -116,7 +116,7 @@ function TabItem({ item, active, tone = "tracker" }: { item: NavItem; active: bo
         prefetch
         aria-current={active ? "page" : undefined}
         className={cn(
-          "relative flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-colors",
+          "relative flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-[color,opacity] active:opacity-60",
           active ? activeText : "text-muted-foreground",
         )}
       >

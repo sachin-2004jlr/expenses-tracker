@@ -113,7 +113,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
   const destinationItems = [{ value: NONE, label: "Whole savings balance" }, ...destinations.map((d) => ({ value: d.id, label: `Money added for ${d.name}` }))];
 
   return (
-    <Card>
+    <Card className="page-enter">
       <CardHeader>
         <CardTitle>Savings goals</CardTitle>
         <CardDescription>Unlinked goals track your whole savings balance. Link one to a savings category to count only money you add for it.</CardDescription>
@@ -187,7 +187,7 @@ export function SavingsGoals({ goals, destinations, dateFormat }: SavingsGoalsPr
                     aria-valuemax={100}
                     aria-valuenow={Math.round(width)}
                   >
-                    <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${width}%`, background: colour }} />
+                    <div className="bar-grow h-full rounded-full transition-[width] duration-500" style={{ width: `${width}%`, background: colour }} />
                   </div>
                   <p className={cn("mt-2 text-xs", goal.complete ? "font-semibold text-income-foreground" : "text-muted-foreground")}>
                     {goal.complete
